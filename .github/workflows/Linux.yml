@@ -1,0 +1,30 @@
+name: Linux
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  VULKAN_VERSION: 1.2.189
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Checkout submodules
+        run: git submodule update --init --recursive
+      - name: Update System
+        run: sudo apt update && sudo apt upgrade
+      - name: Install Build Dependencies
+        run: sudo apt install -y xorg-dev
+      - name: Install Vulkan SDK
+        run: |
+          wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-$VULKAN_VERSION-focal.list https://packages.lunarg.com/vulkan/$VULKAN_VERSION/lunarg-vulkan-$VULKAN_VERSION-focal.list
+          sudo apt update
+          sudo apt install -y vulkan-sdk
+      - name: Build
+        run: mkdir ${{github.workspace}}/build && cd ${{github.workspace}}/build && cmake .. && make

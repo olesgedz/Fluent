@@ -1,0 +1,30 @@
+name: Windows
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  VULKAN_VERSION: 1.2.189.2
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: setup-msbuild
+      uses: microsoft/setup-msbuild@v1.0.3
+    - name: Checkout submodules
+      run: git submodule update --init --recursive
+    - name: Download Vulkan SDK
+      run: Invoke-WebRequest "https://sdk.lunarg.com/sdk/download/$Env:VULKAN_VERSION/windows/VulkanSDK-$Env:VULKAN_VERSION-Installer.exe" -OutFile VulkanSDK.exe -v
+    - name: Install Vulkan SDK
+      run: ./VulkanSDK.exe --accept-licenses --default-answer --confirm-command install com.lunarg.vulkan.debug
+    - name: Build
+      env:
+        VULKAN_SDK: "C:\\VulkanSDK\\${{ env.VULKAN_VERSION }}"
+      run: mkdir ${{github.workspace}}/build && cd ${{github.workspace}}/build && cmake .. && msbuild Fluent.sln

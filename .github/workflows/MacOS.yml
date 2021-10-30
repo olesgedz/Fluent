@@ -1,0 +1,30 @@
+name: MacOS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  VULKAN_VERSION: 1.2.189.0
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Checkout submodules
+        run: git submodule update --init --recursive
+      - name: Download Vulkan SDK
+        run: curl https://sdk.lunarg.com/sdk/download/${{ env.VULKAN_VERSION }}/mac/vulkansdk-macos-${{ env.VULKAN_VERSION }}.dmg --output VulkanSDK.dmg
+      - name: Attach dmg
+        run: hdiutil attach ./VulkanSDK.dmg
+      - name: Install Vulkan SDK
+        run: sudo /Volumes/vulkansdk-macos-1.2.189.0/InstallVulkan.app/Contents/MacOS/InstallVulkan --accept-licenses --default-answer --confirm-command install
+      - name: Build
+        env:
+          VULKAN_SDK: "/Users/runner/VulkanSDK/${{ env.VULKAN_VERSION }}/macOS"
+        run: mkdir ${{github.workspace}}/build && cd ${{github.workspace}}/build && cmake .. && make
