@@ -30,11 +30,21 @@ set(Sources
 
 find_package(Vulkan REQUIRED)
 
-set(Libs glfw glm spdlog vk_mem_alloc tiny_imageformat spirv-cross-core spirv-cross-glsl shaderc_shared Vulkan::Vulkan)
+set(CommonLibs glfw glm spdlog vk_mem_alloc tiny_imageformat Vulkan::Vulkan)
 
-if (UNIX)
+if (MSVC)
+    set(PlatformLibDirs $ENV{VULKAN_SDK}/Lib)
+    set(PlatformLibs spirv-cross-cored spirv-cross-glsld)
+elseif (UNIX AND NOT APPLE)
+	set(PlatformLibs spirv-cross-core spirv-cross-glsl shaderc_shared)
 	set(CompileOptions -g)
+elseif(APPLE)
+    set(PlatformLibDirs $ENV{VULKAN_SDK}/lib)
+    set(PlatformLibs spirv-cross-core spirv-cross-glsl shaderc)
 endif()
+
+set(Libs ${CommonLibs} ${PlatformLibs})
+set(LibDirs ${PlatformLibDirs})
 
 add_library(${Target} ${Sources})
 
@@ -46,5 +56,6 @@ target_include_directories(${Target}
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 
+target_link_directories(${Target} PUBLIC ${LibDirs})
 target_link_libraries(${Target} PUBLIC ${Libs})
 target_compile_options(${Target} PUBLIC ${CompileOptions})
