@@ -1,6 +1,7 @@
 #include <fstream>
 #include <vector>
 #include <shaderc/shaderc.hpp>
+#include "Core/FileSystem.hpp"
 #include "Renderer/GraphicContext.hpp"
 #include "Renderer/Shader.hpp"
 
@@ -20,11 +21,11 @@ namespace Fluent
         return shaderc_shader_kind(-1);
     }
 
-    std::vector<uint32_t> CompileShader(const std::string& filename, ShaderStage stage)
+    std::vector<uint32_t> CompileShader(const std::string& filepath, ShaderStage stage)
     {
-        std::ifstream file(filename);
+        std::ifstream file(filepath);
         if (!file.is_open())
-            LOG_ERROR("File not found {}", filename);
+            LOG_ERROR("File not found {}", filepath);
         std::string code { std::istreambuf_iterator(file), std::istreambuf_iterator<char>() };
         shaderc::Compiler compiler;
         shaderc::CompilationResult module = compiler.CompileGlslToSpv(code.c_str(), code.size(), ShaderStageToShadercType(stage), "name");
@@ -46,7 +47,7 @@ namespace Fluent
             ShaderDescription desc = description;
             if (desc.byteCode.empty())
             {
-                desc.byteCode = CompileShader(desc.filename, desc.stage);
+                desc.byteCode = CompileShader(FileSystem::GetShadersDirectory() + desc.filename, desc.stage);
             }
             
             vk::Device device = (VkDevice)GetGraphicContext().GetDevice();

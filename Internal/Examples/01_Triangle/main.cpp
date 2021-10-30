@@ -1,4 +1,5 @@
 #include <iostream>
+#include <filesystem>
 #include "Fluent/Fluent.hpp"
 
 using namespace Fluent;
@@ -15,6 +16,8 @@ public:
 
     void OnAttach() override
     {
+        FileSystem::SetShadersDirectory("../../../Internal/Examples/Shaders/");
+
         auto& window = Application::Get().GetWindow();
 
         RenderPassDescription renderPassDesc{};
@@ -31,11 +34,11 @@ public:
         
         ShaderDescription vertexShaderDesc{};
         vertexShaderDesc.stage = ShaderStage::eVertex;
-        vertexShaderDesc.filename = "../Internal/Examples/Shaders/triangle.vert.glsl";
+        vertexShaderDesc.filename = "triangle.vert.glsl";
 
         ShaderDescription fragmentShaderDesc{};
         fragmentShaderDesc.stage = ShaderStage::eFragment;
-        fragmentShaderDesc.filename = "../Internal/Examples/Shaders/triangle.frag.glsl";
+        fragmentShaderDesc.filename = "triangle.frag.glsl";
 
         auto vertexShader = Shader::Create(vertexShaderDesc);
         auto fragmentShader = Shader::Create(fragmentShaderDesc);
@@ -109,15 +112,19 @@ public:
     }
 };
 
-int main()
+int main(int argc, char** argv)
 {
     Log::SetLogLevel(Log::LogLevel::eTrace);
         
     WindowDescription windowDescription {};
     windowDescription.width = 800;
     windowDescription.height = 600;
+    
+    ApplicationDescription appDesc {};
+    appDesc.argv = argv;
+    appDesc.windowDescription = windowDescription;
 
-    Application app(windowDescription);
+    Application app(appDesc);
     Triangle triangle;
     app.PushLayer(triangle);
     app.Run();

@@ -10,6 +10,12 @@ namespace Fluent
 {
     class GraphicContext;
     
+    struct ApplicationDescription
+    {
+        char** argv;
+        WindowDescription windowDescription;
+    };
+
     class Application
     {
     private:
@@ -23,7 +29,7 @@ namespace Fluent
 
         void OnEvent(const Event& event);
     public:
-        explicit Application(const WindowDescription& windowDesc);
+        explicit Application(const ApplicationDescription& description);
         ~Application();
 
         void PushLayer(Layer& layer);

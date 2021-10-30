@@ -8,6 +8,7 @@
 #include "Core/LayerStack.hpp"
 #include "Core/Log.hpp"
 #include "Core/MouseCodes.hpp"
+#include "Core/FileSystem.hpp"
 
 #include "Math/Math.hpp"
 

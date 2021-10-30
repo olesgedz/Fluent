@@ -8,7 +8,8 @@ set(CoreSources
 	Core/Event.cpp
 	Core/Input.cpp
 	Core/Window.cpp
-	Core/Log.cpp)
+	Core/Log.cpp
+	Core/FileSystem.cpp)
 
 set(RendererSources 
 	Renderer/Renderer.cpp

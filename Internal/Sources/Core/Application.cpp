@@ -1,3 +1,4 @@
+#include "Core/FileSystem.hpp"
 #include "Core/Event.hpp"
 #include "Core/Input.hpp"
 #include "Renderer/GraphicContext.hpp"
@@ -7,12 +8,13 @@ namespace Fluent
 {
     Application* Application::mApplication = nullptr;
 
-    Application::Application(const WindowDescription& windowDesc)
+    Application::Application(const ApplicationDescription& description)
     {
         if (!mApplication)
         {
             mApplication = this;
-            mWindow = Window::Create(windowDesc);
+            FileSystem::Init(description.argv);
+            mWindow = Window::Create(description.windowDescription);
             mWindow->SetEventCallback([this](const Event &event) { OnEvent(event); });
             mRunning = true;
             GContextDescription gcontextDescription{};
