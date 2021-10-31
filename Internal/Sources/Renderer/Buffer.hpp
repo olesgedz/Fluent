@@ -19,6 +19,13 @@ namespace Fluent
     public:
         virtual ~Buffer() = default;
         
+        virtual void WriteData(const void* data, uint32_t size, uint32_t offset) = 0;
+        virtual void* MapMemory() = 0;
+        virtual void UnmapMemory() = 0;
+        virtual void FlushMemory(uint32_t size, uint32_t offset) = 0;
+
+        virtual bool IsMemoryMapped() const = 0;
+        
         virtual Handle GetNativeHandle() const = 0;
 
         static Ref<Buffer> Create(const BufferDescription& description);

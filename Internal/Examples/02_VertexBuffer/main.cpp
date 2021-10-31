@@ -1,18 +1,52 @@
 #include <iostream>
-#include <filesystem>
+#include <vector>
 #include "Fluent/Fluent.hpp"
 
 using namespace Fluent;
 
-class Triangle : public Layer
+struct Vertex
+{
+    Vector3 position;
+    Vector3 color;
+};
+
+class VertexBufferLayer : public Layer
 {
 private:
     Ref<Image>          mImage;
     Ref<RenderPass>     mRenderPass;
     Ref<Framebuffer>    mFramebuffer;
     Ref<Pipeline>       mPipeline;
+    Ref<Buffer>         mVertexBuffer;
 public:
-    Triangle() : Layer("Triangle") {}
+    VertexBufferLayer() : Layer("VertexBuffer") {}
+
+    void CreateVertexBuffer()
+    {
+        std::vector<Vertex> vertices =
+        {
+            {
+                Vector3(-0.5, -0.5, 0.0),
+                Vector3(1.0, 0.0, 0.0)
+            },
+            {
+                Vector3(0.5, -0.5, 0.0),
+                Vector3(0.0, 1.0, 0.0)
+            },
+            {
+                Vector3(0.0, 0.5, 0.0),
+                Vector3(0.0, 0.0, 1.0)
+            }
+        };
+
+        BufferDescription bufferDesc{};
+        bufferDesc.bufferUsage = BufferUsage::eVertexBuffer;
+        bufferDesc.memoryUsage = MemoryUsage::eCpuToGpu;
+        bufferDesc.size = vertices.size() * sizeof(vertices[0]);
+
+        mVertexBuffer = Buffer::Create(bufferDesc);
+        mVertexBuffer->WriteData(vertices.data(), bufferDesc.size, 0);
+    }
 
     void OnAttach() override
     {
@@ -34,11 +68,11 @@ public:
         
         ShaderDescription vertexShaderDesc{};
         vertexShaderDesc.stage = ShaderStage::eVertex;
-        vertexShaderDesc.filename = "01_Triangle/triangle.vert.glsl";
+        vertexShaderDesc.filename = "02_VertexBuffer/main.vert.glsl";
 
         ShaderDescription fragmentShaderDesc{};
         fragmentShaderDesc.stage = ShaderStage::eFragment;
-        fragmentShaderDesc.filename = "01_Triangle/triangle.frag.glsl";
+        fragmentShaderDesc.filename = "02_VertexBuffer/main.frag.glsl";
 
         auto vertexShader = Shader::Create(vertexShaderDesc);
         auto fragmentShader = Shader::Create(fragmentShaderDesc);
@@ -49,11 +83,39 @@ public:
 
         PipelineDescription pipelineDesc{};
         pipelineDesc.type = PipelineType::eGraphics;
+        pipelineDesc.bindingDescriptions =
+        {
+            VertexBindingDescription
+            {
+                .binding = 0,
+                .stride = sizeof(Vertex),
+                .inputRate = VertexInputRate::eVertex
+            }
+        };
+
+        pipelineDesc.attributeDescriptions = 
+        {
+            VertexAttributeDescription
+            {
+                .location = 0,
+                .binding = 0,
+                .format = Format::eR32G32B32Sfloat,
+                .offset = offsetof(Vertex, position)
+            },
+            {
+                .location = 1,
+                .binding = 0,
+                .format = Format::eR32G32B32Sfloat,
+                .offset = offsetof(Vertex, color)
+            }
+        };
         pipelineDesc.shaders = { vertexShader, fragmentShader };
         pipelineDesc.rasterizerDescription = rasterizerState;
         pipelineDesc.renderPass = mRenderPass;
 
         mPipeline = Pipeline::Create(pipelineDesc);
+
+        CreateVertexBuffer();
     }
 
     void OnDetach() override
@@ -89,6 +151,7 @@ public:
 
     void OnUnload() override
     {
+        mVertexBuffer = nullptr;
         mFramebuffer = nullptr;
         mImage = nullptr;
     }
@@ -103,6 +166,7 @@ public:
         cmd->SetViewport(window->GetWidth(), window->GetHeight(), 0.0f, 1.0f, 0, 0);
         cmd->SetScissor(window->GetWidth(), window->GetHeight(), 0, 0);
         cmd->BindPipeline(mPipeline);
+        cmd->BindVertexBuffer(mVertexBuffer, 0);
         cmd->Draw(3, 1, 0, 0);
         cmd->EndRenderPass();
         uint32_t activeImage = context->GetActiveImageIndex();
@@ -125,8 +189,8 @@ int main(int argc, char** argv)
     appDesc.windowDescription = windowDescription;
 
     Application app(appDesc);
-    Triangle triangle;
-    app.PushLayer(triangle);
+    VertexBufferLayer layer;
+    app.PushLayer(layer);
     app.Run();
 
     return 0;

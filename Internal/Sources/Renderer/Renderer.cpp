@@ -144,6 +144,16 @@ namespace Fluent
         return vk::PipelineBindPoint(-1);
     }
 
+    vk::VertexInputRate ToVulkanVertexInputRate(VertexInputRate inputRate)
+    {
+        switch (inputRate)
+        {
+            case VertexInputRate::eVertex: return vk::VertexInputRate::eVertex;
+            case VertexInputRate::eInstance: return vk::VertexInputRate::eInstance;
+        }
+        return vk::VertexInputRate(-1);
+    }
+
     vk::ImageAspectFlags ImageFormatToImageAspect(vk::Format format)
     {
         static const std::unordered_map<vk::Format, vk::ImageAspectFlags> formatToAspect

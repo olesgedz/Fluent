@@ -107,6 +107,21 @@ namespace Fluent
         {
             vmaDestroyBuffer(mAllocator, static_cast<VkBuffer>(buffer), static_cast<VmaAllocation>(allocation));
         }
+
+        void MapMemory(Allocation allocation, void** data) const override
+        {
+            vmaMapMemory(mAllocator, (VmaAllocation)allocation, data);
+        }
+
+        void UnmapMemory(Allocation allocation) const override
+        {
+            vmaUnmapMemory(mAllocator, (VmaAllocation)allocation);
+        }
+
+        void FlushMemory(Allocation allocation, uint32_t size, uint32_t offset) const override
+        {
+            vmaFlushAllocation(mAllocator, (VmaAllocation)allocation, offset, size);
+        }
     };
 
     Scope<DeviceAllocator> DeviceAllocator::Create(const DeviceAllocatorDescription& description)
