@@ -21,14 +21,14 @@ public:
         auto& window = Application::Get().GetWindow();
 
         ClearValue clearValue{};
-        clearValue.color = Vector4(0.5, 0.0, 0.0, 1.0);
+        clearValue.color = Vector4(0.0, 0.0, 0.0, 1.0);
         RenderPassDescription renderPassDesc{};
         renderPassDesc.width = window->GetWidth();
         renderPassDesc.height = window->GetHeight();
         renderPassDesc.clearValues = { clearValue };
         renderPassDesc.colorFormats = { Format::eR8G8B8A8Unorm };
         renderPassDesc.initialUsages = { ImageUsage::eUndefined };
-        renderPassDesc.finalUsages = { ImageUsage::eStorage };
+        renderPassDesc.finalUsages = { ImageUsage::eSampled };
         renderPassDesc.attachmentLoadOps = { AttachmentLoadOp::eClear };
         renderPassDesc.sampleCount = SampleCount::e1;
 
@@ -76,7 +76,7 @@ public:
         imageDesc.format = Format::eR8G8B8A8Unorm;
         imageDesc.width = window->GetWidth();
         imageDesc.height = window->GetHeight();
-        imageDesc.initialUsage = ImageUsage::Bits::eStorage;
+        imageDesc.initialUsage = ImageUsage::Bits::eSampled;
 
         mImage = Image::Create(imageDesc);
 
@@ -110,7 +110,7 @@ public:
         uint32_t activeImage = context->GetActiveImageIndex();
         auto swapchainImageUsage = context->GetSwapchainImageUsage(activeImage);
         auto swapchainImage = context->AcquireImage(activeImage, ImageUsage::eTransferDst);
-        cmd->BlitImage(mImage, ImageUsage::eStorage, swapchainImage, swapchainImageUsage, Filter::eLinear);
+        cmd->BlitImage(mImage, ImageUsage::eSampled, swapchainImage, swapchainImageUsage, Filter::eLinear);
     }
 };
 

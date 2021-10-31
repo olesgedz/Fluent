@@ -54,10 +54,12 @@ public:
 
         auto& window = Application::Get().GetWindow();
 
+        ClearValue clearValue{};
+        clearValue.color = Vector4(0.0, 0.0, 0.0, 1.0);
         RenderPassDescription renderPassDesc{};
         renderPassDesc.width = window->GetWidth();
         renderPassDesc.height = window->GetHeight();
-        renderPassDesc.clearValues = {{ 0.0, 0.0, 0.0 }};
+        renderPassDesc.clearValues = { clearValue };
         renderPassDesc.colorFormats = {{ Format::eR8G8B8A8Unorm }};
         renderPassDesc.initialUsages = {{ ImageUsage::eUndefined }};
         renderPassDesc.finalUsages = {{ ImageUsage::eStorage }};

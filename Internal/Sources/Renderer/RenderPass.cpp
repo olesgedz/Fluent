@@ -39,12 +39,11 @@ namespace Fluent
                     .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
                     .setInitialLayout(ImageUsageToImageLayout(description.initialUsages[i]))
                     .setFinalLayout(ImageUsageToImageLayout(description.finalUsages[i]));
-                
 
                 vk::AttachmentReference attachmentReference;
                 attachmentReference
                     .setAttachment(i)
-                    .setLayout(ImageUsageToImageLayout(description.finalUsages[i]));
+                    .setLayout(vk::ImageLayout::eColorAttachmentOptimal);
                 
                 if (description.finalUsages[i] == ImageUsage::eDepthStencilAttachment)
                 {
