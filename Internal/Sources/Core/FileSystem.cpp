@@ -10,7 +10,7 @@ namespace Fluent::FileSystem
 
     void Init(char** argv)
     {
-        absoluteExecutablePath = std::filesystem::weakly_canonical(std::filesystem::path(argv[0])).parent_path().string();
+        absoluteExecutablePath = std::filesystem::weakly_canonical(std::filesystem::path(argv[0])).parent_path().string() + "/";
         LOG_INFO(absoluteExecutablePath);
     }
 
