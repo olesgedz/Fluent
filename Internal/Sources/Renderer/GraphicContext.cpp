@@ -117,7 +117,7 @@ namespace Fluent
             auto surfaceFormats         = mPhysicalDevice.getSurfaceFormatsKHR(mSurface);
 
             /// Find best surface present mode
-            vk::PresentModeKHR presentMode = vk::PresentModeKHR::eImmediate;
+            mPresentMode = vk::PresentModeKHR::eImmediate;
             if (std::find(presentModes.begin(), presentModes.end(), vk::PresentModeKHR::eMailbox) != presentModes.end())
                 mPresentMode = vk::PresentModeKHR::eMailbox;
 
