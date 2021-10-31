@@ -34,11 +34,11 @@ public:
         
         ShaderDescription vertexShaderDesc{};
         vertexShaderDesc.stage = ShaderStage::eVertex;
-        vertexShaderDesc.filename = "01_Triangle/triangle.vert.glsl";
+        vertexShaderDesc.filename = "01_Triangle/main.vert.glsl";
 
         ShaderDescription fragmentShaderDesc{};
         fragmentShaderDesc.stage = ShaderStage::eFragment;
-        fragmentShaderDesc.filename = "01_Triangle/triangle.frag.glsl";
+        fragmentShaderDesc.filename = "01_Triangle/main.frag.glsl";
 
         auto vertexShader = Shader::Create(vertexShaderDesc);
         auto fragmentShader = Shader::Create(fragmentShaderDesc);
