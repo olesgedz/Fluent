@@ -4,7 +4,9 @@ project(${Target})
 if (UNIX)
 	set(CompileOptions -g)
 endif()
-
+if (WIN32)
+set(CompileOptions /DEBUG)
+endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Examples/${Target})
 
 add_executable(${Target} main.cpp)
