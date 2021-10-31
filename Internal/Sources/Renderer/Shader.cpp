@@ -24,6 +24,7 @@ namespace Fluent
     std::vector<uint32_t> CompileShader(const std::string& filepath, ShaderStage stage)
     {
         std::ifstream file(filepath);
+        LOG_INFO(filepath);
         if (!file.is_open())
             LOG_ERROR("File not found {}", filepath);
         std::string code { std::istreambuf_iterator(file), std::istreambuf_iterator<char>() };
