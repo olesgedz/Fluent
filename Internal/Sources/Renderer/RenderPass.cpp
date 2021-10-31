@@ -43,7 +43,7 @@ namespace Fluent
                 vk::AttachmentReference attachmentReference;
                 attachmentReference
                     .setAttachment(i)
-                    .setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+                    .setLayout(vk::ImageLayout::eColorAttachmentOptimal); // TODO
                 
                 if (description.finalUsages[i] == ImageUsage::eDepthStencilAttachment)
                 {
