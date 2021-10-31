@@ -38,14 +38,16 @@ namespace Fluent
 
         void BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& framebuffer) const override
         {
-            auto& clearValues = renderPass->GetClearValues();
-            std::vector<vk::ClearValue> vkClearValues(clearValues.size());
-            for (uint32_t i = 0; i < vkClearValues.size(); ++i)
+            std::vector<vk::ClearValue> clearValues(renderPass->GetClearValues().size());
+            uint32_t i = 0;
+            for (auto& clearValue : renderPass->GetClearValues())
             {
-                vkClearValues[i]
-                    .setColor(std::array{ clearValues[i].r, clearValues[i].g, clearValues[i].b, clearValues[i].a })
-                    .setDepthStencil({ clearValues[i].depth, clearValues[i].stencil });
+                clearValues[i]
+                    .setColor(vk::ClearColorValue().setFloat32({ clearValue.color.r, clearValue.color.g, clearValue.color.b, clearValue.color.a }));
             }
+
+            if (renderPass->HasDepthStencil())
+                clearValues.back().setDepthStencil(vk::ClearDepthStencilValue().setDepth(renderPass->GetDepth()).setStencil(renderPass->GetStencil()));
 
             vk::Rect2D rect;
             rect
@@ -54,7 +56,7 @@ namespace Fluent
 
             vk::RenderPassBeginInfo renderPassBeginInfo;
             renderPassBeginInfo
-                    .setClearValues(vkClearValues)
+                    .setClearValues(clearValues)
                     .setRenderArea(rect)
                     .setFramebuffer((VkFramebuffer)framebuffer->GetNativeHandle())
                     .setRenderPass((VkRenderPass)renderPass->GetNativeHandle());

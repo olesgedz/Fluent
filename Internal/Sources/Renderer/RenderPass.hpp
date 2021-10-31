@@ -3,15 +3,16 @@
 #include <cstdint>
 #include <vector>
 #include "Core/Base.hpp"
+#include "Math/Math.hpp"
 #include "Renderer/Renderer.hpp"
 
 namespace Fluent
 {
     struct ClearValue
     {
-        float r, g, b, a;
-        float depth;
-        uint32_t stencil;
+        Vector4 color;
+        float depth = 0.0f;
+        uint32_t stencil = 0;
     };
 
     struct RenderPassDescription
@@ -40,6 +41,9 @@ namespace Fluent
         virtual uint32_t GetWidth() const = 0;
         virtual uint32_t GetHeight() const = 0;
 
+        virtual bool HasDepthStencil() const = 0;
+        virtual float GetDepth() const = 0;
+        virtual uint32_t GetStencil() const = 0;
         virtual const std::vector<ClearValue>& GetClearValues() const = 0;
 
         virtual Handle GetNativeHandle() const = 0;

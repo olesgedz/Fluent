@@ -20,25 +20,27 @@ public:
 
         auto& window = Application::Get().GetWindow();
 
+        ClearValue clearValue{};
+        clearValue.color = Vector4(0.5, 0.0, 0.0, 1.0);
         RenderPassDescription renderPassDesc{};
         renderPassDesc.width = window->GetWidth();
         renderPassDesc.height = window->GetHeight();
-        renderPassDesc.clearValues = {{ 0.0, 0.0, 0.0 }};
-        renderPassDesc.colorFormats = {{ Format::eR8G8B8A8Unorm }};
-        renderPassDesc.initialUsages = {{ ImageUsage::eUndefined }};
-        renderPassDesc.finalUsages = {{ ImageUsage::eStorage }};
-        renderPassDesc.attachmentLoadOps = {{ AttachmentLoadOp::eClear }};
+        renderPassDesc.clearValues = { clearValue };
+        renderPassDesc.colorFormats = { Format::eR8G8B8A8Unorm };
+        renderPassDesc.initialUsages = { ImageUsage::eUndefined };
+        renderPassDesc.finalUsages = { ImageUsage::eStorage };
+        renderPassDesc.attachmentLoadOps = { AttachmentLoadOp::eClear };
         renderPassDesc.sampleCount = SampleCount::e1;
 
         mRenderPass = RenderPass::Create(renderPassDesc);
         
         ShaderDescription vertexShaderDesc{};
         vertexShaderDesc.stage = ShaderStage::eVertex;
-        vertexShaderDesc.filename = "01_Triangle/triangle.vert.glsl";
+        vertexShaderDesc.filename = "01_Triangle/main.vert.glsl";
 
         ShaderDescription fragmentShaderDesc{};
         fragmentShaderDesc.stage = ShaderStage::eFragment;
-        fragmentShaderDesc.filename = "01_Triangle/triangle.frag.glsl";
+        fragmentShaderDesc.filename = "01_Triangle/main.frag.glsl";
 
         auto vertexShader = Shader::Create(vertexShaderDesc);
         auto fragmentShader = Shader::Create(fragmentShaderDesc);
