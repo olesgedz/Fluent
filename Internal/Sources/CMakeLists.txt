@@ -23,11 +23,17 @@ set(RendererSources
 	Renderer/Pipeline.cpp
 	Renderer/Shader.cpp
 	Renderer/ShaderReflection.cpp
-	Renderer/CommandBuffer.cpp)
+	Renderer/CommandBuffer.cpp
+	Renderer/DescriptorSetLayout.cpp
+	Renderer/DescriptorSet.cpp)
+
+set(MathSources
+	Math/Math.cpp)
 
 set(Sources 
 	${CoreSources}
-	${RendererSources})
+	${RendererSources}
+	${MathSources})
 
 find_package(Vulkan REQUIRED)
 

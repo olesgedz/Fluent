@@ -74,6 +74,18 @@ namespace Fluent
             mHandle.draw(vertexCount, instanceCount, firstVertex, firstInstance);
         }
 
+        void DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) const override
+        {
+            mHandle.drawIndexed(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+        }
+        
+        void BindDescriptorSet(const Ref<Pipeline>& pipeline, const Ref<DescriptorSet>& set) const override
+        {
+            vk::PipelineLayout layout = (VkPipelineLayout)pipeline->GetPipelineLayout();
+            vk::DescriptorSet nativeSet = (VkDescriptorSet)set->GetNativeHandle();
+            mHandle.bindDescriptorSets(ToVulkanPipelineBindPoint(pipeline->GetType()), layout, 0, { nativeSet }, {});
+        }
+
         void BindPipeline(const Ref<Pipeline>& pipeline) const override
         {
             mHandle.bindPipeline
@@ -86,6 +98,11 @@ namespace Fluent
         void BindVertexBuffer(const Ref<Buffer>& buffer, uint32_t offset) const override
         {
             mHandle.bindVertexBuffers(0, vk::Buffer((VkBuffer)buffer->GetNativeHandle()), offset);
+        }
+
+        void BindIndexBuffer(const Ref<Buffer>& buffer, uint32_t offset, IndexType type) const override
+        {
+            mHandle.bindIndexBuffer((VkBuffer)buffer->GetNativeHandle(), offset, ToVulkanIndexType(type));
         }
 
         void SetScissor(uint32_t width, uint32_t height, int32_t x, int32_t y)

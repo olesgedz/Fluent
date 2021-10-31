@@ -121,6 +121,7 @@ namespace Fluent
 
         uint32_t GetWidth() const override { return mWidth; }
         uint32_t GetHeight() const override { return mHeight; }
+        float GetAspect() const override { return static_cast<float>(mWidth) / static_cast<float>(mHeight); }
 
         Handle GetNativeHandle() const override { return mHandle; }
     };

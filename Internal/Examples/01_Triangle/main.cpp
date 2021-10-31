@@ -7,10 +7,11 @@ using namespace Fluent;
 class Triangle : public Layer
 {
 private:
-    Ref<Image>          mImage;
-    Ref<RenderPass>     mRenderPass;
-    Ref<Framebuffer>    mFramebuffer;
-    Ref<Pipeline>       mPipeline;
+    Ref<Image>                  mImage;
+    Ref<RenderPass>             mRenderPass;
+    Ref<Framebuffer>            mFramebuffer;
+    Ref<Pipeline>               mPipeline;
+    Ref<DescriptorSetLayout>    mDescriptorSetLayout;
 public:
     Triangle() : Layer("Triangle") {}
 
@@ -45,13 +46,18 @@ public:
         auto vertexShader = Shader::Create(vertexShaderDesc);
         auto fragmentShader = Shader::Create(fragmentShaderDesc);
         
+        DescriptorSetLayoutDescription descriptorSetLayoutDesc{};
+        descriptorSetLayoutDesc.shaders = { vertexShader, fragmentShader };
+
+        mDescriptorSetLayout = DescriptorSetLayout::Create(descriptorSetLayoutDesc);
+
         RasterizerStateDescription rasterizerState{};
         rasterizerState.cullMode = CullMode::eNone;
         rasterizerState.frontFace = FrontFace::eCounterClockwise;
 
         PipelineDescription pipelineDesc{};
         pipelineDesc.type = PipelineType::eGraphics;
-        pipelineDesc.shaders = { vertexShader, fragmentShader };
+        pipelineDesc.descriptorSetLayout = mDescriptorSetLayout;
         pipelineDesc.rasterizerDescription = rasterizerState;
         pipelineDesc.renderPass = mRenderPass;
 

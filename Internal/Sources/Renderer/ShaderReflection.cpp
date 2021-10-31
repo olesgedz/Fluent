@@ -92,13 +92,15 @@ namespace Fluent
         for (auto& uniformBuffer : resources.uniform_buffers)
         {
             auto& uniform = description.uniforms.emplace_back();
+            uniform.descriptorCount = 1;
             uniform.descriptorType = DescriptorType::eUniformBuffer;
             uniform.binding = compiler.get_decoration(uniformBuffer.id, spv::Decoration::DecorationBinding);
 
             for (auto count : compiler.get_type(uniformBuffer.type_id).array)
                 uniform.descriptorCount *= count;
-
             LOG_INFO("Name: {}", uniformBuffer.name);
+            LOG_INFO("Binding: {}", uniform.binding);
+            LOG_INFO("Descriptor count: {}", uniform.descriptorCount);
             LOG_INFO("Width: {}", compiler.get_type(uniformBuffer.base_type_id).width);
             LOG_INFO("Vecsize: {}", compiler.get_type(uniformBuffer.base_type_id).vecsize);
             LOG_INFO("Columns: {}", compiler.get_type(uniformBuffer.base_type_id).columns);

@@ -42,6 +42,7 @@ namespace Fluent
         {
             if (!IsMemoryMapped()) return;
             GetGraphicContext().GetDeviceAllocator().UnmapMemory(mAllocation);
+            mMappedMemory = nullptr;
         }
 
         void FlushMemory(uint32_t size, uint32_t offset) override

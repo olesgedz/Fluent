@@ -15,7 +15,7 @@ namespace Fluent
             : mType(description.type)
         {
             std::vector<vk::PipelineShaderStageCreateInfo> shaderStageCreateInfos;
-            for (auto& shader : description.shaders)
+            for (auto& shader : description.descriptorSetLayout->GetShaders())
             {
                 vk::PipelineShaderStageCreateInfo shaderStageCreateInfo;
                 shaderStageCreateInfo
@@ -114,7 +114,9 @@ namespace Fluent
 
             vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
 
+            vk::DescriptorSetLayout descriptorSetLayout = (VkDescriptorSetLayout)description.descriptorSetLayout->GetNativeHandle();
             vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo;
+            pipelineLayoutCreateInfo.setSetLayouts(descriptorSetLayout);
             mPipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
 
             vk::GraphicsPipelineCreateInfo pipelineCreateInfo;
@@ -140,8 +142,9 @@ namespace Fluent
             device.destroyPipeline(mHandle);
         }
 
-        PipelineType GetType() const { return mType; }
+        PipelineType GetType() const override { return mType; }
         Handle GetNativeHandle() const override { return mHandle; }
+        Handle GetPipelineLayout() const override { return mPipelineLayout; }
     };
 
     Ref<Pipeline> Pipeline::Create(const PipelineDescription& description)

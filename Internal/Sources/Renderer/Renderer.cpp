@@ -154,6 +154,37 @@ namespace Fluent
         return vk::VertexInputRate(-1);
     }
 
+    vk::DescriptorType ToVulkanDescriptorType(DescriptorType type)
+    {
+        switch(type)
+        {
+            case DescriptorType::eSampler: return vk::DescriptorType::eSampler;
+            case DescriptorType::eCombinedImageSampler: return vk::DescriptorType::eCombinedImageSampler;
+            case DescriptorType::eSampledImage: return vk::DescriptorType::eSampledImage;
+            case DescriptorType::eStorageImage: return vk::DescriptorType::eStorageImage;
+            case DescriptorType::eUniformTexelBuffer: return vk::DescriptorType::eUniformTexelBuffer;
+            case DescriptorType::eStorageTexelBuffer: return vk::DescriptorType::eStorageTexelBuffer;
+            case DescriptorType::eUniformBuffer: return vk::DescriptorType::eUniformBuffer;
+            case DescriptorType::eStorageBuffer: return vk::DescriptorType::eStorageBuffer;
+            case DescriptorType::eUniformBufferDynamic: return vk::DescriptorType::eUniformBufferDynamic;
+            case DescriptorType::eStorageBufferDynamic: return vk::DescriptorType::eStorageBufferDynamic;
+            case DescriptorType::eInputAttachment: return vk::DescriptorType::eInputAttachment;
+        }
+
+        return vk::DescriptorType(-1);
+    }
+    
+    vk::IndexType ToVulkanIndexType(IndexType type)
+    {
+        switch (type)
+        {
+            case IndexType::eUint16: return vk::IndexType::eUint16;
+            case IndexType::eUint32: return vk::IndexType::eUint32;
+        }
+        
+        return vk::IndexType(-1);
+    }
+
     vk::ImageAspectFlags ImageFormatToImageAspect(vk::Format format)
     {
         static const std::unordered_map<vk::Format, vk::ImageAspectFlags> formatToAspect

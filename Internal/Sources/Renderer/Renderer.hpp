@@ -321,6 +321,12 @@ namespace Fluent
         eLinear   = 1,
     };
 
+    enum class IndexType
+    {
+        eUint16,
+        eUint32
+    };
+
     enum class PipelineType
     {
         eGraphics,
@@ -374,6 +380,8 @@ namespace Fluent
     vk::Filter                  ToVulkanFilter(Filter filter);
     vk::PipelineBindPoint       ToVulkanPipelineBindPoint(PipelineType type);
     vk::VertexInputRate         ToVulkanVertexInputRate(VertexInputRate inputRate);
+    vk::DescriptorType          ToVulkanDescriptorType(DescriptorType type);
+    vk::IndexType               ToVulkanIndexType(IndexType type);
     
     vk::ImageAspectFlags        ImageFormatToImageAspect(vk::Format format);
     vk::AccessFlags             ImageUsageToAccessFlags(ImageUsage::Bits usage);

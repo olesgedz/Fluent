@@ -1,4 +1,4 @@
-set(Target UniformBuffer)
+set(Target 03_UniformBuffer)
 project(${Target})
 
 if (CMAKE_BUILD_TYPE EQUAL Debug)

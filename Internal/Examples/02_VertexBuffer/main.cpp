@@ -13,11 +13,12 @@ struct Vertex
 class VertexBufferLayer : public Layer
 {
 private:
-    Ref<Image>          mImage;
-    Ref<RenderPass>     mRenderPass;
-    Ref<Framebuffer>    mFramebuffer;
-    Ref<Pipeline>       mPipeline;
-    Ref<Buffer>         mVertexBuffer;
+    Ref<Image>                  mImage;
+    Ref<RenderPass>             mRenderPass;
+    Ref<Framebuffer>            mFramebuffer;
+    Ref<Pipeline>               mPipeline;
+    Ref<Buffer>                 mVertexBuffer;
+    Ref<DescriptorSetLayout>    mDescriptorSetLayout;
 public:
     VertexBufferLayer() : Layer("VertexBuffer") {}
 
@@ -56,6 +57,7 @@ public:
 
         ClearValue clearValue{};
         clearValue.color = Vector4(0.0, 0.0, 0.0, 1.0);
+        
         RenderPassDescription renderPassDesc{};
         renderPassDesc.width = window->GetWidth();
         renderPassDesc.height = window->GetHeight();
@@ -79,6 +81,11 @@ public:
         auto vertexShader = Shader::Create(vertexShaderDesc);
         auto fragmentShader = Shader::Create(fragmentShaderDesc);
         
+        DescriptorSetLayoutDescription descriptorSetLayoutDesc{};
+        descriptorSetLayoutDesc.shaders = { vertexShader, fragmentShader };
+
+        mDescriptorSetLayout = DescriptorSetLayout::Create(descriptorSetLayoutDesc);
+
         RasterizerStateDescription rasterizerState{};
         rasterizerState.cullMode = CullMode::eNone;
         rasterizerState.frontFace = FrontFace::eCounterClockwise;
@@ -111,7 +118,7 @@ public:
                 .offset = offsetof(Vertex, color)
             }
         };
-        pipelineDesc.shaders = { vertexShader, fragmentShader };
+        pipelineDesc.descriptorSetLayout = mDescriptorSetLayout;
         pipelineDesc.rasterizerDescription = rasterizerState;
         pipelineDesc.renderPass = mRenderPass;
 

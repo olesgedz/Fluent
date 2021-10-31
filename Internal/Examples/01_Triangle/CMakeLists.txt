@@ -1,4 +1,4 @@
-set(Target Triangle)
+set(Target 01_Triangle)
 project(${Target})
 
 if (CMAKE_BUILD_TYPE EQUAL Debug)

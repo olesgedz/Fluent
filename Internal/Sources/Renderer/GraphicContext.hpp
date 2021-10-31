@@ -34,6 +34,7 @@ namespace Fluent
         virtual DeviceAllocator& GetDeviceAllocator() = 0;
         virtual Handle GetCommandPool() = 0;
         virtual Handle GetSwapchain() = 0;
+        virtual Handle GetDescriptorPool() const = 0;
         virtual uint32_t GetActiveImageIndex() const = 0;
         virtual Ref<CommandBuffer>& GetCurrentCommandBuffer() = 0;
         

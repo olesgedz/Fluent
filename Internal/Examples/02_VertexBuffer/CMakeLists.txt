@@ -1,4 +1,4 @@
-set(Target VertexBuffer)
+set(Target 02_VertexBuffer)
 project(${Target})
 
 if (CMAKE_BUILD_TYPE EQUAL Debug)

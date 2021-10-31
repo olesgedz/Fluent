@@ -24,7 +24,6 @@ namespace Fluent
     std::vector<uint32_t> CompileShader(const std::string& filepath, ShaderStage stage)
     {
         std::ifstream file(filepath);
-        LOG_INFO(filepath);
         if (!file.is_open())
             LOG_ERROR("File not found {}", filepath);
         std::string code { std::istreambuf_iterator(file), std::istreambuf_iterator<char>() };
@@ -55,8 +54,8 @@ namespace Fluent
 
             vk::ShaderModuleCreateInfo shaderCreateInfo;
             shaderCreateInfo
-                    .setCodeSize(desc.byteCode.size() * sizeof(uint32_t))
-                    .setPCode(desc.byteCode.data());
+                .setCodeSize(desc.byteCode.size() * sizeof(uint32_t))
+                .setPCode(desc.byteCode.data());
 
             mHandle = device.createShaderModule(shaderCreateInfo);
 
@@ -76,6 +75,7 @@ namespace Fluent
             device.destroyShaderModule(mHandle);
         }
 
+        const std::vector<ShaderUniforms>& GetUniforms() const override { return mUniforms; }
         ShaderStage GetStage() const override { return mShaderStage; }
         Handle GetNativeHandle() const override { return mHandle; }
     };

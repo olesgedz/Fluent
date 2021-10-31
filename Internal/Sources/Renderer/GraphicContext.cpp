@@ -50,11 +50,37 @@ namespace Fluent
         vk::SwapchainKHR                mSwapchain;
         std::vector<Ref<Image>>         mSwapchainImages;
         std::vector<ImageUsage::Bits>   mSwapchainImageUsages;
+        vk::DescriptorPool              mDescriptorPool;
 
         static constexpr uint32_t       FRAME_COUNT = 2;
         Scope<VirtualFrameProvider>     mFrameProvider;
 
-        void CreateSurface();
+        void CreateDescriptorPool()
+        {
+            // TODO
+            std::array descriptorPoolSizes = 
+            {
+                vk::DescriptorPoolSize { vk::DescriptorType::eSampler,              1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, 1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eSampledImage,         1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eStorageImage,         1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eUniformTexelBuffer,   1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eStorageTexelBuffer,   1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eUniformBuffer,        1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eStorageBuffer,        1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eUniformBufferDynamic, 1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eStorageBufferDynamic, 1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eInputAttachment,      1024 },
+            };
+
+            vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo;
+            descriptorPoolCreateInfo
+                .setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet | vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind)
+                .setPoolSizes(descriptorPoolSizes)
+                .setMaxSets(2048 * (uint32_t)descriptorPoolSizes.size());
+
+            mDescriptorPool = mDevice.createDescriptorPool(descriptorPoolCreateInfo);
+        }
     public:
         VulkanContext(const GContextDescription& description)
             : mWindowHandle(description.window)
@@ -182,11 +208,13 @@ namespace Fluent
 
             mCommandPool = mDevice.createCommandPool(cmdPoolCreateInfo);
 
+            CreateDescriptorPool();
             OnResize(mExtent.width, mExtent.height);
         }
 
         ~VulkanContext()
         {
+            mDevice.destroyDescriptorPool(mDescriptorPool);
             mDevice.destroyCommandPool(mCommandPool);
             mDeviceAllocator = nullptr;
             mDevice.destroy();
@@ -295,6 +323,7 @@ namespace Fluent
         DeviceAllocator& GetDeviceAllocator() override { return *mDeviceAllocator; }
         Handle GetCommandPool() override { return mCommandPool; }
         Handle GetSwapchain() override { return mSwapchain; }
+        Handle GetDescriptorPool() const override { return mDescriptorPool; }
         uint32_t GetActiveImageIndex() const override { return mFrameProvider->GetActiveImageIndex(); };
         Ref<CommandBuffer>& GetCurrentCommandBuffer() override { return mFrameProvider->GetCommandBuffer(); }
     };
