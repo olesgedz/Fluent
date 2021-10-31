@@ -114,7 +114,7 @@ public:
     {
         auto& window = Application::Get().GetWindow();
 
-        mCameraUBO.projection   = CreatePerspectiveMatrix(M_PI / 4.0f, window->GetAspect(), 0, 100.f);
+        mCameraUBO.projection   = CreatePerspectiveMatrix(Radians(45.0f), window->GetAspect(), 0, 100.f);
         mCameraUBO.view         = CreateLookAtMatrix(Vector3(0.0f, 0.0, 2.0f), Vector3(0.0, 0.0, -1.0), Vector3(0.0, 1.0, 0.0));
         mCameraUBO.model        = Matrix4(1.0f);
 

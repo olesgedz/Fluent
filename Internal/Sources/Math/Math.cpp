@@ -2,6 +2,11 @@
 
 namespace Fluent
 {
+    float Radians(float degrees)
+    {
+        glm::radians(degrees);
+    }
+
     Matrix4 CreatePerspectiveMatrix(float fov, float aspect, float zNear, float zFar)
     {
         return glm::perspective(fov, aspect, zNear, zFar);
