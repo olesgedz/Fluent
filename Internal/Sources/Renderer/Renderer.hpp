@@ -328,6 +328,27 @@ namespace Fluent
         eRayTracing
     };
 
+    enum class VertexInputRate
+    {
+        eVertex,
+        eInstance
+    };
+    struct VertexBindingDescription
+    {
+        uint32_t binding;
+        uint32_t stride;
+        VertexInputRate inputRate;
+    };
+
+    // TODO: Maybe reflect it too?
+    struct VertexAttributeDescription
+    {
+        uint32_t location;
+        uint32_t binding;
+        Format format;
+        uint32_t offset;
+    };
+
     enum class CullMode
     {
         eNone,
@@ -352,7 +373,8 @@ namespace Fluent
     vk::FrontFace               ToVulkanFrontFace(FrontFace frontFace);
     vk::Filter                  ToVulkanFilter(Filter filter);
     vk::PipelineBindPoint       ToVulkanPipelineBindPoint(PipelineType type);
-
+    vk::VertexInputRate         ToVulkanVertexInputRate(VertexInputRate inputRate);
+    
     vk::ImageAspectFlags        ImageFormatToImageAspect(vk::Format format);
     vk::AccessFlags             ImageUsageToAccessFlags(ImageUsage::Bits usage);
     vk::ImageLayout             ImageUsageToImageLayout(ImageUsage::Bits usage);

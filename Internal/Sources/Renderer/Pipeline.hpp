@@ -15,10 +15,12 @@ namespace Fluent
 
     struct PipelineDescription
     {
-        PipelineType                type;
-        RasterizerStateDescription  rasterizerDescription;
-        std::vector<Ref<Shader>>    shaders;
-        Ref<RenderPass>             renderPass;
+        PipelineType                            type;
+        std::vector<VertexBindingDescription>   bindingDescriptions;
+        std::vector<VertexAttributeDescription> attributeDescriptions;
+        RasterizerStateDescription              rasterizerDescription;
+        std::vector<Ref<Shader>>                shaders;
+        Ref<RenderPass>                         renderPass;
     };
 
     class Pipeline

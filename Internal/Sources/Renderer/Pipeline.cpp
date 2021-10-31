@@ -25,8 +25,40 @@ namespace Fluent
                 shaderStageCreateInfos.push_back(shaderStageCreateInfo);
             }
 
-            vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo;
+            std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
+            bindingDescriptions.reserve(description.bindingDescriptions.size());
+            for (auto& bindingDescription : description.bindingDescriptions)
+            {
+                bindingDescriptions.emplace_back
+                (
+                vk::VertexInputBindingDescription
+                { 
+                    bindingDescription.binding,
+                    bindingDescription.stride,
+                    ToVulkanVertexInputRate(bindingDescription.inputRate)
+                });
+            }
 
+            std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
+            attributeDescriptions.reserve(description.attributeDescriptions.size());
+            for (auto& attributeDescription : description.attributeDescriptions)
+            {
+                attributeDescriptions.emplace_back
+                (
+                vk::VertexInputAttributeDescription
+                { 
+                    attributeDescription.location,
+                    attributeDescription.binding,
+                    ToVulkanFormat(attributeDescription.format),
+                    attributeDescription.offset
+                });
+            }
+
+            vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo;
+            vertexInputStateCreateInfo
+                .setVertexBindingDescriptions(bindingDescriptions)
+                .setVertexAttributeDescriptions(attributeDescriptions);
+                
             vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo;
             inputAssemblyStateCreateInfo
                 .setTopology(vk::PrimitiveTopology::eTriangleList)
