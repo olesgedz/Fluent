@@ -82,17 +82,17 @@ namespace Fluent
         
         ~VulkanImage() override
         {
+            if (mImageView)
+            {
+                vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
+                device.destroyImageView(mImageView);
+            }
+            
             if (mAllocation)
             {
                 auto& allocator = GetGraphicContext().GetDeviceAllocator();
                 allocator.FreeImage(mHandle, mAllocation);
                 mAllocation = nullptr;
-
-                if (mImageView)
-                {
-                    vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
-                    device.destroyImageView(mImageView);
-                }
             }
         }
 

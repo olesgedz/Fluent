@@ -213,17 +213,20 @@ namespace Fluent
             OnResize(mExtent.width, mExtent.height);
         }
 
-        ~VulkanContext()
+        ~VulkanContext() override
         {
+            mSwapchainImages.clear();
+            mFrameProvider = nullptr;
             mDevice.destroyDescriptorPool(mDescriptorPool);
             mDevice.destroyCommandPool(mCommandPool);
+            mDevice.destroySwapchainKHR(mSwapchain);
             mDeviceAllocator = nullptr;
             mDevice.destroy();
             mInstance.destroySurfaceKHR(mSurface);
             mInstance.destroy();
         }
 
-        void OnResize(uint32_t width, uint32_t height)
+        void OnResize(uint32_t width, uint32_t height) override
         {
             mRenderingEnabled = false;
             mDevice.waitIdle();

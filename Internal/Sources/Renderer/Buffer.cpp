@@ -94,7 +94,7 @@ namespace Fluent
         }
 
         uint32_t GetSize() const override { return mSize; }
-        Handle GetNativeHandle() const { return mHandle; }
+        Handle GetNativeHandle() const override { return mHandle; }
     };
 
     /// Interface

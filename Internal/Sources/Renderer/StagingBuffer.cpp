@@ -57,12 +57,12 @@ namespace Fluent
             mCurrentOffset = 0;
         }
 
-        Ref<Buffer> GetBuffer() const
+        Ref<Buffer> GetBuffer() const override
         {
             return mBuffer;
         }
 
-        uint32_t GetCurrentOffset() const
+        uint32_t GetCurrentOffset() const override
         {
             return mCurrentOffset;
         }

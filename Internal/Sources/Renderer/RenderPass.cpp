@@ -115,7 +115,7 @@ namespace Fluent
 
         const std::vector<ClearValue>& GetClearValues() const override { return mClearValues; }
 
-        Handle GetNativeHandle() const
+        Handle GetNativeHandle() const override
         {
             return mHandle;
         }

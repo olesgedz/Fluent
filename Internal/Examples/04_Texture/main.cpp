@@ -270,6 +270,10 @@ public:
 
     void OnDetach() override
     {
+        mTexture = nullptr;
+        mIndexBuffer = nullptr;
+        mVertexBuffer = nullptr;
+        mUniformBuffer = nullptr;
         mPipeline = nullptr;
         mFramebuffer = nullptr;
         mImage = nullptr;

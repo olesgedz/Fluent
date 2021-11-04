@@ -62,10 +62,10 @@ public:
         renderPassDesc.width = window->GetWidth();
         renderPassDesc.height = window->GetHeight();
         renderPassDesc.clearValues = { clearValue };
-        renderPassDesc.colorFormats = {{ Format::eR8G8B8A8Unorm }};
-        renderPassDesc.initialUsages = {{ ImageUsage::eUndefined }};
-        renderPassDesc.finalUsages = {{ ImageUsage::eStorage }};
-        renderPassDesc.attachmentLoadOps = {{ AttachmentLoadOp::eClear }};
+        renderPassDesc.colorFormats = { Format::eR8G8B8A8Unorm };
+        renderPassDesc.initialUsages = { ImageUsage::eUndefined };
+        renderPassDesc.finalUsages = { ImageUsage::eStorage };
+        renderPassDesc.attachmentLoadOps = { AttachmentLoadOp::eClear };
         renderPassDesc.sampleCount = SampleCount::e1;
 
         mRenderPass = RenderPass::Create(renderPassDesc);
@@ -129,6 +129,7 @@ public:
 
     void OnDetach() override
     {
+        mVertexBuffer = nullptr;
         mPipeline = nullptr;
         mFramebuffer = nullptr;
         mImage = nullptr;
@@ -160,7 +161,6 @@ public:
 
     void OnUnload() override
     {
-        mVertexBuffer = nullptr;
         mFramebuffer = nullptr;
         mImage = nullptr;
     }

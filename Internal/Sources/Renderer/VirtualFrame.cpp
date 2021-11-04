@@ -55,7 +55,12 @@ namespace Fluent
         ~VulkanFrameProvider() override
         {
             for (auto& frame : mVirtualFrames)
+            {
+                frame.stagingBuffer = nullptr;
                 mDevice.destroyFence(frame.fence);
+                mDevice.destroySemaphore(frame.renderCompleteSemaphore);
+            }
+            mDevice.destroy(mAcquireSemaphore);
         }
 
         bool BeginFrame() override

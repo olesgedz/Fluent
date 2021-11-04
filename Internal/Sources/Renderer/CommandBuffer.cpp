@@ -105,7 +105,7 @@ namespace Fluent
             mHandle.bindIndexBuffer((VkBuffer)buffer->GetNativeHandle(), offset, ToVulkanIndexType(type));
         }
 
-        void SetScissor(uint32_t width, uint32_t height, int32_t x, int32_t y)
+        void SetScissor(uint32_t width, uint32_t height, int32_t x, int32_t y) override
         {
             vk::Rect2D scissor = vk::Rect2D()
                 .setOffset({ x, y })
@@ -113,7 +113,7 @@ namespace Fluent
             mHandle.setScissor(0, scissor);
         }
 
-        void SetViewport(uint32_t width, uint32_t height, float minDepth, float maxDepth, uint32_t x, uint32_t y)
+        void SetViewport(uint32_t width, uint32_t height, float minDepth, float maxDepth, uint32_t x, uint32_t y) override
         {
             vk::Viewport viewport = vk::Viewport()
                 .setWidth(static_cast<float>(width))
@@ -126,7 +126,7 @@ namespace Fluent
             mHandle.setViewport(0, viewport);
         }
 
-        void CopyBuffer(const Ref<Buffer>& src, uint32_t srcOffset, Buffer& dst, uint32_t dstOffset, uint32_t size)
+        void CopyBuffer(const Ref<Buffer>& src, uint32_t srcOffset, Buffer& dst, uint32_t dstOffset, uint32_t size) override
         {
             vk::BufferCopy bufferCopy;
             bufferCopy
@@ -137,7 +137,7 @@ namespace Fluent
             mHandle.copyBuffer(vk::Buffer((VkBuffer)src->GetNativeHandle()), vk::Buffer((VkBuffer)dst.GetNativeHandle()), bufferCopy);
         }
 
-        void CopyBufferToImage(const Ref<Buffer>& src, uint32_t srcOffset, Image& dst, ImageUsage::Bits dstUsage)
+        void CopyBufferToImage(const Ref<Buffer>& src, uint32_t srcOffset, Image& dst, ImageUsage::Bits dstUsage) override
         {
             if (dstUsage != ImageUsage::eTransferDst)
             {
@@ -181,7 +181,7 @@ namespace Fluent
             mHandle.copyBufferToImage(vk::Buffer((VkBuffer)src->GetNativeHandle()), vk::Image((VkImage)dst.GetNativeHandle()), ImageUsageToImageLayout(ImageUsage::eTransferDst), bufferToImageCopyInfo);
         }
 
-        void BlitImage(const Ref<Image>& src, ImageUsage::Bits srcUsage, const Ref<Image>& dst, ImageUsage::Bits dstUsage, Filter filter)
+        void BlitImage(const Ref<Image>& src, ImageUsage::Bits srcUsage, const Ref<Image>& dst, ImageUsage::Bits dstUsage, Filter filter) override
         {
             auto sourceRange = GetImageSubresourceRange(*src);
             auto distanceRange = GetImageSubresourceRange(*dst);

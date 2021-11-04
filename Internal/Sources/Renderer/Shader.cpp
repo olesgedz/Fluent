@@ -17,6 +17,7 @@ namespace Fluent
             case ShaderStage::eGeometry: return shaderc_shader_kind::shaderc_geometry_shader;
             case ShaderStage::eFragment: return shaderc_shader_kind::shaderc_fragment_shader;
             case ShaderStage::eCompute: return shaderc_shader_kind::shaderc_compute_shader;
+            default: break;
         }
         return shaderc_shader_kind(-1);
     }

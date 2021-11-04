@@ -75,8 +75,8 @@ namespace Fluent
             device.destroyDescriptorSetLayout(mHandle);
         }
 
-        const std::vector<Ref<Shader>>& GetShaders() const { return mShaders; }
-        Handle GetNativeHandle() const { return mHandle; }
+        const std::vector<Ref<Shader>>& GetShaders() const override { return mShaders; }
+        Handle GetNativeHandle() const override { return mHandle; }
     };
 
     Ref<DescriptorSetLayout> DescriptorSetLayout::Create(const DescriptorSetLayoutDescription& description)
