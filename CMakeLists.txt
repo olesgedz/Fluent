@@ -9,6 +9,12 @@ cmake_policy(SET CMP0077 NEW) # ENABLE CMP0077: option() honors normal variables
 
 set(CMAKE_CXX_STANDARD 23)
 
+if (CMAKE_BUILD_TYPE EQUAL "Debug")
+    set(DebugMode True)
+elseif(CMAKE_BUILD_TYPE EQUAL "Release")
+    set(DebugMode False)
+endif()
+
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)

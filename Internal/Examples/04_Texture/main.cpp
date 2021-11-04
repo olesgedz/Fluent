@@ -94,7 +94,7 @@ public:
     {
         BufferDescription bufferDesc{};
         bufferDesc.bufferUsage = BufferUsage::eVertexBuffer;
-        bufferDesc.memoryUsage = MemoryUsage::eCpuToGpu;
+        bufferDesc.memoryUsage = MemoryUsage::eGpu;
         bufferDesc.size = cubeVertices.size() * sizeof(cubeVertices[0]);
         bufferDesc.data = cubeVertices.data();
 
@@ -105,7 +105,7 @@ public:
     {
         BufferDescription bufferDesc{};
         bufferDesc.bufferUsage = BufferUsage::eIndexBuffer;
-        bufferDesc.memoryUsage = MemoryUsage::eCpuToGpu;
+        bufferDesc.memoryUsage = MemoryUsage::eGpu;
         bufferDesc.size = indices.size() * sizeof(indices[0]);
         bufferDesc.data = indices.data();
 
@@ -136,13 +136,19 @@ public:
         imageDesc.arraySize = 1;
         imageDesc.mipLevels = 1;
         imageDesc.depth = 1;
-        imageDesc.format = Format::eR8G8B8A8Unorm;
+        imageDesc.format = Format::eR8G8B8A8Srgb;
         imageDesc.width = window->GetWidth();
         imageDesc.height = window->GetHeight();
         imageDesc.initialUsage = ImageUsage::Bits::eSampled;
         imageDesc.filename = "image.jpg";
 
         mTexture = Image::Create(imageDesc);
+
+        auto& cmd = GetGraphicContext().GetCurrentCommandBuffer();
+        cmd->Begin();
+        cmd->ImageBarrier(mTexture, ImageUsage::eTransferDst, ImageUsage::eSampled);
+        cmd->End();
+        GetGraphicContext().ImmediateSubmit(cmd);
     }
 
     void CreateSampler()
@@ -244,7 +250,9 @@ public:
         descriptorSetDesc.descriptorSetLayout = mDescriptorSetLayout;
         mDescriptorSet = DescriptorSet::Create(descriptorSetDesc);
 
-        DescriptorSetUpdateDesc updateDescriptions[3];
+        LOG_INFO("Image View {}", mTexture->GetImageView());
+        
+        std::vector<DescriptorSetUpdateDesc> updateDescriptions(3);
         updateDescriptions[0].binding = 0;
         updateDescriptions[0].bufferUpdate.buffer = mUniformBuffer;
         updateDescriptions[0].bufferUpdate.offset = 0;
@@ -293,9 +301,6 @@ public:
 
     void OnUnload() override
     {
-        mUniformBuffer = nullptr;
-        mIndexBuffer = nullptr;
-        mVertexBuffer = nullptr;
         mFramebuffer = nullptr;
         mImage = nullptr;
     }

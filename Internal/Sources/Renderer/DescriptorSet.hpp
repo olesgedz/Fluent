@@ -1,6 +1,5 @@
 #pragma once
 
-#include <span>
 #include "Core/Base.hpp"
 #include "Renderer/Renderer.hpp"
 #include "Renderer/Buffer.hpp"
@@ -44,7 +43,8 @@ namespace Fluent
     public:
         virtual ~DescriptorSet() = default;
 
-        virtual void UpdateDescriptorSet(const std::span<DescriptorSetUpdateDesc>& updateDesc) = 0;
+        // TODO: rewrite
+        virtual void UpdateDescriptorSet(const std::vector<DescriptorSetUpdateDesc>& updateDesc) = 0;
 
         virtual Handle GetNativeHandle() const = 0;
          

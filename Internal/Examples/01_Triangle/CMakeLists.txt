@@ -1,7 +1,7 @@
 set(Target 01_Triangle)
 project(${Target})
 
-if (CMAKE_BUILD_TYPE EQUAL Debug)
+if (DebugMode)
 	if (MSVC)
 		set(CompileOptions /DEBUG)
 	else()

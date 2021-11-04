@@ -92,7 +92,7 @@ public:
     {
         BufferDescription bufferDesc{};
         bufferDesc.bufferUsage = BufferUsage::eVertexBuffer;
-        bufferDesc.memoryUsage = MemoryUsage::eCpuToGpu;
+        bufferDesc.memoryUsage = MemoryUsage::eGpu;
         bufferDesc.size = cubeVertices.size() * sizeof(cubeVertices[0]);
         bufferDesc.data = cubeVertices.data();
 
@@ -103,7 +103,7 @@ public:
     {
         BufferDescription bufferDesc{};
         bufferDesc.bufferUsage = BufferUsage::eIndexBuffer;
-        bufferDesc.memoryUsage = MemoryUsage::eCpuToGpu;
+        bufferDesc.memoryUsage = MemoryUsage::eGpu;
         bufferDesc.size = indices.size() * sizeof(indices[0]);
         bufferDesc.data = indices.data();
 
@@ -217,13 +217,13 @@ public:
         descriptorSetDesc.descriptorSetLayout = mDescriptorSetLayout;
         mDescriptorSet = DescriptorSet::Create(descriptorSetDesc);
 
-        DescriptorSetUpdateDesc updateDesc[1];
-        updateDesc[0].binding = 0;
-        updateDesc[0].bufferUpdate.buffer = mUniformBuffer;
-        updateDesc[0].bufferUpdate.offset = 0;
-        updateDesc[0].bufferUpdate.range = sizeof(CameraUBO);
-        updateDesc[0].descriptorType = DescriptorType::eUniformBuffer;
-        mDescriptorSet->UpdateDescriptorSet(updateDesc);
+        std::vector<DescriptorSetUpdateDesc> updateDescriptions(1);
+        updateDescriptions[0].binding = 0;
+        updateDescriptions[0].bufferUpdate.buffer = mUniformBuffer;
+        updateDescriptions[0].bufferUpdate.offset = 0;
+        updateDescriptions[0].bufferUpdate.range = sizeof(CameraUBO);
+        updateDescriptions[0].descriptorType = DescriptorType::eUniformBuffer;
+        mDescriptorSet->UpdateDescriptorSet(updateDescriptions);
     }
 
     void OnDetach() override

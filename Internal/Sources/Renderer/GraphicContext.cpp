@@ -286,7 +286,7 @@ namespace Fluent
             frameProviderDesc.swapchain = mSwapchain;
             frameProviderDesc.frameCount = FRAME_COUNT;
             frameProviderDesc.swapchainImageCount = mSwapchainImages.size();
-            frameProviderDesc.stagingBufferSize = 10000;
+            frameProviderDesc.stagingBufferSize = 1024 * 1024 * 10;
 
             LOG_INFO("Current staging buffer size {}", frameProviderDesc.stagingBufferSize);
 

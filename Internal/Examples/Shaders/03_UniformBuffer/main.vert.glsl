@@ -2,7 +2,7 @@
 
 layout (location = 0) in vec3 iPosition;
 layout (location = 1) in vec3 iNormal;
-layout (location = 2) in vec3 iTexture;
+layout (location = 2) in vec2 iTexture;
 
 layout (location = 0) out vec3 fragColor;
 
