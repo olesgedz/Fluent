@@ -54,7 +54,7 @@ namespace Fluent
 
         static constexpr uint32_t       FRAME_COUNT = 2;
         Scope<VirtualFrameProvider>     mFrameProvider;
-
+        
         void CreateDescriptorPool()
         {
             // TODO
@@ -85,6 +85,7 @@ namespace Fluent
         VulkanContext(const GContextDescription& description)
             : mWindowHandle(description.window)
         {
+            SetGraphicContext(*this);
             vk::ApplicationInfo appInfo;
             appInfo
                 .setPEngineName("FluentGFX")
@@ -285,6 +286,9 @@ namespace Fluent
             frameProviderDesc.swapchain = mSwapchain;
             frameProviderDesc.frameCount = FRAME_COUNT;
             frameProviderDesc.swapchainImageCount = mSwapchainImages.size();
+            frameProviderDesc.stagingBufferSize = 10000;
+
+            LOG_INFO("Current staging buffer size {}", frameProviderDesc.stagingBufferSize);
 
             mFrameProvider = VirtualFrameProvider::Create(frameProviderDesc);
 
@@ -317,6 +321,16 @@ namespace Fluent
             mDevice.waitIdle();
         }
         
+        void ImmediateSubmit(const Ref<CommandBuffer>& cmd) const override
+        {
+            vk::CommandBuffer nativeCmd = (VkCommandBuffer)cmd->GetNativeHandle();
+            vk::SubmitInfo submitInfo;
+            submitInfo.setCommandBuffers(nativeCmd);
+            mDeviceQueue.submit(submitInfo);
+            mDeviceQueue.waitIdle();
+        }
+
+
         ImageUsage::Bits GetSwapchainImageUsage(uint32_t index) const override { return mSwapchainImageUsages[index]; }
 
         Handle GetDevice() override { return mDevice; }
@@ -326,6 +340,7 @@ namespace Fluent
         Handle GetDescriptorPool() const override { return mDescriptorPool; }
         uint32_t GetActiveImageIndex() const override { return mFrameProvider->GetActiveImageIndex(); };
         Ref<CommandBuffer>& GetCurrentCommandBuffer() override { return mFrameProvider->GetCommandBuffer(); }
+        Ref<StagingBuffer>& GetStagingBuffer() override { return mFrameProvider->GetStagingBuffer(); }
     };
 
     /// Interface
@@ -335,9 +350,9 @@ namespace Fluent
         return CreateScope<VulkanContext>(description);
     }
 
-    void SetGraphicContext(Scope<GraphicContext>& context)
+    void SetGraphicContext(GraphicContext& context)
     {
-        sGraphicContext = context.get();
+        sGraphicContext = std::addressof(context);
     }
 
     GraphicContext& GetGraphicContext()

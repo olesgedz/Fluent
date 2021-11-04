@@ -1,5 +1,6 @@
 #pragma once
 
+#include <type_traits>
 #include <cstdint>
 #include <vulkan/vulkan.hpp>
 #include <tinyimageformat_base.h>
@@ -263,6 +264,18 @@ namespace Fluent
             eShaderDeviceAddress                        = 0x00020000
         };
     };
+    
+    inline BufferUsage::Bits operator | (BufferUsage::Bits lhs, BufferUsage::Bits rhs)
+    {
+        using T = std::underlying_type_t<BufferUsage::Bits>;
+        return static_cast<BufferUsage::Bits>(static_cast<T>(lhs) | static_cast<T>(rhs));
+    }
+
+    inline BufferUsage::Bits& operator |= (BufferUsage::Bits& lhs, BufferUsage::Bits rhs)
+    {
+        lhs = lhs | rhs;
+        return lhs;
+    }
 
     enum class SampleCount
     {
@@ -368,6 +381,33 @@ namespace Fluent
         eCounterClockwise
     };
 
+    enum class SamplerMipmapMode
+    {
+        eNearest = 0,
+        eLinear  = 1
+    };
+
+    enum class SamplerAddressMode
+    {
+        eRepeat               = 0,
+        eMirroredRepeat       = 1,
+        eClampToEdge          = 2,
+        eClampToBorder        = 3,
+        eMirrorClampToEdge    = 4,
+    };
+
+    enum class CompareOp
+    {
+        eNever          = 0,
+        eLess           = 1,
+        eEqual          = 2,
+        eLessOrEqual    = 3,
+        eGreater        = 4,
+        eNotEqual       = 5,
+        eGreaterOrEqual = 6,
+        eAlways         = 7
+    };
+
     vk::Format                  ToVulkanFormat(Format format);
     Format                      FromVulkanFormatToFormat(vk::Format format);
     vk::ImageUsageFlagBits      ToVulkanImageUsage(ImageUsage::Bits imageUsage);
@@ -382,11 +422,14 @@ namespace Fluent
     vk::VertexInputRate         ToVulkanVertexInputRate(VertexInputRate inputRate);
     vk::DescriptorType          ToVulkanDescriptorType(DescriptorType type);
     vk::IndexType               ToVulkanIndexType(IndexType type);
+    vk::SamplerMipmapMode       ToVulkanSamplerMipmapMode(SamplerMipmapMode mode);
+    vk::SamplerAddressMode      ToVulkanSamplerAddressMode(SamplerAddressMode mode);
+    vk::CompareOp               ToVulkanCompareOp(CompareOp op);
     
     vk::ImageAspectFlags        ImageFormatToImageAspect(vk::Format format);
     vk::AccessFlags             ImageUsageToAccessFlags(ImageUsage::Bits usage);
     vk::ImageLayout             ImageUsageToImageLayout(ImageUsage::Bits usage);
     vk::PipelineStageFlags      ImageUsageToPipelineStage(ImageUsage::Bits usage);
-    vk::ImageSubresourceRange   GetImageSubresourceRange(const Ref<Image>& image);
-    vk::ImageSubresourceLayers  GetImageSubresourceLayers(const Ref<Image>& image);
+    vk::ImageSubresourceRange   GetImageSubresourceRange(const Image& image);
+    vk::ImageSubresourceLayers  GetImageSubresourceLayers(const Image& image);
 } // namespace FLuent

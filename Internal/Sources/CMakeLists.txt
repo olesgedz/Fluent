@@ -25,7 +25,9 @@ set(RendererSources
 	Renderer/ShaderReflection.cpp
 	Renderer/CommandBuffer.cpp
 	Renderer/DescriptorSetLayout.cpp
-	Renderer/DescriptorSet.cpp)
+	Renderer/DescriptorSet.cpp
+	Renderer/Sampler.cpp
+	Renderer/StagingBuffer.cpp)
 
 set(MathSources
 	Math/Math.cpp)
@@ -37,7 +39,7 @@ set(Sources
 
 find_package(Vulkan REQUIRED)
 
-set(CommonLibs glfw glm spdlog vk_mem_alloc tiny_imageformat Vulkan::Vulkan)
+set(CommonLibs glfw glm spdlog stb_image vk_mem_alloc tiny_imageformat Vulkan::Vulkan)
 
 if (MSVC)
     set(PlatformLibDirs $ENV{VULKAN_SDK}/Lib)
@@ -49,20 +51,21 @@ elseif(APPLE)
     set(PlatformLibs spirv-cross-core spirv-cross-glsl shaderc_shared)
 endif()
 
-if (CMAKE_BUILD_TYPE EQUAL Debug)
-	if (MSVC)
-		set(CompileOptions /DEBUG)
-	else()
-		set(CompileOptions -g)
-	endif()
-else()
-	if (MSVC)
-		# set(CompileOptions /O2)
-		# TODO Fix on windows
-	else()
-		set(CompileOptions -O3)
-	endif()
-endif()
+set(CompileOptions -g)
+# if (CMAKE_BUILD_TYPE EQUAL Debug)
+# 	if (MSVC)
+# 		set(CompileOptions /DEBUG)
+# 	else()
+# 		set(CompileOptions -g)
+# 	endif()
+# else()
+# 	if (MSVC)
+# 		# set(CompileOptions /O2)
+# 		# TODO Fix on windows
+# 	else()
+# 		set(CompileOptions -O3)
+# 	endif()
+# endif()
 
 set(Libs ${CommonLibs} ${PlatformLibs})
 set(LibDirs ${PlatformLibDirs})

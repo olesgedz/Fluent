@@ -21,3 +21,4 @@
 #include "Renderer/DescriptorSetLayout.hpp"
 #include "Renderer/DescriptorSet.hpp"
 #include "Renderer/Pipeline.hpp"
+#include "Renderer/Sampler.hpp"

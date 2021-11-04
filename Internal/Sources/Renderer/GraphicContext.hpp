@@ -5,6 +5,7 @@
 #include "Renderer/DeviceAllocator.hpp"
 #include "Renderer/Image.hpp"
 #include "Renderer/CommandBuffer.hpp"
+#include "Renderer/StagingBuffer.hpp"
 
 namespace Fluent
 {
@@ -29,18 +30,20 @@ namespace Fluent
         
         virtual ImageUsage::Bits GetSwapchainImageUsage(uint32_t index) const = 0;
         virtual Ref<Image> AcquireImage(uint32_t imageIndex, ImageUsage::Bits usage) = 0;
+        virtual void ImmediateSubmit(const Ref<CommandBuffer>& cmd) const = 0;
         
-        virtual Handle GetDevice() = 0;
-        virtual DeviceAllocator& GetDeviceAllocator() = 0;
-        virtual Handle GetCommandPool() = 0;
-        virtual Handle GetSwapchain() = 0;
-        virtual Handle GetDescriptorPool() const = 0;
-        virtual uint32_t GetActiveImageIndex() const = 0;
+        virtual Handle              GetDevice() = 0;
+        virtual DeviceAllocator&    GetDeviceAllocator() = 0;
+        virtual Handle              GetCommandPool() = 0;
+        virtual Handle              GetSwapchain() = 0;
+        virtual Handle              GetDescriptorPool() const = 0;
+        virtual uint32_t            GetActiveImageIndex() const = 0;
         virtual Ref<CommandBuffer>& GetCurrentCommandBuffer() = 0;
-        
+        virtual Ref<StagingBuffer>& GetStagingBuffer() = 0;
+
         static Scope<GraphicContext> Create(const GContextDescription& description);
     };
 
-    void SetGraphicContext(Scope<GraphicContext>& context);
+    void SetGraphicContext(GraphicContext& context);
     GraphicContext& GetGraphicContext();
 } // namespace Fluent

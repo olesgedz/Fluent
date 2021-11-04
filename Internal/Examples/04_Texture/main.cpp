@@ -81,7 +81,9 @@ private:
     Ref<Buffer>                 mUniformBuffer;
     Ref<DescriptorSetLayout>    mDescriptorSetLayout;
     Ref<DescriptorSet>          mDescriptorSet;
-    
+    Ref<Image>                  mTexture;
+    Ref<Sampler>                mSampler;
+
     Timer                       mTimer;
 
     CameraUBO                   mCameraUBO;
@@ -127,9 +129,32 @@ public:
         mUniformBuffer->WriteData(&mCameraUBO, bufferDesc.size, 0);
     }
 
+    void CreateTexture()
+    {
+        auto& window = Application::Get().GetWindow();
+        ImageDescription imageDesc{};
+        imageDesc.arraySize = 1;
+        imageDesc.mipLevels = 1;
+        imageDesc.depth = 1;
+        imageDesc.format = Format::eR8G8B8A8Unorm;
+        imageDesc.width = window->GetWidth();
+        imageDesc.height = window->GetHeight();
+        imageDesc.initialUsage = ImageUsage::Bits::eSampled;
+        imageDesc.filename = "image.jpg";
+
+        mTexture = Image::Create(imageDesc);
+    }
+
+    void CreateSampler()
+    {
+        SamplerDescription samplerDesc{};
+        mSampler = Sampler::Create(samplerDesc);
+    }
+
     void OnAttach() override
     {
         FileSystem::SetShadersDirectory("../../../Internal/Examples/Shaders/");
+        FileSystem::SetTexturesDirectory("../../../Internal/Examples/Textures/");
 
         auto& window = Application::Get().GetWindow();
 
@@ -150,11 +175,11 @@ public:
         
         ShaderDescription vertexShaderDesc{};
         vertexShaderDesc.stage = ShaderStage::eVertex;
-        vertexShaderDesc.filename = "03_UniformBuffer/main.vert.glsl";
+        vertexShaderDesc.filename = "04_Texture/main.vert.glsl";
 
         ShaderDescription fragmentShaderDesc{};
         fragmentShaderDesc.stage = ShaderStage::eFragment;
-        fragmentShaderDesc.filename = "03_UniformBuffer/main.frag.glsl";
+        fragmentShaderDesc.filename = "04_Texture/main.frag.glsl";
 
         auto vertexShader = Shader::Create(vertexShaderDesc);
         auto fragmentShader = Shader::Create(fragmentShaderDesc);
@@ -212,18 +237,27 @@ public:
         CreateVertexBuffer();
         CreateIndexBuffer();
         CreateUniformBuffer();
+        CreateTexture();
+        CreateSampler();
 
         DescriptorSetDescription descriptorSetDesc{};
         descriptorSetDesc.descriptorSetLayout = mDescriptorSetLayout;
         mDescriptorSet = DescriptorSet::Create(descriptorSetDesc);
 
-        DescriptorSetUpdateDesc updateDesc[1];
-        updateDesc[0].binding = 0;
-        updateDesc[0].bufferUpdate.buffer = mUniformBuffer;
-        updateDesc[0].bufferUpdate.offset = 0;
-        updateDesc[0].bufferUpdate.range = sizeof(CameraUBO);
-        updateDesc[0].descriptorType = DescriptorType::eUniformBuffer;
-        mDescriptorSet->UpdateDescriptorSet(updateDesc);
+        DescriptorSetUpdateDesc updateDescriptions[3];
+        updateDescriptions[0].binding = 0;
+        updateDescriptions[0].bufferUpdate.buffer = mUniformBuffer;
+        updateDescriptions[0].bufferUpdate.offset = 0;
+        updateDescriptions[0].bufferUpdate.range = sizeof(CameraUBO);
+        updateDescriptions[0].descriptorType = DescriptorType::eUniformBuffer;
+        updateDescriptions[1].binding = 1;
+        updateDescriptions[1].imageUpdate.image = mTexture;
+        updateDescriptions[1].imageUpdate.usage = ImageUsage::eSampled;
+        updateDescriptions[1].descriptorType = DescriptorType::eSampledImage;
+        updateDescriptions[2].binding = 2;
+        updateDescriptions[2].imageUpdate.sampler = mSampler;
+        updateDescriptions[2].descriptorType = DescriptorType::eSampler;
+        mDescriptorSet->UpdateDescriptorSet(updateDescriptions);
     }
 
     void OnDetach() override
@@ -279,6 +313,7 @@ public:
         cmd->BeginRenderPass(mRenderPass, mFramebuffer);
         cmd->SetViewport(window->GetWidth(), window->GetHeight(), 0.0f, 1.0f, 0, 0);
         cmd->SetScissor(window->GetWidth(), window->GetHeight(), 0, 0);
+        auto imageView = mTexture->GetImageView();
         cmd->BindDescriptorSet(mPipeline, mDescriptorSet);
         cmd->BindPipeline(mPipeline);
         cmd->BindVertexBuffer(mVertexBuffer, 0);

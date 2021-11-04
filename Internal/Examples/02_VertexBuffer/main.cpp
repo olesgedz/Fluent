@@ -40,13 +40,13 @@ public:
             }
         };
 
+        // Staging will apply automatically
         BufferDescription bufferDesc{};
         bufferDesc.bufferUsage = BufferUsage::eVertexBuffer;
-        bufferDesc.memoryUsage = MemoryUsage::eCpuToGpu;
+        bufferDesc.memoryUsage = MemoryUsage::eGpu;
         bufferDesc.size = vertices.size() * sizeof(vertices[0]);
-
+        bufferDesc.data = vertices.data();
         mVertexBuffer = Buffer::Create(bufferDesc);
-        mVertexBuffer->WriteData(vertices.data(), bufferDesc.size, 0);
     }
 
     void OnAttach() override

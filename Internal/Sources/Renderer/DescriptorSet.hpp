@@ -1,6 +1,11 @@
 #pragma once
 
+#include <span>
 #include "Core/Base.hpp"
+#include "Renderer/Renderer.hpp"
+#include "Renderer/Buffer.hpp"
+#include "Renderer/Image.hpp"
+#include "Renderer/Sampler.hpp"
 #include "Renderer/DescriptorSetLayout.hpp"
 
 namespace Fluent
@@ -17,11 +22,19 @@ namespace Fluent
         uint32_t range = 0;
     };
 
-    struct DescriptorUpdateDesc
+    struct ImageUpdateDesc
     {
-        DescriptorType descriptorType;
-        uint32_t binding;
-        BufferUpdateDesc bufferUpdate;
+        Ref<Image>          image;
+        Ref<Sampler>        sampler;
+        ImageUsage::Bits    usage;
+    };
+
+    struct DescriptorSetUpdateDesc
+    {
+        DescriptorType      descriptorType;
+        uint32_t            binding;
+        BufferUpdateDesc    bufferUpdate;
+        ImageUpdateDesc     imageUpdate;
     };
 
     class DescriptorSet
@@ -31,7 +44,7 @@ namespace Fluent
     public:
         virtual ~DescriptorSet() = default;
 
-        virtual void UpdateDescriptorSet(const DescriptorUpdateDesc& bufferUpdateDesc) = 0;
+        virtual void UpdateDescriptorSet(const std::span<DescriptorSetUpdateDesc>& updateDesc) = 0;
 
         virtual Handle GetNativeHandle() const = 0;
          

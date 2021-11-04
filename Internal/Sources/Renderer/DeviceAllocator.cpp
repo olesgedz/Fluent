@@ -16,6 +16,7 @@ namespace Fluent
             : mInstance(static_cast<VkInstance>(description.instance))
             , mPhysicalDevice(static_cast<VkPhysicalDevice>(description.physicalDevice))
             , mDevice(static_cast<VkDevice>(description.device))
+            , mAllocator(nullptr)
         {
             VmaAllocatorCreateInfo allocatorCreateInfo{};
             allocatorCreateInfo.vulkanApiVersion    = VK_API_VERSION_1_2;
@@ -86,21 +87,37 @@ namespace Fluent
             VmaAllocationCreateInfo allocationCreateInfo{};
             allocationCreateInfo.usage = static_cast<VmaMemoryUsage>(memoryUsage);
 
-            vk::BufferCreateInfo bufferCreateInfo;
-            bufferCreateInfo
-                .setSize(description.size)
-                .setUsage(ToVulkanBufferUsage(description.bufferUsage))
-                .setSharingMode(vk::SharingMode::eExclusive);
+            VkBufferCreateInfo bufferCreateInfo{};
+            bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            bufferCreateInfo.pNext = nullptr;
+            bufferCreateInfo.flags = 0;
+            bufferCreateInfo.size = description.size;
+            bufferCreateInfo.usage = (VkBufferUsageFlags)ToVulkanBufferUsage(description.bufferUsage);
+            bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            bufferCreateInfo.queueFamilyIndexCount = 0;
+            bufferCreateInfo.pQueueFamilyIndices = nullptr;
 
-            vmaCreateBuffer
+
+            /// TODO!!!
+            if (memoryUsage == MemoryUsage::eGpu)
+                bufferCreateInfo.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+                
+            auto result = vmaCreateBuffer
             (
                 mAllocator,
-                reinterpret_cast<const VkBufferCreateInfo*>(&bufferCreateInfo),
-                &allocationCreateInfo, reinterpret_cast<VkBuffer*>(&buffer), &allocation,
+                &bufferCreateInfo,
+                &allocationCreateInfo, &buffer, &allocation,
                 nullptr
             );
 
-            return { buffer, allocation };
+            if (result != VK_SUCCESS)
+                LOG_ERROR("Buffer allocation failed with result {}", result);
+
+            AllocatedBuffer res;
+            res.buffer = buffer;
+            res.allocation = allocation;
+
+            return res;
         }
 
         void FreeBuffer(Handle buffer, Allocation allocation) override

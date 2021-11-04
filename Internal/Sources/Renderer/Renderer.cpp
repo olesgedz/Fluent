@@ -185,6 +185,47 @@ namespace Fluent
         return vk::IndexType(-1);
     }
 
+    vk::SamplerMipmapMode ToVulkanSamplerMipmapMode(SamplerMipmapMode mode)
+    {
+        switch (mode)
+        {
+            case SamplerMipmapMode::eNearest: return vk::SamplerMipmapMode::eNearest;
+            case SamplerMipmapMode::eLinear: return vk::SamplerMipmapMode::eLinear;
+        }
+
+        return vk::SamplerMipmapMode(-1);
+    }
+
+    vk::SamplerAddressMode ToVulkanSamplerAddressMode(SamplerAddressMode mode)
+    {
+        switch (mode)
+        {
+            case SamplerAddressMode::eRepeat: return vk::SamplerAddressMode::eRepeat;
+            case SamplerAddressMode::eMirroredRepeat: return vk::SamplerAddressMode::eMirroredRepeat;
+            case SamplerAddressMode::eClampToEdge: return vk::SamplerAddressMode::eClampToEdge;
+            case SamplerAddressMode::eClampToBorder: return vk::SamplerAddressMode::eClampToBorder;
+            case SamplerAddressMode::eMirrorClampToEdge: return vk::SamplerAddressMode::eMirrorClampToEdge;
+        }
+        return vk::SamplerAddressMode(-1);
+    }
+
+    vk::CompareOp ToVulkanCompareOp(CompareOp op)
+    {
+        switch (op)
+        {
+            case CompareOp::eNever          : return vk::CompareOp::eNever;
+            case CompareOp::eLess           : return vk::CompareOp::eLess;
+            case CompareOp::eEqual          : return vk::CompareOp::eEqual;
+            case CompareOp::eLessOrEqual    : return vk::CompareOp::eLessOrEqual;
+            case CompareOp::eGreater        : return vk::CompareOp::eGreater;
+            case CompareOp::eNotEqual       : return vk::CompareOp::eNotEqual;
+            case CompareOp::eGreaterOrEqual : return vk::CompareOp::eGreaterOrEqual;
+            case CompareOp::eAlways         : return vk::CompareOp::eAlways;
+        }
+
+        return vk::CompareOp(-1);
+    }
+
     vk::ImageAspectFlags ImageFormatToImageAspect(vk::Format format)
     {
         static const std::unordered_map<vk::Format, vk::ImageAspectFlags> formatToAspect
@@ -266,11 +307,11 @@ namespace Fluent
             return vk::PipelineStageFlagBits::eTopOfPipe;
     }
 
-    vk::ImageSubresourceRange GetImageSubresourceRange(const Ref<Image>& image)
+    vk::ImageSubresourceRange GetImageSubresourceRange(const Image& image)
     {
         vk::ImageSubresourceRange imageSubresourceRange;
         imageSubresourceRange
-            .setAspectMask(ImageFormatToImageAspect(static_cast<vk::Format>(image->GetFormat())))
+            .setAspectMask(ImageFormatToImageAspect(static_cast<vk::Format>(image.GetFormat())))
             .setBaseMipLevel(0)
             .setLevelCount(1)
             .setBaseArrayLayer(0)
@@ -278,7 +319,7 @@ namespace Fluent
         return imageSubresourceRange;
     }
 
-    vk::ImageSubresourceLayers GetImageSubresourceLayers(const Ref<Image>& image)
+    vk::ImageSubresourceLayers GetImageSubresourceLayers(const Image& image)
     {
         auto subresourceRange = GetImageSubresourceRange(image);
         return vk::ImageSubresourceLayers{

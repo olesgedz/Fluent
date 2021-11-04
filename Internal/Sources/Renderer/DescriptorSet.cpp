@@ -26,23 +26,64 @@ namespace Fluent
         {
         }
 
-        void UpdateDescriptorSet(const DescriptorUpdateDesc& updateDesc) override
+        void UpdateDescriptorSet(const std::span<DescriptorSetUpdateDesc>& updateDescs) override
         {
-            vk::DescriptorBufferInfo bufferInfo;
-            bufferInfo
-                .setBuffer((VkBuffer)updateDesc.bufferUpdate.buffer->GetNativeHandle())
-                .setOffset(updateDesc.bufferUpdate.offset)
-                .setRange(updateDesc.bufferUpdate.range);
+            // TODO: Very bad
+            std::vector<vk::DescriptorBufferInfo> bufferUpdates;
+            std::vector<vk::DescriptorImageInfo> imageUpdates;
+            std::vector<vk::WriteDescriptorSet> descriptorWrites;
 
-            vk::WriteDescriptorSet writeDescriptorSet;
-            writeDescriptorSet
-                .setDstBinding(updateDesc.binding)
-                .setDstSet(mHandle)
-                .setDescriptorType(ToVulkanDescriptorType(updateDesc.descriptorType))
-                .setBufferInfo(bufferInfo);
+            for (const auto& update : updateDescs)
+            {
+                auto& writeDescriptorSet = descriptorWrites.emplace_back();
+                writeDescriptorSet
+                    .setDstBinding(update.binding)
+                    .setDstSet(mHandle)
+                    .setDescriptorType(ToVulkanDescriptorType(update.descriptorType));
+
+                if (update.bufferUpdate.buffer != nullptr)
+                {
+                    auto& bufferUpdateInfo = bufferUpdates.emplace_back();
+                    bufferUpdateInfo
+                        .setBuffer((VkBuffer)update.bufferUpdate.buffer->GetNativeHandle())
+                        .setOffset(update.bufferUpdate.offset)
+                        .setRange(update.bufferUpdate.range);
+                        
+                    writeDescriptorSet.setBufferInfo(bufferUpdateInfo);
+                }
+
+                if (update.imageUpdate.image != nullptr)
+                {
+                    auto& imageUpdateInfo = imageUpdates.emplace_back();
+                    imageUpdateInfo
+                        .setImageLayout(ImageUsageToImageLayout(update.imageUpdate.usage))
+                        .setImageView((VkImageView)update.imageUpdate.image->GetImageView());
+                    
+                    writeDescriptorSet.setImageInfo(imageUpdateInfo);
+                }
+
+                if (update.imageUpdate.sampler != nullptr || update.imageUpdate.image != nullptr)
+                {
+                    auto& imageUpdateInfo = imageUpdates.emplace_back();
+
+                    if (update.imageUpdate.sampler != nullptr)
+                    {
+                        imageUpdateInfo.setSampler((VkSampler)update.imageUpdate.sampler->GetNativeHandle());
+                    }
+
+                    if (update.imageUpdate.image != nullptr)
+                    {
+                        imageUpdateInfo
+                            .setImageLayout(ImageUsageToImageLayout(update.imageUpdate.usage))
+                            .setImageView((VkImageView)update.imageUpdate.image->GetImageView());
+                    }
+
+                    writeDescriptorSet.setImageInfo(imageUpdateInfo);
+                }
+            }
 
             vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
-            device.updateDescriptorSets(writeDescriptorSet, {});
+            device.updateDescriptorSets(descriptorWrites, {});
         }
 
         Handle GetNativeHandle() const override { return mHandle; }

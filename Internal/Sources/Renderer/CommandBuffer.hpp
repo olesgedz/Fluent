@@ -41,8 +41,8 @@ namespace Fluent
 
         virtual void SetScissor(uint32_t width, uint32_t height, int32_t x, int32_t y) = 0;
         virtual void SetViewport(uint32_t width, uint32_t height, float minDepth, float maxDepth, uint32_t x, uint32_t y) = 0;
-        virtual void CopyBuffer(const Ref<Buffer>& src, uint32_t srcOffset, Ref<Buffer>& dst, uint32_t dstOffset, uint32_t size) = 0;
-        virtual void CopyBufferToImage(const Ref<Buffer>& src, uint32_t srcOffset, const Ref<Image>& dst, ImageUsage::Bits dstUsage) = 0;
+        virtual void CopyBuffer(const Ref<Buffer>& src, uint32_t srcOffset, Buffer& dst, uint32_t dstOffset, uint32_t size) = 0;
+        virtual void CopyBufferToImage(const Ref<Buffer>& src, uint32_t srcOffset, Image& dst, ImageUsage::Bits dstUsage) = 0;
         virtual void BlitImage(const Ref<Image>& src, ImageUsage::Bits srcUsage, const Ref<Image>& dst, ImageUsage::Bits dstUsage, Filter filter) = 0;
         
         virtual void ImageBarrier(Ref<Image>& image, ImageUsage::Bits src, ImageUsage::Bits dst) = 0;

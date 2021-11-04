@@ -126,7 +126,7 @@ namespace Fluent
             mHandle.setViewport(0, viewport);
         }
 
-        void CopyBuffer(const Ref<Buffer>& src, uint32_t srcOffset, Ref<Buffer>& dst, uint32_t dstOffset, uint32_t size)
+        void CopyBuffer(const Ref<Buffer>& src, uint32_t srcOffset, Buffer& dst, uint32_t dstOffset, uint32_t size)
         {
             vk::BufferCopy bufferCopy;
             bufferCopy
@@ -134,10 +134,10 @@ namespace Fluent
                 .setDstOffset(dstOffset)
                 .setSize(size);
 
-            mHandle.copyBuffer(vk::Buffer((VkBuffer)src->GetNativeHandle()), vk::Buffer((VkBuffer)dst->GetNativeHandle()), bufferCopy);
+            mHandle.copyBuffer(vk::Buffer((VkBuffer)src->GetNativeHandle()), vk::Buffer((VkBuffer)dst.GetNativeHandle()), bufferCopy);
         }
 
-        void CopyBufferToImage(const Ref<Buffer>& src, uint32_t srcOffset, const Ref<Image>& dst, ImageUsage::Bits dstUsage)
+        void CopyBufferToImage(const Ref<Buffer>& src, uint32_t srcOffset, Image& dst, ImageUsage::Bits dstUsage)
         {
             if (dstUsage != ImageUsage::eTransferDst)
             {
@@ -149,7 +149,7 @@ namespace Fluent
                     .setNewLayout(vk::ImageLayout::eTransferDstOptimal)
                     .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
                     .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-                    .setImage(vk::Image((VkImage)dst->GetNativeHandle()))
+                    .setImage(vk::Image((VkImage)dst.GetNativeHandle()))
                     .setSubresourceRange(GetImageSubresourceRange(dst));
 
                 mHandle.pipelineBarrier
@@ -173,18 +173,18 @@ namespace Fluent
                 .setImageSubresource(dstLayers)
                 .setImageOffset(vk::Offset3D{ 0, 0, 0 })
                 .setImageExtent(vk::Extent3D{
-                        dst->GetWidth(),
-                        dst->GetHeight(),
+                        dst.GetWidth(),
+                        dst.GetHeight(),
                         1
                 });
 
-            mHandle.copyBufferToImage(vk::Buffer((VkBuffer)src->GetNativeHandle()), vk::Image((VkImage)dst->GetNativeHandle()), ImageUsageToImageLayout(ImageUsage::eTransferDst), bufferToImageCopyInfo);
+            mHandle.copyBufferToImage(vk::Buffer((VkBuffer)src->GetNativeHandle()), vk::Image((VkImage)dst.GetNativeHandle()), ImageUsageToImageLayout(ImageUsage::eTransferDst), bufferToImageCopyInfo);
         }
 
         void BlitImage(const Ref<Image>& src, ImageUsage::Bits srcUsage, const Ref<Image>& dst, ImageUsage::Bits dstUsage, Filter filter)
         {
-            auto sourceRange = GetImageSubresourceRange(src);
-            auto distanceRange = GetImageSubresourceRange(dst);
+            auto sourceRange = GetImageSubresourceRange(*src);
+            auto distanceRange = GetImageSubresourceRange(*dst);
 
             std::array<vk::ImageMemoryBarrier, 2> barriers;
             size_t barrierCount = 0;
@@ -228,8 +228,8 @@ namespace Fluent
                 );
             }
 
-            auto sourceLayers = GetImageSubresourceLayers(src);
-            auto distanceLayers = GetImageSubresourceLayers(dst);
+            auto sourceLayers = GetImageSubresourceLayers(*src);
+            auto distanceLayers = GetImageSubresourceLayers(*dst);
 
             vk::ImageBlit imageBlitInfo;
             imageBlitInfo
@@ -260,7 +260,7 @@ namespace Fluent
         {
             if (src == dst) return;
 
-            vk::ImageSubresourceRange imageSubresourceRange = GetImageSubresourceRange(image);
+            vk::ImageSubresourceRange imageSubresourceRange = GetImageSubresourceRange(*image);
 
             vk::ImageMemoryBarrier barrier;
             barrier
