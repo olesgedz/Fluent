@@ -126,6 +126,16 @@ namespace Fluent
             mHandle.setViewport(0, viewport);
         }
 
+        void PushConstants(const Ref<Pipeline>& pipeline, ShaderStage stage, uint32_t offset, uint32_t size, const void* data) const override
+        {
+            mHandle.pushConstants
+            (
+                (VkPipelineLayout)pipeline->GetPipelineLayout(), 
+                vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eFragment, 
+                offset, size, data
+            );
+        }
+
         void CopyBuffer(const Ref<Buffer>& src, uint32_t srcOffset, Buffer& dst, uint32_t dstOffset, uint32_t size) override
         {
             vk::BufferCopy bufferCopy;
