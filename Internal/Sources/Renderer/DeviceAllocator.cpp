@@ -51,8 +51,6 @@ namespace Fluent
                 .setImageType(vk::ImageType::e2D) // TODO: Am I really need this or hardcode it is ok
                 .setSharingMode(vk::SharingMode::eExclusive);
 
-            LOG_INFO("Mip levels {}", description.mipLevels);
-            
             vk::ImageUsageFlags imageUsage = ToVulkanImageUsage(description.initialUsage);
             
             if (true) // TODO

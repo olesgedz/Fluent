@@ -297,6 +297,8 @@ public:
         mFramebuffer = Framebuffer::Create(framebufferDesc);
 
         mRenderPass->SetRenderArea(window->GetWidth(), window->GetHeight());
+
+        mCameraUBO.projection = CreatePerspectiveMatrix(Radians(45.0f), window->GetAspect(), 0, 100.f);
     }
 
     void OnUnload() override
