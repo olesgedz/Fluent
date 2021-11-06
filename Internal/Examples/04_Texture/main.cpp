@@ -138,12 +138,6 @@ public:
         imageDesc.filename = "04_Texture/albedo.ktx";
 
         mTexture = Image::Create(imageDesc);
-
-        auto& cmd = GetGraphicContext().GetCurrentCommandBuffer();
-        cmd->Begin();
-        cmd->ImageBarrier(mTexture, ImageUsage::eTransferDst, ImageUsage::eSampled);
-        cmd->End();
-        GetGraphicContext().ImmediateSubmit(cmd);
     }
 
     void CreateSampler()

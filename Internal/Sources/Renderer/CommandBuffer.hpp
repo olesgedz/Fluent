@@ -46,7 +46,8 @@ namespace Fluent
         virtual void BlitImage(const Ref<Image>& src, ImageUsage::Bits srcUsage, const Ref<Image>& dst, ImageUsage::Bits dstUsage, Filter filter) const = 0;
         virtual void GenerateMipLevels(const Image& image, ImageUsage::Bits initialUsage, Filter filter) const = 0;
         
-        virtual void ImageBarrier(Ref<Image>& image, ImageUsage::Bits src, ImageUsage::Bits dst) = 0;
+        virtual void ImageBarrier(Ref<Image>& image, ImageUsage::Bits src, ImageUsage::Bits dst) const = 0;
+        virtual void ImageBarrier(Image& image, ImageUsage::Bits src, ImageUsage::Bits dst) const = 0;
 
         virtual Handle GetNativeHandle() const = 0;
 
