@@ -72,10 +72,23 @@ namespace Fluent
     private:
         Allocation              mAllocation;
         vk::Image               mHandle;
-        vk::Format              mFormat;
+        Format                  mFormat;
         uint32_t                mWidth;
         uint32_t                mHeight;
+        uint32_t                mMipLevels;
         vk::ImageView           mImageView;
+
+        void ApplyDescription(ImageDescription& description)
+        {
+            mWidth = description.width;
+            mHeight = description.height;
+            mFormat = description.format;
+            if (static_cast<bool>(description.flags & ImageDescriptionFlagBits::eGenerateMipMaps))
+            {
+                description.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(mWidth, mHeight)))) + 1;
+            }
+            mMipLevels = description.mipLevels;
+        }
 
         void InitImage(ImageDescription description)
         {
@@ -87,19 +100,19 @@ namespace Fluent
                 if (!description.filename.empty())
                 {
                     auto imageData = LoadKtxImageDescription(description);
+                    ApplyDescription(description);
                     auto stage = context.GetStagingBuffer()->Submit(imageData.data(), imageData.size() * sizeof(imageData[0]));
                     auto [image, allocation] = allocator.AllocateImage(description, MemoryUsage::eGpu);
-
-                    // Not forget to fill data from loaded image
+                    
+                    // TODO: Not beautiful solution
+                    // Don't forget to fill data from loaded image
                     mHandle = (VkImage)image;
                     mAllocation = allocation;
-                    mWidth = description.width;
-                    mHeight = description.height;
-                    mFormat = ToVulkanFormat(description.format);
 
                     auto& cmd = context.GetCurrentCommandBuffer();
                     cmd->Begin();
                     cmd->CopyBufferToImage(context.GetStagingBuffer()->GetBuffer(), stage.offset, *this, ImageUsage::eUndefined);
+                    cmd->GenerateMipLevels(*this, ImageUsage::eTransferDst, Filter::eLinear);
                     cmd->End();
                     context.ImmediateSubmit(cmd);
                 }
@@ -114,15 +127,16 @@ namespace Fluent
             }
 
             CreateImageView();
-            LOG_TRACE("[ Image Created ] Size {}x{} Format {}", mWidth, mHeight, vk::to_string(mFormat));
+            LOG_TRACE("[ Image Created ] Size {}x{} Format {}", mWidth, mHeight, vk::to_string(ToVulkanFormat(mFormat)));
         }
     public:
         VulkanImage(const ImageDescription& description)
             : mAllocation(nullptr)
             , mHandle((VkImage)description.handle)
-            , mFormat(ToVulkanFormat(description.format))
+            , mFormat(description.format)
             , mWidth(description.width), mHeight(description.height)
             , mImageView(nullptr)
+            , mMipLevels(1)
         {
             InitImage(description);
         }
@@ -145,19 +159,12 @@ namespace Fluent
 
         void CreateImageView()
         {
-            /// TODO: Binding func
-            vk::ImageSubresourceRange imageSubresourceRange;
-            imageSubresourceRange
-                .setAspectMask(ImageFormatToImageAspect(mFormat))
-                .setBaseMipLevel(0)
-                .setLevelCount(1)
-                .setBaseArrayLayer(0)
-                .setLayerCount(1);
+            auto imageSubresourceRange = GetImageSubresourceRange(*this);
 
             vk::ImageViewCreateInfo imageViewCreateInfo;
             imageViewCreateInfo
                 .setViewType(vk::ImageViewType::e2D)
-                .setFormat(static_cast<vk::Format>(mFormat))
+                .setFormat(ToVulkanFormat(mFormat))
                 .setImage(mHandle)
                 .setSubresourceRange(imageSubresourceRange)
                 .setComponents(vk::ComponentMapping{
@@ -173,13 +180,14 @@ namespace Fluent
 
         Format GetFormat() const override
         {
-            return FromVulkanFormatToFormat(mFormat);
+            return mFormat;
         }
 
         Handle GetNativeHandle() const override { return mHandle; }
         Handle GetImageView() const override { return mImageView; }
         uint32_t GetWidth() const override { return mWidth; };
         uint32_t GetHeight() const override { return mHeight; };
+        uint32_t GetMipLevelsCount() const override { return mMipLevels; }
     };
 
     Ref<Image> Image::Create(const ImageDescription& description)

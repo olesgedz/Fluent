@@ -134,6 +134,7 @@ public:
         auto& window = Application::Get().GetWindow();
         ImageDescription imageDesc{};
         imageDesc.initialUsage = ImageUsage::Bits::eSampled;
+        imageDesc.flags = ImageDescriptionFlagBits::eGenerateMipMaps;
         imageDesc.filename = "04_Texture/albedo.ktx";
 
         mTexture = Image::Create(imageDesc);
@@ -148,6 +149,9 @@ public:
     void CreateSampler()
     {
         SamplerDescription samplerDesc{};
+        samplerDesc.mipmapMode = SamplerMipmapMode::eLinear;
+        samplerDesc.minLod = 0;
+        samplerDesc.maxLod = 1000;
         mSampler = Sampler::Create(samplerDesc);
     }
 
