@@ -181,7 +181,7 @@ namespace Fluent
             mHandle.copyBufferToImage(vk::Buffer((VkBuffer)src->GetNativeHandle()), vk::Image((VkImage)dst.GetNativeHandle()), ImageUsageToImageLayout(ImageUsage::eTransferDst), bufferToImageCopyInfo);
         }
 
-        void BlitImage(const Ref<Image>& src, ImageUsage::Bits srcUsage, const Ref<Image>& dst, ImageUsage::Bits dstUsage, Filter filter) override
+        void BlitImage(const Ref<Image>& src, ImageUsage::Bits srcUsage, const Ref<Image>& dst, ImageUsage::Bits dstUsage, Filter filter) const override
         {
             auto sourceRange = GetImageSubresourceRange(*src);
             auto distanceRange = GetImageSubresourceRange(*dst);
@@ -279,6 +279,113 @@ namespace Fluent
                 ImageUsageToPipelineStage(dst),
                 {}, {}, {},
                 barrier
+            );
+        }
+
+        void GenerateMipLevels(const Image& image, ImageUsage::Bits initialUsage, Filter filter) const override
+        {
+            if (image.GetMipLevelsCount() < 2) return;
+
+            auto sourceRange = GetImageSubresourceRange(image);
+            auto distanceRange = GetImageSubresourceRange(image);
+            auto sourceLayers = GetImageSubresourceLayers(image);
+            auto distanceLayers = GetImageSubresourceLayers(image);
+            auto sourceUsage = initialUsage;
+            uint32_t sourceWidth = image.GetWidth();
+            uint32_t sourceHeight = image.GetHeight();
+            uint32_t destinationWidth = image.GetWidth();
+            uint32_t destinationHeight = image.GetHeight();
+
+            for (size_t i = 0; i + 1 < image.GetMipLevelsCount(); i++)
+            {
+                sourceWidth = destinationWidth;
+                sourceHeight = destinationHeight;
+                destinationWidth = std::max(sourceWidth / 2, 1u);
+                destinationHeight = std::max(sourceHeight / 2, 1u);
+                
+                sourceLayers.setMipLevel(i);
+                sourceRange.setBaseMipLevel(i);
+                sourceRange.setLevelCount(1);
+
+                distanceLayers.setMipLevel(i + 1);
+                distanceRange.setBaseMipLevel(i + 1);
+                distanceRange.setLevelCount(1);
+
+                std::array<vk::ImageMemoryBarrier, 2> imageBarriers;
+                imageBarriers[0] // to transfer source
+                    .setSrcAccessMask(ImageUsageToAccessFlags(sourceUsage))
+                    .setDstAccessMask(ImageUsageToAccessFlags(ImageUsage::eTransferSrc))
+                    .setOldLayout(ImageUsageToImageLayout(sourceUsage))
+                    .setNewLayout(ImageUsageToImageLayout(ImageUsage::eTransferSrc))
+                    .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+                    .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+                    .setImage((VkImage)image.GetNativeHandle())
+                    .setSubresourceRange(sourceRange);
+
+                imageBarriers[1] // to transfer distance
+                    .setSrcAccessMask(ImageUsageToAccessFlags(ImageUsage::eUndefined))
+                    .setDstAccessMask(ImageUsageToAccessFlags(ImageUsage::eTransferDst))
+                    .setOldLayout(ImageUsageToImageLayout(ImageUsage::eUndefined))
+                    .setNewLayout(ImageUsageToImageLayout(ImageUsage::eTransferDst))
+                    .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+                    .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+                    .setImage((VkImage)image.GetNativeHandle())
+                    .setSubresourceRange(distanceRange);
+
+                mHandle.pipelineBarrier(
+                    vk::PipelineStageFlagBits::eTransfer,
+                    vk::PipelineStageFlagBits::eTransfer,
+                    { }, // dependencies
+                    { }, // memory barriers
+                    { }, // buffer barriers,
+                    imageBarriers
+                );
+                sourceUsage = ImageUsage::eTransferDst;
+
+                vk::ImageBlit imageBlitInfo;
+                imageBlitInfo
+                    .setSrcOffsets({
+                        vk::Offset3D{ 0, 0, 0 },
+                        vk::Offset3D{ (int32_t)sourceWidth, (int32_t)sourceHeight, 1 }
+                    })
+                    .setDstOffsets({
+                        vk::Offset3D{ 0, 0, 0 },
+                        vk::Offset3D{ (int32_t)destinationWidth, (int32_t)destinationHeight, 1 }
+                    })
+                    .setSrcSubresource(sourceLayers)
+                    .setDstSubresource(distanceLayers);
+
+                mHandle.blitImage(
+                    (VkImage)image.GetNativeHandle(),
+                    vk::ImageLayout::eTransferSrcOptimal,
+                    (VkImage)image.GetNativeHandle(),
+                    vk::ImageLayout::eTransferDstOptimal,
+                    imageBlitInfo,
+                    ToVulkanFilter(filter)
+                );
+
+            }
+
+            auto mipLevelsSubresourceRange = GetImageSubresourceRange(image);
+            mipLevelsSubresourceRange.setLevelCount(mipLevelsSubresourceRange.levelCount - 1);
+            vk::ImageMemoryBarrier mipLevelsTransfer;
+            mipLevelsTransfer
+                .setSrcAccessMask(vk::AccessFlagBits::eTransferRead)
+                .setDstAccessMask(vk::AccessFlagBits::eTransferWrite)
+                .setOldLayout(vk::ImageLayout::eTransferSrcOptimal)
+                .setNewLayout(vk::ImageLayout::eTransferDstOptimal)
+                .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+                .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+                .setImage((VkImage)image.GetNativeHandle())
+                .setSubresourceRange(mipLevelsSubresourceRange);
+
+            mHandle.pipelineBarrier(
+                vk::PipelineStageFlagBits::eTransfer,
+                vk::PipelineStageFlagBits::eTransfer,
+                { }, // dependecies
+                { }, // memory barriers
+                { }, // buffer barriers
+                mipLevelsTransfer
             );
         }
 

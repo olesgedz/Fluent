@@ -148,6 +148,9 @@ public:
     void CreateSampler()
     {
         SamplerDescription samplerDesc{};
+        samplerDesc.mipmapMode = SamplerMipmapMode::eLinear;
+        samplerDesc.minLod = 11;
+        samplerDesc.maxLod = 1000;
         mSampler = Sampler::Create(samplerDesc);
     }
 

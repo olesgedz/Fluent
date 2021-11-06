@@ -33,6 +33,7 @@ namespace Fluent
         virtual Handle GetImageView() const = 0;
         virtual uint32_t GetWidth() const = 0;
         virtual uint32_t GetHeight() const = 0;
+        virtual uint32_t GetMipLevelsCount() const = 0;
         
         static Ref<Image> Create(const ImageDescription& description);
     };

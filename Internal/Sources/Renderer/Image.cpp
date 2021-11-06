@@ -75,6 +75,7 @@ namespace Fluent
         vk::Format              mFormat;
         uint32_t                mWidth;
         uint32_t                mHeight;
+        uint32_t                mMipLevels;
         vk::ImageView           mImageView;
 
         void InitImage(ImageDescription description)
@@ -87,6 +88,7 @@ namespace Fluent
                 if (!description.filename.empty())
                 {
                     auto imageData = LoadKtxImageDescription(description);
+                    description.mipLevels = (uint32_t)std::floor(std::log2(std::max(mWidth, mHeight))) + 1;
                     auto stage = context.GetStagingBuffer()->Submit(imageData.data(), imageData.size() * sizeof(imageData[0]));
                     auto [image, allocation] = allocator.AllocateImage(description, MemoryUsage::eGpu);
 
@@ -95,11 +97,13 @@ namespace Fluent
                     mAllocation = allocation;
                     mWidth = description.width;
                     mHeight = description.height;
+                    mMipLevels = description.mipLevels;
                     mFormat = ToVulkanFormat(description.format);
 
                     auto& cmd = context.GetCurrentCommandBuffer();
                     cmd->Begin();
                     cmd->CopyBufferToImage(context.GetStagingBuffer()->GetBuffer(), stage.offset, *this, ImageUsage::eUndefined);
+                    cmd->GenerateMipLevels(*this, ImageUsage::eTransferDst, Filter::eLinear);
                     cmd->End();
                     context.ImmediateSubmit(cmd);
                 }
@@ -123,6 +127,7 @@ namespace Fluent
             , mFormat(ToVulkanFormat(description.format))
             , mWidth(description.width), mHeight(description.height)
             , mImageView(nullptr)
+            , mMipLevels(1)
         {
             InitImage(description);
         }
@@ -145,14 +150,7 @@ namespace Fluent
 
         void CreateImageView()
         {
-            /// TODO: Binding func
-            vk::ImageSubresourceRange imageSubresourceRange;
-            imageSubresourceRange
-                .setAspectMask(ImageFormatToImageAspect(mFormat))
-                .setBaseMipLevel(0)
-                .setLevelCount(1)
-                .setBaseArrayLayer(0)
-                .setLayerCount(1);
+            auto imageSubresourceRange = GetImageSubresourceRange(*this);
 
             vk::ImageViewCreateInfo imageViewCreateInfo;
             imageViewCreateInfo
@@ -180,6 +178,7 @@ namespace Fluent
         Handle GetImageView() const override { return mImageView; }
         uint32_t GetWidth() const override { return mWidth; };
         uint32_t GetHeight() const override { return mHeight; };
+        uint32_t GetMipLevelsCount() const override { return mMipLevels; }
     };
 
     Ref<Image> Image::Create(const ImageDescription& description)

@@ -328,7 +328,7 @@ namespace Fluent
         imageSubresourceRange
             .setAspectMask(ImageFormatToImageAspect(static_cast<vk::Format>(image.GetFormat())))
             .setBaseMipLevel(0)
-            .setLevelCount(1)
+            .setLevelCount(image.GetMipLevelsCount())
             .setBaseArrayLayer(0)
             .setLayerCount(1);
         return imageSubresourceRange;
