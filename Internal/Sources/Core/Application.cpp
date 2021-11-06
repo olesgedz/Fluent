@@ -21,7 +21,7 @@ namespace Fluent
             gcontextDescription.requestValidation = true;
             gcontextDescription.window = mWindow->GetNativeHandle();
             mGraphicContext = GraphicContext::Create(gcontextDescription);
-            SetGraphicContext(mGraphicContext);
+            SetGraphicContext(*mGraphicContext);
             Input::Init();
         }
     }

@@ -50,15 +50,42 @@ namespace Fluent
         vk::SwapchainKHR                mSwapchain;
         std::vector<Ref<Image>>         mSwapchainImages;
         std::vector<ImageUsage::Bits>   mSwapchainImageUsages;
+        vk::DescriptorPool              mDescriptorPool;
 
         static constexpr uint32_t       FRAME_COUNT = 2;
         Scope<VirtualFrameProvider>     mFrameProvider;
+        
+        void CreateDescriptorPool()
+        {
+            // TODO
+            std::array descriptorPoolSizes = 
+            {
+                vk::DescriptorPoolSize { vk::DescriptorType::eSampler,              1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, 1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eSampledImage,         1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eStorageImage,         1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eUniformTexelBuffer,   1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eStorageTexelBuffer,   1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eUniformBuffer,        1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eStorageBuffer,        1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eUniformBufferDynamic, 1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eStorageBufferDynamic, 1024 },
+                vk::DescriptorPoolSize { vk::DescriptorType::eInputAttachment,      1024 },
+            };
 
-        void CreateSurface();
+            vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo;
+            descriptorPoolCreateInfo
+                .setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet | vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind)
+                .setPoolSizes(descriptorPoolSizes)
+                .setMaxSets(2048 * (uint32_t)descriptorPoolSizes.size());
+
+            mDescriptorPool = mDevice.createDescriptorPool(descriptorPoolCreateInfo);
+        }
     public:
         VulkanContext(const GContextDescription& description)
             : mWindowHandle(description.window)
         {
+            SetGraphicContext(*this);
             vk::ApplicationInfo appInfo;
             appInfo
                 .setPEngineName("FluentGFX")
@@ -117,7 +144,7 @@ namespace Fluent
             auto surfaceFormats         = mPhysicalDevice.getSurfaceFormatsKHR(mSurface);
 
             /// Find best surface present mode
-            vk::PresentModeKHR presentMode = vk::PresentModeKHR::eImmediate;
+            mPresentMode = vk::PresentModeKHR::eImmediate;
             if (std::find(presentModes.begin(), presentModes.end(), vk::PresentModeKHR::eMailbox) != presentModes.end())
                 mPresentMode = vk::PresentModeKHR::eMailbox;
 
@@ -182,19 +209,24 @@ namespace Fluent
 
             mCommandPool = mDevice.createCommandPool(cmdPoolCreateInfo);
 
+            CreateDescriptorPool();
             OnResize(mExtent.width, mExtent.height);
         }
 
-        ~VulkanContext()
+        ~VulkanContext() override
         {
+            mSwapchainImages.clear();
+            mFrameProvider.reset(nullptr);
+            mDevice.destroyDescriptorPool(mDescriptorPool);
             mDevice.destroyCommandPool(mCommandPool);
-            mDeviceAllocator = nullptr;
+            mDevice.destroySwapchainKHR(mSwapchain);
+            mDeviceAllocator.reset(nullptr);
             mDevice.destroy();
             mInstance.destroySurfaceKHR(mSurface);
             mInstance.destroy();
         }
 
-        void OnResize(uint32_t width, uint32_t height)
+        void OnResize(uint32_t width, uint32_t height) override
         {
             mRenderingEnabled = false;
             mDevice.waitIdle();
@@ -257,6 +289,10 @@ namespace Fluent
             frameProviderDesc.swapchain = mSwapchain;
             frameProviderDesc.frameCount = FRAME_COUNT;
             frameProviderDesc.swapchainImageCount = mSwapchainImages.size();
+            // TODO: Find optimal size
+            frameProviderDesc.stagingBufferSize = 1024 * 1024 * 50;
+
+            LOG_INFO("Current staging buffer size {}", frameProviderDesc.stagingBufferSize);
 
             mFrameProvider = VirtualFrameProvider::Create(frameProviderDesc);
 
@@ -289,14 +325,26 @@ namespace Fluent
             mDevice.waitIdle();
         }
         
+        void ImmediateSubmit(const Ref<CommandBuffer>& cmd) const override
+        {
+            vk::CommandBuffer nativeCmd = (VkCommandBuffer)cmd->GetNativeHandle();
+            vk::SubmitInfo submitInfo;
+            submitInfo.setCommandBuffers(nativeCmd);
+            mDeviceQueue.submit(submitInfo);
+            mDeviceQueue.waitIdle();
+        }
+
+
         ImageUsage::Bits GetSwapchainImageUsage(uint32_t index) const override { return mSwapchainImageUsages[index]; }
 
         Handle GetDevice() override { return mDevice; }
         DeviceAllocator& GetDeviceAllocator() override { return *mDeviceAllocator; }
         Handle GetCommandPool() override { return mCommandPool; }
         Handle GetSwapchain() override { return mSwapchain; }
+        Handle GetDescriptorPool() const override { return mDescriptorPool; }
         uint32_t GetActiveImageIndex() const override { return mFrameProvider->GetActiveImageIndex(); };
         Ref<CommandBuffer>& GetCurrentCommandBuffer() override { return mFrameProvider->GetCommandBuffer(); }
+        Ref<StagingBuffer>& GetStagingBuffer() override { return mFrameProvider->GetStagingBuffer(); }
     };
 
     /// Interface
@@ -306,9 +354,9 @@ namespace Fluent
         return CreateScope<VulkanContext>(description);
     }
 
-    void SetGraphicContext(Scope<GraphicContext>& context)
+    void SetGraphicContext(GraphicContext& context)
     {
-        sGraphicContext = context.get();
+        sGraphicContext = std::addressof(context);
     }
 
     GraphicContext& GetGraphicContext()

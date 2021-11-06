@@ -24,6 +24,7 @@ namespace Fluent
         virtual ~Shader() = default;
 
         virtual ShaderStage GetStage() const = 0;
+        virtual const std::vector<ShaderUniforms>& GetUniforms() const = 0;
         virtual Handle GetNativeHandle() const = 0;
         
         static Ref<Shader> Create(const ShaderDescription& description);

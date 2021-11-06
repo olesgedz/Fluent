@@ -17,6 +17,7 @@ namespace Fluent
             case ShaderStage::eGeometry: return shaderc_shader_kind::shaderc_geometry_shader;
             case ShaderStage::eFragment: return shaderc_shader_kind::shaderc_fragment_shader;
             case ShaderStage::eCompute: return shaderc_shader_kind::shaderc_compute_shader;
+            default: break;
         }
         return shaderc_shader_kind(-1);
     }
@@ -54,8 +55,8 @@ namespace Fluent
 
             vk::ShaderModuleCreateInfo shaderCreateInfo;
             shaderCreateInfo
-                    .setCodeSize(desc.byteCode.size() * sizeof(uint32_t))
-                    .setPCode(desc.byteCode.data());
+                .setCodeSize(desc.byteCode.size() * sizeof(uint32_t))
+                .setPCode(desc.byteCode.data());
 
             mHandle = device.createShaderModule(shaderCreateInfo);
 
@@ -75,6 +76,7 @@ namespace Fluent
             device.destroyShaderModule(mHandle);
         }
 
+        const std::vector<ShaderUniforms>& GetUniforms() const override { return mUniforms; }
         ShaderStage GetStage() const override { return mShaderStage; }
         Handle GetNativeHandle() const override { return mHandle; }
     };

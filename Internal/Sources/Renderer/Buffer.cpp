@@ -9,18 +9,42 @@ namespace Fluent
     private:
         Allocation mAllocation;
         vk::Buffer mHandle;
+        uint32_t mSize;
         void* mMappedMemory = nullptr;
+
+        void InitBuffer(const BufferDescription& description)
+        {
+            auto& context = GetGraphicContext();
+            // Staging
+            if (description.data && description.memoryUsage == MemoryUsage::eGpu)
+            {
+                auto stage = context.GetStagingBuffer()->Submit(description.data, description.size);
+                auto [buffer, allocation] = context.GetDeviceAllocator().AllocateBuffer(description, description.memoryUsage);
+
+                mHandle = (VkBuffer)buffer;
+                mAllocation = allocation;
+
+                auto& cmd = context.GetCurrentCommandBuffer();
+                cmd->Begin();
+                cmd->CopyBuffer(context.GetStagingBuffer()->GetBuffer(), stage.offset, *this, 0, description.size);
+                cmd->End();
+                context.ImmediateSubmit(cmd);
+            }
+            else
+            {
+                auto [buffer, allocation] = context.GetDeviceAllocator().AllocateBuffer(description, description.memoryUsage);
+                mHandle = (VkBuffer)buffer;
+                mAllocation = allocation;
+            }
+        }
     public:
         VulkanBuffer(const BufferDescription& description)
             : mAllocation(nullptr)
             , mHandle(nullptr)
             , mMappedMemory(nullptr)
+            , mSize(description.size)
         {
-            auto [buffer, allocation] = GetGraphicContext().GetDeviceAllocator()
-                .AllocateBuffer(description, description.memoryUsage);
-            
-            mHandle = (VkBuffer)buffer;
-            mAllocation = allocation;
+            InitBuffer(description);
         }
 
         ~VulkanBuffer() override
@@ -42,6 +66,7 @@ namespace Fluent
         {
             if (!IsMemoryMapped()) return;
             GetGraphicContext().GetDeviceAllocator().UnmapMemory(mAllocation);
+            mMappedMemory = nullptr;
         }
 
         void FlushMemory(uint32_t size, uint32_t offset) override
@@ -68,7 +93,8 @@ namespace Fluent
             }
         }
 
-        Handle GetNativeHandle() const { return mHandle; }
+        uint32_t GetSize() const override { return mSize; }
+        Handle GetNativeHandle() const override { return mHandle; }
     };
 
     /// Interface

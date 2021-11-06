@@ -13,11 +13,12 @@ struct Vertex
 class VertexBufferLayer : public Layer
 {
 private:
-    Ref<Image>          mImage;
-    Ref<RenderPass>     mRenderPass;
-    Ref<Framebuffer>    mFramebuffer;
-    Ref<Pipeline>       mPipeline;
-    Ref<Buffer>         mVertexBuffer;
+    Ref<Image>                  mImage;
+    Ref<RenderPass>             mRenderPass;
+    Ref<Framebuffer>            mFramebuffer;
+    Ref<Pipeline>               mPipeline;
+    Ref<Buffer>                 mVertexBuffer;
+    Ref<DescriptorSetLayout>    mDescriptorSetLayout;
 public:
     VertexBufferLayer() : Layer("VertexBuffer") {}
 
@@ -39,13 +40,13 @@ public:
             }
         };
 
+        // Staging will apply automatically
         BufferDescription bufferDesc{};
         bufferDesc.bufferUsage = BufferUsage::eVertexBuffer;
-        bufferDesc.memoryUsage = MemoryUsage::eCpuToGpu;
+        bufferDesc.memoryUsage = MemoryUsage::eGpu;
         bufferDesc.size = vertices.size() * sizeof(vertices[0]);
-
+        bufferDesc.data = vertices.data();
         mVertexBuffer = Buffer::Create(bufferDesc);
-        mVertexBuffer->WriteData(vertices.data(), bufferDesc.size, 0);
     }
 
     void OnAttach() override
@@ -54,14 +55,17 @@ public:
 
         auto& window = Application::Get().GetWindow();
 
+        ClearValue clearValue{};
+        clearValue.color = Vector4(0.0, 0.0, 0.0, 1.0);
+        
         RenderPassDescription renderPassDesc{};
         renderPassDesc.width = window->GetWidth();
         renderPassDesc.height = window->GetHeight();
-        renderPassDesc.clearValues = {{ 0.0, 0.0, 0.0 }};
-        renderPassDesc.colorFormats = {{ Format::eR8G8B8A8Unorm }};
-        renderPassDesc.initialUsages = {{ ImageUsage::eUndefined }};
-        renderPassDesc.finalUsages = {{ ImageUsage::eStorage }};
-        renderPassDesc.attachmentLoadOps = {{ AttachmentLoadOp::eClear }};
+        renderPassDesc.clearValues = { clearValue };
+        renderPassDesc.colorFormats = { Format::eR8G8B8A8Unorm };
+        renderPassDesc.initialUsages = { ImageUsage::eUndefined };
+        renderPassDesc.finalUsages = { ImageUsage::eStorage };
+        renderPassDesc.attachmentLoadOps = { AttachmentLoadOp::eClear };
         renderPassDesc.sampleCount = SampleCount::e1;
 
         mRenderPass = RenderPass::Create(renderPassDesc);
@@ -77,6 +81,11 @@ public:
         auto vertexShader = Shader::Create(vertexShaderDesc);
         auto fragmentShader = Shader::Create(fragmentShaderDesc);
         
+        DescriptorSetLayoutDescription descriptorSetLayoutDesc{};
+        descriptorSetLayoutDesc.shaders = { vertexShader, fragmentShader };
+
+        mDescriptorSetLayout = DescriptorSetLayout::Create(descriptorSetLayoutDesc);
+
         RasterizerStateDescription rasterizerState{};
         rasterizerState.cullMode = CullMode::eNone;
         rasterizerState.frontFace = FrontFace::eCounterClockwise;
@@ -109,7 +118,7 @@ public:
                 .offset = offsetof(Vertex, color)
             }
         };
-        pipelineDesc.shaders = { vertexShader, fragmentShader };
+        pipelineDesc.descriptorSetLayout = mDescriptorSetLayout;
         pipelineDesc.rasterizerDescription = rasterizerState;
         pipelineDesc.renderPass = mRenderPass;
 
@@ -120,6 +129,7 @@ public:
 
     void OnDetach() override
     {
+        mVertexBuffer = nullptr;
         mPipeline = nullptr;
         mFramebuffer = nullptr;
         mImage = nullptr;
@@ -151,7 +161,6 @@ public:
 
     void OnUnload() override
     {
-        mVertexBuffer = nullptr;
         mFramebuffer = nullptr;
         mImage = nullptr;
     }

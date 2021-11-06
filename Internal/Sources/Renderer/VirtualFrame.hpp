@@ -3,6 +3,7 @@
 #include <cstdint>
 #include "Core/Base.hpp"
 #include "Renderer/CommandBuffer.hpp"
+#include "Renderer/StagingBuffer.hpp"
 
 namespace Fluent
 {
@@ -14,6 +15,7 @@ namespace Fluent
         Handle      commandPool;
         Handle      swapchain;
         uint32_t    swapchainImageCount;
+        uint32_t    stagingBufferSize;
     };
 
     class VirtualFrameProvider
@@ -28,7 +30,8 @@ namespace Fluent
 
         virtual uint32_t GetActiveImageIndex() const = 0;
         virtual Ref<CommandBuffer>& GetCommandBuffer() = 0;
-        
+        virtual Ref<StagingBuffer>& GetStagingBuffer() = 0;
+
         static Scope<VirtualFrameProvider> Create(const VirtualFrameProviderDescription& description);
     };
 } // namespace Fluent

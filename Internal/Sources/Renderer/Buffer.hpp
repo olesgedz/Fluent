@@ -9,6 +9,7 @@ namespace Fluent
     {
         MemoryUsage         memoryUsage;
         BufferUsage::Bits   bufferUsage; // TODO: Can be changed to descriptor type
+        void*               data;
         uint32_t            size;
     };
     
@@ -26,6 +27,7 @@ namespace Fluent
 
         virtual bool IsMemoryMapped() const = 0;
         
+        virtual uint32_t GetSize() const = 0;
         virtual Handle GetNativeHandle() const = 0;
 
         static Ref<Buffer> Create(const BufferDescription& description);

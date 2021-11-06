@@ -18,4 +18,7 @@
 #include "Renderer/RenderPass.hpp"
 #include "Renderer/Framebuffer.hpp"
 #include "Renderer/Shader.hpp"
+#include "Renderer/DescriptorSetLayout.hpp"
+#include "Renderer/DescriptorSet.hpp"
 #include "Renderer/Pipeline.hpp"
+#include "Renderer/Sampler.hpp"

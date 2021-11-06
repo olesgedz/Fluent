@@ -62,10 +62,10 @@ namespace Fluent
         switch (description.stage)
         {
             case ShaderStage::eVertex:
-                LOG_INFO("[ VERTEX SHADER ]");
+                LOG_TRACE("[ VERTEX SHADER ]");
                 break;
             case ShaderStage::eFragment:
-                LOG_INFO("[ FRAGMENT SHADER ]");
+                LOG_TRACE("[ FRAGMENT SHADER ]");
                 break;
             default:
                 break;
@@ -88,23 +88,25 @@ namespace Fluent
             description.inputAttributes.push_back(GetTypeByReflection(compiler, inputAttribute));
         }
 
-        LOG_INFO("UNIFORM BUFFERS:");
+        LOG_TRACE("UNIFORM BUFFERS:");
         for (auto& uniformBuffer : resources.uniform_buffers)
         {
             auto& uniform = description.uniforms.emplace_back();
+            uniform.descriptorCount = 1;
             uniform.descriptorType = DescriptorType::eUniformBuffer;
             uniform.binding = compiler.get_decoration(uniformBuffer.id, spv::Decoration::DecorationBinding);
 
             for (auto count : compiler.get_type(uniformBuffer.type_id).array)
                 uniform.descriptorCount *= count;
-
-            LOG_INFO("Name: {}", uniformBuffer.name);
-            LOG_INFO("Width: {}", compiler.get_type(uniformBuffer.base_type_id).width);
-            LOG_INFO("Vecsize: {}", compiler.get_type(uniformBuffer.base_type_id).vecsize);
-            LOG_INFO("Columns: {}", compiler.get_type(uniformBuffer.base_type_id).columns);
+            LOG_TRACE("Name: {}", uniformBuffer.name);
+            LOG_TRACE("Binding: {}", uniform.binding);
+            LOG_TRACE("Descriptor count: {}", uniform.descriptorCount);
+            LOG_TRACE("Width: {}", compiler.get_type(uniformBuffer.base_type_id).width);
+            LOG_TRACE("Vecsize: {}", compiler.get_type(uniformBuffer.base_type_id).vecsize);
+            LOG_TRACE("Columns: {}", compiler.get_type(uniformBuffer.base_type_id).columns);
         }
 
-        LOG_INFO("SEPARATE SAMPLERS:");
+        LOG_TRACE("SEPARATE SAMPLERS:");
 
         for (auto& sampler : resources.separate_samplers)
         {
@@ -115,15 +117,15 @@ namespace Fluent
             for (auto count : compiler.get_type(sampler.type_id).array)
                 uniform.descriptorCount *= count;
 
-            LOG_INFO("Name: {}", sampler.name);
-            LOG_INFO("Set: {}", compiler.get_decoration(sampler.id, spv::Decoration::DecorationDescriptorSet));
-            LOG_INFO("Binding: {}", compiler.get_decoration(sampler.id, spv::Decoration::DecorationBinding));
-            LOG_INFO("Width: {}", compiler.get_type(sampler.base_type_id).width);
-            LOG_INFO("Vecsize: {}", compiler.get_type(sampler.base_type_id).vecsize);
-            LOG_INFO("Columns: {}", compiler.get_type(sampler.base_type_id).columns);
+            LOG_TRACE("Name: {}", sampler.name);
+            LOG_TRACE("Set: {}", compiler.get_decoration(sampler.id, spv::Decoration::DecorationDescriptorSet));
+            LOG_TRACE("Binding: {}", compiler.get_decoration(sampler.id, spv::Decoration::DecorationBinding));
+            LOG_TRACE("Width: {}", compiler.get_type(sampler.base_type_id).width);
+            LOG_TRACE("Vecsize: {}", compiler.get_type(sampler.base_type_id).vecsize);
+            LOG_TRACE("Columns: {}", compiler.get_type(sampler.base_type_id).columns);
         }
 
-        LOG_INFO("SEPARATE IMAGES:");
+        LOG_TRACE("SEPARATE IMAGES:");
 
         for (auto& image : resources.separate_images)
         {
@@ -135,12 +137,12 @@ namespace Fluent
             for (auto count : compiler.get_type(image.type_id).array)
                 uniform.descriptorCount *= count;
 
-            LOG_INFO("Name: {}", image.name);
-            LOG_INFO("Set: {}", compiler.get_decoration(image.id, spv::Decoration::DecorationDescriptorSet));
-            LOG_INFO("Binding: {}", compiler.get_decoration(image.id, spv::Decoration::DecorationBinding));
-            LOG_INFO("Width: {}", compiler.get_type(image.base_type_id).width);
-            LOG_INFO("Vecsize: {}", compiler.get_type(image.base_type_id).vecsize);
-            LOG_INFO("Columns: {}", compiler.get_type(image.base_type_id).columns);
+            LOG_TRACE("Name: {}", image.name);
+            LOG_TRACE("Set: {}", compiler.get_decoration(image.id, spv::Decoration::DecorationDescriptorSet));
+            LOG_TRACE("Binding: {}", compiler.get_decoration(image.id, spv::Decoration::DecorationBinding));
+            LOG_TRACE("Width: {}", compiler.get_type(image.base_type_id).width);
+            LOG_TRACE("Vecsize: {}", compiler.get_type(image.base_type_id).vecsize);
+            LOG_TRACE("Columns: {}", compiler.get_type(image.base_type_id).columns);
         }
     }
 } // namespace Fluent

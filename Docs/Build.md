@@ -2,7 +2,7 @@
 
 ## Install dependencies
 
-#### On moment of writing this docs actual vulkan sdk version 1.2.189 for unix systems and 1.2.189.2 for windows
+#### On moment of writing this build guide actual vulkan sdk version 1.2.189 for unix systems and 1.2.189.2 for windows
 
 ## Linux
 
@@ -11,12 +11,13 @@
 ```shell
 # We will need xorg
 sudo pacman -S xorg
-# I will use amd custom amd loader. You can choose any loader what you want
+# I will use amd vulkan implementation
 yay -S vulkan-amdgpu-pro
 # Install base vulkan packages
 sudo pacman -S vulkan-devel
 # Also we need aditional libs
-sudo pacman -S spirv-cross shaderc
+sudo pacman -S shaderc
+yay -S spirv-cross
 ```
 ### Ubuntu
 ```shell

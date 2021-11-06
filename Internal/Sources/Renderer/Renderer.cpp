@@ -26,6 +26,7 @@ namespace Fluent
             case ImageUsage::eDepthStencilAttachment: return vk::ImageUsageFlagBits::eDepthStencilAttachment;
             case ImageUsage::eInputAttachment: return vk::ImageUsageFlagBits::eInputAttachment;
             case ImageUsage::eFragmentShadingRateAttachment: return vk::ImageUsageFlagBits::eFragmentShadingRateAttachmentKHR;
+            default: break;
         }
 
         return vk::ImageUsageFlagBits(-1);
@@ -41,6 +42,7 @@ namespace Fluent
             case SampleCount::e8: return vk::SampleCountFlagBits::e8;
             case SampleCount::e16: return vk::SampleCountFlagBits::e16;
             case SampleCount::e32: return vk::SampleCountFlagBits::e32;
+            default: break;
         }
 
         return vk::SampleCountFlagBits(-1);
@@ -60,6 +62,7 @@ namespace Fluent
             case BufferUsage::eVertexBuffer: return vk::BufferUsageFlagBits::eVertexBuffer;
             case BufferUsage::eIndirectBuffer: return vk::BufferUsageFlagBits::eIndirectBuffer;
             case BufferUsage::eShaderDeviceAddress: return vk::BufferUsageFlagBits::eShaderDeviceAddress;
+            default: break;
         }
 
         return vk::BufferUsageFlagBits(-1);
@@ -72,6 +75,7 @@ namespace Fluent
             case AttachmentLoadOp::eClear: return vk::AttachmentLoadOp::eClear;
             case AttachmentLoadOp::eDontCare: return vk::AttachmentLoadOp::eDontCare;
             case AttachmentLoadOp::eLoad: return vk::AttachmentLoadOp::eLoad;
+            default: break;
         }
         return vk::AttachmentLoadOp(-1);
     }
@@ -94,6 +98,7 @@ namespace Fluent
             case ShaderStage::eMissKHR: return vk::ShaderStageFlagBits::eMissKHR;
             case ShaderStage::eIntersectionKHR: return vk::ShaderStageFlagBits::eIntersectionKHR;
             case ShaderStage::eCallableKHR: return vk::ShaderStageFlagBits::eCallableKHR;
+            default: break;
         }
         return vk::ShaderStageFlagBits(-1);
     }
@@ -105,6 +110,7 @@ namespace Fluent
             case CullMode::eBack: return vk::CullModeFlagBits::eBack;
             case CullMode::eFront: return vk::CullModeFlagBits::eFront;
             case CullMode::eNone: return vk::CullModeFlagBits::eNone;
+            default: break;
         }
 
         return vk::CullModeFlagBits(-1);
@@ -116,6 +122,7 @@ namespace Fluent
         {
             case FrontFace::eClockwise: return vk::FrontFace::eClockwise;
             case FrontFace::eCounterClockwise: return vk::FrontFace::eCounterClockwise;
+            default: break;
         }
 
         return vk::FrontFace(-1);
@@ -127,6 +134,7 @@ namespace Fluent
         {
             case Filter::eLinear: return vk::Filter::eLinear;
             case Filter::eNearest: return vk::Filter::eNearest;
+            default: break;
         }
         
         return vk::Filter(-1);
@@ -139,6 +147,7 @@ namespace Fluent
             case PipelineType::eCompute: return vk::PipelineBindPoint::eCompute;
             case PipelineType::eGraphics: return vk::PipelineBindPoint::eGraphics;
             case PipelineType::eRayTracing: return vk::PipelineBindPoint::eRayTracingKHR;
+            default: break;
         }
 
         return vk::PipelineBindPoint(-1);
@@ -150,8 +159,86 @@ namespace Fluent
         {
             case VertexInputRate::eVertex: return vk::VertexInputRate::eVertex;
             case VertexInputRate::eInstance: return vk::VertexInputRate::eInstance;
+            default: break;
         }
         return vk::VertexInputRate(-1);
+    }
+
+    vk::DescriptorType ToVulkanDescriptorType(DescriptorType type)
+    {
+        switch(type)
+        {
+            case DescriptorType::eSampler: return vk::DescriptorType::eSampler;
+            case DescriptorType::eCombinedImageSampler: return vk::DescriptorType::eCombinedImageSampler;
+            case DescriptorType::eSampledImage: return vk::DescriptorType::eSampledImage;
+            case DescriptorType::eStorageImage: return vk::DescriptorType::eStorageImage;
+            case DescriptorType::eUniformTexelBuffer: return vk::DescriptorType::eUniformTexelBuffer;
+            case DescriptorType::eStorageTexelBuffer: return vk::DescriptorType::eStorageTexelBuffer;
+            case DescriptorType::eUniformBuffer: return vk::DescriptorType::eUniformBuffer;
+            case DescriptorType::eStorageBuffer: return vk::DescriptorType::eStorageBuffer;
+            case DescriptorType::eUniformBufferDynamic: return vk::DescriptorType::eUniformBufferDynamic;
+            case DescriptorType::eStorageBufferDynamic: return vk::DescriptorType::eStorageBufferDynamic;
+            case DescriptorType::eInputAttachment: return vk::DescriptorType::eInputAttachment;
+            default: break;
+        }
+
+        return vk::DescriptorType(-1);
+    }
+    
+    vk::IndexType ToVulkanIndexType(IndexType type)
+    {
+        switch (type)
+        {
+            case IndexType::eUint16: return vk::IndexType::eUint16;
+            case IndexType::eUint32: return vk::IndexType::eUint32;
+            default: break;
+        }
+        
+        return vk::IndexType(-1);
+    }
+
+    vk::SamplerMipmapMode ToVulkanSamplerMipmapMode(SamplerMipmapMode mode)
+    {
+        switch (mode)
+        {
+            case SamplerMipmapMode::eNearest: return vk::SamplerMipmapMode::eNearest;
+            case SamplerMipmapMode::eLinear: return vk::SamplerMipmapMode::eLinear;
+            default: break;
+        }
+
+        return vk::SamplerMipmapMode(-1);
+    }
+
+    vk::SamplerAddressMode ToVulkanSamplerAddressMode(SamplerAddressMode mode)
+    {
+        switch (mode)
+        {
+            case SamplerAddressMode::eRepeat: return vk::SamplerAddressMode::eRepeat;
+            case SamplerAddressMode::eMirroredRepeat: return vk::SamplerAddressMode::eMirroredRepeat;
+            case SamplerAddressMode::eClampToEdge: return vk::SamplerAddressMode::eClampToEdge;
+            case SamplerAddressMode::eClampToBorder: return vk::SamplerAddressMode::eClampToBorder;
+            case SamplerAddressMode::eMirrorClampToEdge: return vk::SamplerAddressMode::eMirrorClampToEdge;
+            default: break;
+        }
+        return vk::SamplerAddressMode(-1);
+    }
+
+    vk::CompareOp ToVulkanCompareOp(CompareOp op)
+    {
+        switch (op)
+        {
+            case CompareOp::eNever          : return vk::CompareOp::eNever;
+            case CompareOp::eLess           : return vk::CompareOp::eLess;
+            case CompareOp::eEqual          : return vk::CompareOp::eEqual;
+            case CompareOp::eLessOrEqual    : return vk::CompareOp::eLessOrEqual;
+            case CompareOp::eGreater        : return vk::CompareOp::eGreater;
+            case CompareOp::eNotEqual       : return vk::CompareOp::eNotEqual;
+            case CompareOp::eGreaterOrEqual : return vk::CompareOp::eGreaterOrEqual;
+            case CompareOp::eAlways         : return vk::CompareOp::eAlways;
+            default: break;
+        }
+
+        return vk::CompareOp(-1);
     }
 
     vk::ImageAspectFlags ImageFormatToImageAspect(vk::Format format)
@@ -235,11 +322,11 @@ namespace Fluent
             return vk::PipelineStageFlagBits::eTopOfPipe;
     }
 
-    vk::ImageSubresourceRange GetImageSubresourceRange(const Ref<Image>& image)
+    vk::ImageSubresourceRange GetImageSubresourceRange(const Image& image)
     {
         vk::ImageSubresourceRange imageSubresourceRange;
         imageSubresourceRange
-            .setAspectMask(ImageFormatToImageAspect(static_cast<vk::Format>(image->GetFormat())))
+            .setAspectMask(ImageFormatToImageAspect(static_cast<vk::Format>(image.GetFormat())))
             .setBaseMipLevel(0)
             .setLevelCount(1)
             .setBaseArrayLayer(0)
@@ -247,7 +334,7 @@ namespace Fluent
         return imageSubresourceRange;
     }
 
-    vk::ImageSubresourceLayers GetImageSubresourceLayers(const Ref<Image>& image)
+    vk::ImageSubresourceLayers GetImageSubresourceLayers(const Image& image)
     {
         auto subresourceRange = GetImageSubresourceRange(image);
         return vk::ImageSubresourceLayers{

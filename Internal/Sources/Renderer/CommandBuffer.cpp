@@ -38,14 +38,16 @@ namespace Fluent
 
         void BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& framebuffer) const override
         {
-            auto& clearValues = renderPass->GetClearValues();
-            std::vector<vk::ClearValue> vkClearValues(clearValues.size());
-            for (uint32_t i = 0; i < vkClearValues.size(); ++i)
+            std::vector<vk::ClearValue> clearValues(renderPass->GetClearValues().size());
+            uint32_t i = 0;
+            for (auto& clearValue : renderPass->GetClearValues())
             {
-                vkClearValues[i]
-                    .setColor(std::array{ clearValues[i].r, clearValues[i].g, clearValues[i].b, clearValues[i].a })
-                    .setDepthStencil({ clearValues[i].depth, clearValues[i].stencil });
+                clearValues[i]
+                    .setColor(vk::ClearColorValue().setFloat32({ clearValue.color.r, clearValue.color.g, clearValue.color.b, clearValue.color.a }));
             }
+
+            if (renderPass->HasDepthStencil())
+                clearValues.back().setDepthStencil(vk::ClearDepthStencilValue().setDepth(renderPass->GetDepth()).setStencil(renderPass->GetStencil()));
 
             vk::Rect2D rect;
             rect
@@ -54,7 +56,7 @@ namespace Fluent
 
             vk::RenderPassBeginInfo renderPassBeginInfo;
             renderPassBeginInfo
-                    .setClearValues(vkClearValues)
+                    .setClearValues(clearValues)
                     .setRenderArea(rect)
                     .setFramebuffer((VkFramebuffer)framebuffer->GetNativeHandle())
                     .setRenderPass((VkRenderPass)renderPass->GetNativeHandle());
@@ -72,6 +74,18 @@ namespace Fluent
             mHandle.draw(vertexCount, instanceCount, firstVertex, firstInstance);
         }
 
+        void DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) const override
+        {
+            mHandle.drawIndexed(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+        }
+        
+        void BindDescriptorSet(const Ref<Pipeline>& pipeline, const Ref<DescriptorSet>& set) const override
+        {
+            vk::PipelineLayout layout = (VkPipelineLayout)pipeline->GetPipelineLayout();
+            vk::DescriptorSet nativeSet = (VkDescriptorSet)set->GetNativeHandle();
+            mHandle.bindDescriptorSets(ToVulkanPipelineBindPoint(pipeline->GetType()), layout, 0, { nativeSet }, {});
+        }
+
         void BindPipeline(const Ref<Pipeline>& pipeline) const override
         {
             mHandle.bindPipeline
@@ -86,7 +100,12 @@ namespace Fluent
             mHandle.bindVertexBuffers(0, vk::Buffer((VkBuffer)buffer->GetNativeHandle()), offset);
         }
 
-        void SetScissor(uint32_t width, uint32_t height, int32_t x, int32_t y)
+        void BindIndexBuffer(const Ref<Buffer>& buffer, uint32_t offset, IndexType type) const override
+        {
+            mHandle.bindIndexBuffer((VkBuffer)buffer->GetNativeHandle(), offset, ToVulkanIndexType(type));
+        }
+
+        void SetScissor(uint32_t width, uint32_t height, int32_t x, int32_t y) override
         {
             vk::Rect2D scissor = vk::Rect2D()
                 .setOffset({ x, y })
@@ -94,7 +113,7 @@ namespace Fluent
             mHandle.setScissor(0, scissor);
         }
 
-        void SetViewport(uint32_t width, uint32_t height, float minDepth, float maxDepth, uint32_t x, uint32_t y)
+        void SetViewport(uint32_t width, uint32_t height, float minDepth, float maxDepth, uint32_t x, uint32_t y) override
         {
             vk::Viewport viewport = vk::Viewport()
                 .setWidth(static_cast<float>(width))
@@ -107,7 +126,7 @@ namespace Fluent
             mHandle.setViewport(0, viewport);
         }
 
-        void CopyBuffer(const Ref<Buffer>& src, uint32_t srcOffset, Ref<Buffer>& dst, uint32_t dstOffset, uint32_t size)
+        void CopyBuffer(const Ref<Buffer>& src, uint32_t srcOffset, Buffer& dst, uint32_t dstOffset, uint32_t size) override
         {
             vk::BufferCopy bufferCopy;
             bufferCopy
@@ -115,10 +134,10 @@ namespace Fluent
                 .setDstOffset(dstOffset)
                 .setSize(size);
 
-            mHandle.copyBuffer(vk::Buffer((VkBuffer)src->GetNativeHandle()), vk::Buffer((VkBuffer)dst->GetNativeHandle()), bufferCopy);
+            mHandle.copyBuffer(vk::Buffer((VkBuffer)src->GetNativeHandle()), vk::Buffer((VkBuffer)dst.GetNativeHandle()), bufferCopy);
         }
 
-        void CopyBufferToImage(const Ref<Buffer>& src, uint32_t srcOffset, const Ref<Image>& dst, ImageUsage::Bits dstUsage)
+        void CopyBufferToImage(const Ref<Buffer>& src, uint32_t srcOffset, Image& dst, ImageUsage::Bits dstUsage) override
         {
             if (dstUsage != ImageUsage::eTransferDst)
             {
@@ -130,7 +149,7 @@ namespace Fluent
                     .setNewLayout(vk::ImageLayout::eTransferDstOptimal)
                     .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
                     .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-                    .setImage(vk::Image((VkImage)dst->GetNativeHandle()))
+                    .setImage(vk::Image((VkImage)dst.GetNativeHandle()))
                     .setSubresourceRange(GetImageSubresourceRange(dst));
 
                 mHandle.pipelineBarrier
@@ -154,18 +173,18 @@ namespace Fluent
                 .setImageSubresource(dstLayers)
                 .setImageOffset(vk::Offset3D{ 0, 0, 0 })
                 .setImageExtent(vk::Extent3D{
-                        dst->GetWidth(),
-                        dst->GetHeight(),
+                        dst.GetWidth(),
+                        dst.GetHeight(),
                         1
                 });
 
-            mHandle.copyBufferToImage(vk::Buffer((VkBuffer)src->GetNativeHandle()), vk::Image((VkImage)dst->GetNativeHandle()), ImageUsageToImageLayout(ImageUsage::eTransferDst), bufferToImageCopyInfo);
+            mHandle.copyBufferToImage(vk::Buffer((VkBuffer)src->GetNativeHandle()), vk::Image((VkImage)dst.GetNativeHandle()), ImageUsageToImageLayout(ImageUsage::eTransferDst), bufferToImageCopyInfo);
         }
 
-        void BlitImage(const Ref<Image>& src, ImageUsage::Bits srcUsage, const Ref<Image>& dst, ImageUsage::Bits dstUsage, Filter filter)
+        void BlitImage(const Ref<Image>& src, ImageUsage::Bits srcUsage, const Ref<Image>& dst, ImageUsage::Bits dstUsage, Filter filter) override
         {
-            auto sourceRange = GetImageSubresourceRange(src);
-            auto distanceRange = GetImageSubresourceRange(dst);
+            auto sourceRange = GetImageSubresourceRange(*src);
+            auto distanceRange = GetImageSubresourceRange(*dst);
 
             std::array<vk::ImageMemoryBarrier, 2> barriers;
             size_t barrierCount = 0;
@@ -209,8 +228,8 @@ namespace Fluent
                 );
             }
 
-            auto sourceLayers = GetImageSubresourceLayers(src);
-            auto distanceLayers = GetImageSubresourceLayers(dst);
+            auto sourceLayers = GetImageSubresourceLayers(*src);
+            auto distanceLayers = GetImageSubresourceLayers(*dst);
 
             vk::ImageBlit imageBlitInfo;
             imageBlitInfo
@@ -241,7 +260,7 @@ namespace Fluent
         {
             if (src == dst) return;
 
-            vk::ImageSubresourceRange imageSubresourceRange = GetImageSubresourceRange(image);
+            vk::ImageSubresourceRange imageSubresourceRange = GetImageSubresourceRange(*image);
 
             vk::ImageMemoryBarrier barrier;
             barrier

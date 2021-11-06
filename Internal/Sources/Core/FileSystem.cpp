@@ -1,4 +1,5 @@
 #include <filesystem>
+#include "Core/Base.hpp"
 #include "Core/FileSystem.hpp"
 
 namespace Fluent::FileSystem
@@ -9,9 +10,8 @@ namespace Fluent::FileSystem
 
     void Init(char** argv)
     {
-        std::string relativeExecutablePath = std::string(argv[0]);
-        relativeExecutablePath = relativeExecutablePath.substr(0, relativeExecutablePath.find_last_of('/'));
-        absoluteExecutablePath = std::filesystem::current_path().string() + "/" + relativeExecutablePath + "/";
+        absoluteExecutablePath = std::filesystem::weakly_canonical(std::filesystem::path(argv[0])).parent_path().string() + "/";
+        LOG_INFO(absoluteExecutablePath);
     }
 
     void SetShadersDirectory(const std::string& path)

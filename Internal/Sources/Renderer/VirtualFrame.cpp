@@ -1,6 +1,7 @@
 #include <vulkan/vulkan.hpp>
 #include "Renderer/GraphicContext.hpp"
 #include "Renderer/VirtualFrame.hpp"
+#include "Renderer/StagingBuffer.hpp"
 
 namespace Fluent
 {
@@ -8,8 +9,9 @@ namespace Fluent
     {
         struct VirtualFrame
         {
-            vk::Semaphore renderCompleteSemaphore;
-            Ref<CommandBuffer> cmd;
+            Ref<StagingBuffer>  stagingBuffer;
+            vk::Semaphore       renderCompleteSemaphore;
+            Ref<CommandBuffer>  cmd;
             vk::Fence fence;
         };
     private:
@@ -38,18 +40,27 @@ namespace Fluent
 
             mVirtualFrames.resize(description.frameCount);
 
+            StagingBufferDescription stagingBufferDesc{};
+            stagingBufferDesc.size = description.stagingBufferSize;
+
             for (uint32_t i = 0; i < description.frameCount; ++i)
             {
                 mVirtualFrames[i].renderCompleteSemaphore = mDevice.createSemaphore(vk::SemaphoreCreateInfo{});
                 mVirtualFrames[i].cmd = CommandBuffer::Create(cmdDesc);
                 mVirtualFrames[i].fence = mDevice.createFence(vk::FenceCreateInfo { vk::FenceCreateFlagBits::eSignaled });
+                mVirtualFrames[i].stagingBuffer = StagingBuffer::Create(stagingBufferDesc);
             }
         }
 
         ~VulkanFrameProvider() override
         {
             for (auto& frame : mVirtualFrames)
+            {
+                frame.stagingBuffer = nullptr;
                 mDevice.destroyFence(frame.fence);
+                mDevice.destroySemaphore(frame.renderCompleteSemaphore);
+            }
+            mDevice.destroy(mAcquireSemaphore);
         }
 
         bool BeginFrame() override
@@ -94,7 +105,7 @@ namespace Fluent
             auto imageUsage = GetGraphicContext().GetSwapchainImageUsage(mActiveImageIndex);
             auto image = GetGraphicContext().AcquireImage(mActiveImageIndex, ImageUsage::eUndefined);
 
-            vk::ImageSubresourceRange imageSubresourceRange = GetImageSubresourceRange(image);
+            vk::ImageSubresourceRange imageSubresourceRange = GetImageSubresourceRange(*image);
 
             vk::ImageMemoryBarrier transferDstToPresent;
             transferDstToPresent
@@ -135,6 +146,9 @@ namespace Fluent
                 .setWaitSemaphores(mVirtualFrames[mCurrentFrameIndex].renderCompleteSemaphore)
                 .setSwapchains(mSwapchain)
                 .setImageIndices(mActiveImageIndex);
+            
+            mVirtualFrames[mCurrentFrameIndex].stagingBuffer->Flush();
+            mVirtualFrames[mCurrentFrameIndex].stagingBuffer->Reset();
 
             try
             {
@@ -147,6 +161,11 @@ namespace Fluent
 
             mCurrentFrameIndex = (mCurrentFrameIndex + 1) % mVirtualFrames.size();
             return true;
+        }
+
+        Ref<StagingBuffer>& GetStagingBuffer() override
+        {
+            return mVirtualFrames[mCurrentFrameIndex].stagingBuffer;
         }
 
         uint32_t GetActiveImageIndex() const override { return mActiveImageIndex; }

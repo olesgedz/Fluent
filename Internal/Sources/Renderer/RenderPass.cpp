@@ -12,16 +12,18 @@ namespace Fluent
         uint32_t mHeight;
         vk::RenderPass mHandle;
         std::vector<ClearValue> mClearValues;
+        float mDepth;
+        uint32_t mStencil;
+        bool mHasDepthStencil = false;
     public:
-        VulkanPass(const RenderPassDescription& description)
+        explicit VulkanPass(const RenderPassDescription& description)
             : mWidth(description.width)
             , mHeight(description.height)
+            , mHasDepthStencil(false)
         {
             uint32_t attachmentsCount = description.attachmentLoadOps.size();
             std::vector<vk::AttachmentDescription> attachmentDescriptions;
             std::vector<vk::AttachmentReference> attachmentReferences;
-
-            uint32_t renderAreaWidth = 0, renderAreaHeight = 0;
 
             vk::AttachmentReference depthStencilAttachmentReference;
 
@@ -37,36 +39,30 @@ namespace Fluent
                     .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
                     .setInitialLayout(ImageUsageToImageLayout(description.initialUsages[i]))
                     .setFinalLayout(ImageUsageToImageLayout(description.finalUsages[i]));
-                
 
                 vk::AttachmentReference attachmentReference;
                 attachmentReference
                     .setAttachment(i)
-                    .setLayout(ImageUsageToImageLayout(description.finalUsages[i]));
+                    .setLayout(vk::ImageLayout::eColorAttachmentOptimal); // TODO
                 
                 if (description.finalUsages[i] == ImageUsage::eDepthStencilAttachment)
                 {
                     depthStencilAttachmentReference = attachmentReference;
-                    mClearValues.push_back({ 0, 0, 0, 0, description.clearValues[i].depth, description.clearValues[i].stencil });
                     attachmentDescription
                         .setLoadOp(vk::AttachmentLoadOp::eDontCare)
                         .setStencilLoadOp(ToVulkanLoadOp(description.depthLoadOp))
                         .setStencilStoreOp(vk::AttachmentStoreOp::eStore);
+
+                    mHasDepthStencil = true;
+                    mDepth = description.clearValues[i].depth;
+                    mStencil = description.clearValues[i].stencil;
                 }
                 else
                 {
                     attachmentReferences.push_back(attachmentReference);
-                    mClearValues.push_back
-                    ({
-                        description.clearValues[i].r,
-                        description.clearValues[i].g,
-                        description.clearValues[i].b,
-                        description.clearValues[i].a,
-                        0,
-                        0
-                    });
                 }
 
+                mClearValues = description.clearValues;
                 attachmentDescriptions.push_back(std::move(attachmentDescription));
             }
 
@@ -119,7 +115,7 @@ namespace Fluent
 
         const std::vector<ClearValue>& GetClearValues() const override { return mClearValues; }
 
-        Handle GetNativeHandle() const
+        Handle GetNativeHandle() const override
         {
             return mHandle;
         }
@@ -130,8 +126,11 @@ namespace Fluent
             mHeight = height;
         }
 
-        uint32_t GetWidth() const { return mWidth; }
-        uint32_t GetHeight() const { return mHeight; }
+        bool HasDepthStencil() const override { return mHasDepthStencil; }
+        float GetDepth() const override { return mDepth; }
+        uint32_t GetStencil() const override { return mStencil; }
+        uint32_t GetWidth() const override { return mWidth; }
+        uint32_t GetHeight() const override { return mHeight; }
     };
 
     Ref<RenderPass> RenderPass::Create(const RenderPassDescription& description)
