@@ -69,7 +69,7 @@ static std::vector<uint32_t> indices
     20, 21, 22, 22, 23, 20
 };
 
-class VertexBufferLayer : public Layer
+class TextureLayer : public Layer
 {
 private:
     Ref<Image>                  mImage;
@@ -88,7 +88,7 @@ private:
 
     CameraUBO                   mCameraUBO;
 public:
-    VertexBufferLayer() : Layer("VertexBuffer") {}
+    TextureLayer() : Layer("VertexBuffer") {}
 
     void CreateVertexBuffer()
     {
@@ -133,14 +133,8 @@ public:
     {
         auto& window = Application::Get().GetWindow();
         ImageDescription imageDesc{};
-        imageDesc.arraySize = 1;
-        imageDesc.mipLevels = 1;
-        imageDesc.depth = 1;
-        imageDesc.format = Format::eR8G8B8A8Srgb;
-        imageDesc.width = window->GetWidth();
-        imageDesc.height = window->GetHeight();
         imageDesc.initialUsage = ImageUsage::Bits::eSampled;
-        imageDesc.filename = "image.jpg";
+        imageDesc.filename = "04_Texture/albedo.ktx";
 
         mTexture = Image::Create(imageDesc);
 
@@ -250,8 +244,6 @@ public:
         descriptorSetDesc.descriptorSetLayout = mDescriptorSetLayout;
         mDescriptorSet = DescriptorSet::Create(descriptorSetDesc);
 
-        LOG_INFO("Image View {}", mTexture->GetImageView());
-        
         std::vector<DescriptorSetUpdateDesc> updateDescriptions(3);
         updateDescriptions[0].binding = 0;
         updateDescriptions[0].bufferUpdate.buffer = mUniformBuffer;
@@ -349,7 +341,7 @@ int main(int argc, char** argv)
     appDesc.windowDescription = windowDescription;
 
     Application app(appDesc);
-    VertexBufferLayer layer;
+    TextureLayer layer;
     app.PushLayer(layer);
     app.Run();
 

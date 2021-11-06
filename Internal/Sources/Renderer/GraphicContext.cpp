@@ -216,11 +216,11 @@ namespace Fluent
         ~VulkanContext() override
         {
             mSwapchainImages.clear();
-            mFrameProvider = nullptr;
+            mFrameProvider.reset(nullptr);
             mDevice.destroyDescriptorPool(mDescriptorPool);
             mDevice.destroyCommandPool(mCommandPool);
             mDevice.destroySwapchainKHR(mSwapchain);
-            mDeviceAllocator = nullptr;
+            mDeviceAllocator.reset(nullptr);
             mDevice.destroy();
             mInstance.destroySurfaceKHR(mSurface);
             mInstance.destroy();
@@ -289,7 +289,8 @@ namespace Fluent
             frameProviderDesc.swapchain = mSwapchain;
             frameProviderDesc.frameCount = FRAME_COUNT;
             frameProviderDesc.swapchainImageCount = mSwapchainImages.size();
-            frameProviderDesc.stagingBufferSize = 1024 * 1024 * 10;
+            // TODO: Find optimal size
+            frameProviderDesc.stagingBufferSize = 1024 * 1024 * 50;
 
             LOG_INFO("Current staging buffer size {}", frameProviderDesc.stagingBufferSize);
 

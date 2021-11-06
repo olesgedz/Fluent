@@ -17,6 +17,7 @@ namespace Fluent
         uint32_t            mipLevels = 0;
         SampleCount         sampleCount = SampleCount::e1;
         ImageUsage::Bits    initialUsage = ImageUsage::eUndefined;
+        DescriptorType      descriptors;
         std::string         filename;
     };
 

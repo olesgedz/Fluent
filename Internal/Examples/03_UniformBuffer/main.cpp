@@ -69,7 +69,7 @@ static std::vector<uint32_t> indices
     20, 21, 22, 22, 23, 20
 };
 
-class VertexBufferLayer : public Layer
+class UniformBufferLayer : public Layer
 {
 private:
     Ref<Image>                  mImage;
@@ -86,7 +86,7 @@ private:
 
     CameraUBO                   mCameraUBO;
 public:
-    VertexBufferLayer() : Layer("VertexBuffer") {}
+    UniformBufferLayer() : Layer("VertexBuffer") {}
 
     void CreateVertexBuffer()
     {
@@ -308,7 +308,7 @@ int main(int argc, char** argv)
     appDesc.windowDescription = windowDescription;
 
     Application app(appDesc);
-    VertexBufferLayer layer;
+    UniformBufferLayer layer;
     app.PushLayer(layer);
     app.Run();
 

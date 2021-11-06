@@ -70,8 +70,6 @@ namespace Fluent
                         imageUpdateInfo
                             .setImageLayout(ImageUsageToImageLayout(update.imageUpdate.usage))
                             .setImageView((VkImageView)update.imageUpdate.image->GetImageView());
-
-                        LOG_INFO("Image View {}", update.imageUpdate.image->GetImageView());
                     }
 
                     writeDescriptorSet.setImageInfo(imageUpdateInfo);

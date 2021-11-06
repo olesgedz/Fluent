@@ -98,7 +98,9 @@ namespace Fluent
             bufferCreateInfo.pQueueFamilyIndices = nullptr;
 
 
-            /// TODO!!!
+            // TODO!!! We need it when we want staging but it's awful way to determine it
+            // I have done it because we can't now translate more than one BufferUsage 
+            // I mean we can't translate (VertexBuffer | TransferDst)
             if (memoryUsage == MemoryUsage::eGpu)
                 bufferCreateInfo.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
                 
@@ -110,14 +112,11 @@ namespace Fluent
                 nullptr
             );
 
+            // TODO: ASSERT()
             if (result != VK_SUCCESS)
                 LOG_ERROR("Buffer allocation failed with result {}", result);
 
-            AllocatedBuffer res;
-            res.buffer = buffer;
-            res.allocation = allocation;
-
-            return res;
+            return { buffer, allocation };
         }
 
         void FreeBuffer(Handle buffer, Allocation allocation) override

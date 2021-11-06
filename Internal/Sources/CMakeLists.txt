@@ -39,7 +39,7 @@ set(Sources
 
 find_package(Vulkan REQUIRED)
 
-set(CommonLibs glfw glm spdlog stb_image vk_mem_alloc tiny_imageformat Vulkan::Vulkan)
+set(CommonLibs glfw glm spdlog vk_mem_alloc tiny_imageformat tiny_ktx Vulkan::Vulkan)
 
 if (MSVC)
     set(PlatformLibDirs $ENV{VULKAN_SDK}/Lib)
