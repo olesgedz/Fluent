@@ -106,13 +106,17 @@ namespace Fluent
                     
                     // TODO: Not beautiful solution
                     // Don't forget to fill data from loaded image
-                    mHandle = (VkImage)image;
+                    mHandle = static_cast<VkImage>(image);
                     mAllocation = allocation;
 
                     auto& cmd = context.GetCurrentCommandBuffer();
                     cmd->Begin();
                     cmd->CopyBufferToImage(context.GetStagingBuffer()->GetBuffer(), stage.offset, *this, ImageUsage::eUndefined);
                     cmd->GenerateMipLevels(*this, ImageUsage::eTransferDst, Filter::eLinear);
+                    if (description.initialUsage != ImageUsage::eUndefined)
+                    {
+                        cmd->ImageBarrier(*this, ImageUsage::eTransferDst, description.initialUsage);
+                    }
                     cmd->End();
                     context.ImmediateSubmit(cmd);
                 }
@@ -122,8 +126,6 @@ namespace Fluent
                     mHandle = static_cast<VkImage>(image);
                     mAllocation = allocation;
                 }
-
-                // TODO: We have field initial usage, we should transition layout according to this usage
             }
 
             CreateImageView();

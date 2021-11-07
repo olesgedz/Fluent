@@ -126,6 +126,16 @@ namespace Fluent
             mHandle.setViewport(0, viewport);
         }
 
+        void PushConstants(const Ref<Pipeline>& pipeline, uint32_t offset, uint32_t size, const void* data) const override
+        {
+            mHandle.pushConstants
+            (
+                (VkPipelineLayout)pipeline->GetPipelineLayout(), 
+                vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eFragment, 
+                offset, size, data
+            );
+        }
+
         void CopyBuffer(const Ref<Buffer>& src, uint32_t srcOffset, Buffer& dst, uint32_t dstOffset, uint32_t size) override
         {
             vk::BufferCopy bufferCopy;
@@ -256,11 +266,16 @@ namespace Fluent
             );
         }
 
-        void ImageBarrier(Ref<Image>& image, ImageUsage::Bits src, ImageUsage::Bits dst) override
+        void ImageBarrier(Ref<Image>& image, ImageUsage::Bits src, ImageUsage::Bits dst) const override
+        {
+            ImageBarrier(*image, src, dst);
+        }
+
+        void ImageBarrier(Image& image, ImageUsage::Bits src, ImageUsage::Bits dst) const override
         {
             if (src == dst) return;
 
-            vk::ImageSubresourceRange imageSubresourceRange = GetImageSubresourceRange(*image);
+            vk::ImageSubresourceRange imageSubresourceRange = GetImageSubresourceRange(image);
 
             vk::ImageMemoryBarrier barrier;
             barrier
@@ -270,7 +285,7 @@ namespace Fluent
                 .setNewLayout(ImageUsageToImageLayout(dst))
                 .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
                 .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-                .setImage((VkImage)image->GetNativeHandle())
+                .setImage((VkImage)image.GetNativeHandle())
                 .setSubresourceRange(imageSubresourceRange);
 
             mHandle.pipelineBarrier
