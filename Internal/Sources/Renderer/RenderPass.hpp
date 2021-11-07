@@ -17,17 +17,17 @@ namespace Fluent
 
     struct RenderPassDescription
     {
-        uint32_t width = 0;
-        uint32_t height = 0;
-        std::vector<ClearValue> clearValues;
-        std::vector<Format> colorFormats;
-        std::vector<ImageUsage::Bits> initialUsages;
-        std::vector<ImageUsage::Bits> finalUsages;
-        std::vector<AttachmentLoadOp> attachmentLoadOps;
-        Format depthStencilFormat;
-        AttachmentLoadOp depthLoadOp;
-        AttachmentLoadOp stencilLoadOp;
-		SampleCount sampleCount = SampleCount::e1;
+        uint32_t                        width = 0;
+        uint32_t                        height = 0;
+        std::vector<ClearValue>         clearValues;
+        std::vector<Format>             colorFormats;
+        std::vector<ImageUsage::Bits>   initialUsages;
+        std::vector<ImageUsage::Bits>   finalUsages;
+        std::vector<AttachmentLoadOp>   attachmentLoadOps;
+        Format                          depthStencilFormat;
+        AttachmentLoadOp                depthLoadOp;
+        AttachmentLoadOp                stencilLoadOp;
+		SampleCount                     sampleCount = SampleCount::e1;
     };
 
     class RenderPass

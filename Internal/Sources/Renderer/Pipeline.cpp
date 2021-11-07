@@ -10,6 +10,7 @@ namespace Fluent
         PipelineType mType;
         vk::Pipeline mHandle;
         vk::PipelineLayout mPipelineLayout;
+        const uint32_t mMaxPushConstantRange = 128;
     public:
         VulkanPipeline(const PipelineDescription& description)
             : mType(description.type)
@@ -115,8 +116,16 @@ namespace Fluent
             vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
 
             vk::DescriptorSetLayout descriptorSetLayout = (VkDescriptorSetLayout)description.descriptorSetLayout->GetNativeHandle();
+            
+            vk::PushConstantRange pushConstantRange;
+            pushConstantRange
+                .setSize(mMaxPushConstantRange)
+                .setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eFragment);
+
             vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo;
             pipelineLayoutCreateInfo.setSetLayouts(descriptorSetLayout);
+            pipelineLayoutCreateInfo.setPushConstantRanges(pushConstantRange);
+
             mPipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
 
             vk::GraphicsPipelineCreateInfo pipelineCreateInfo;

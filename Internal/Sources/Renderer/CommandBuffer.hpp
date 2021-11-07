@@ -39,6 +39,8 @@ namespace Fluent
         virtual void BindVertexBuffer(const Ref<Buffer>& buffer, uint32_t offset) const = 0;
         virtual void BindIndexBuffer(const Ref<Buffer>& buffer, uint32_t offset, IndexType type) const = 0;
 
+        virtual void PushConstants(const Ref<Pipeline>& pipeline, uint32_t offset, uint32_t size, const void* data) const = 0;
+
         virtual void SetScissor(uint32_t width, uint32_t height, int32_t x, int32_t y) = 0;
         virtual void SetViewport(uint32_t width, uint32_t height, float minDepth, float maxDepth, uint32_t x, uint32_t y) = 0;
         virtual void CopyBuffer(const Ref<Buffer>& src, uint32_t srcOffset, Buffer& dst, uint32_t dstOffset, uint32_t size) = 0;
@@ -46,7 +48,8 @@ namespace Fluent
         virtual void BlitImage(const Ref<Image>& src, ImageUsage::Bits srcUsage, const Ref<Image>& dst, ImageUsage::Bits dstUsage, Filter filter) const = 0;
         virtual void GenerateMipLevels(const Image& image, ImageUsage::Bits initialUsage, Filter filter) const = 0;
         
-        virtual void ImageBarrier(Ref<Image>& image, ImageUsage::Bits src, ImageUsage::Bits dst) = 0;
+        virtual void ImageBarrier(Ref<Image>& image, ImageUsage::Bits src, ImageUsage::Bits dst) const = 0;
+        virtual void ImageBarrier(Image& image, ImageUsage::Bits src, ImageUsage::Bits dst) const = 0;
 
         virtual Handle GetNativeHandle() const = 0;
 

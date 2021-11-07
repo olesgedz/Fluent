@@ -267,7 +267,7 @@ namespace Fluent
     
     inline BufferUsage::Bits operator | (BufferUsage::Bits lhs, BufferUsage::Bits rhs)
     {
-        using T = std::underlying_type_t<BufferUsage::Bits>;
+        using T = typename std::underlying_type_t<BufferUsage::Bits>;
         return static_cast<BufferUsage::Bits>(static_cast<T>(lhs) | static_cast<T>(rhs));
     }
 
@@ -437,36 +437,36 @@ namespace Fluent
     // Enum classes as flags
     template<class T, std::enable_if_t<std::is_enum_v<T>, int> = 0> inline T operator~ (T a) 
     { 
-        return static_cast<T>(~static_cast<std::underlying_type<T>::type>(a)); 
+        return static_cast<T>(~static_cast<typename std::underlying_type<T>::type>(a)); 
     }
 
     template<class T, std::enable_if_t<std::is_enum_v<T>, int> = 0> inline T operator| (T a, T b) 
     { 
-        return static_cast<T>(static_cast<std::underlying_type<T>::type>(a) | static_cast<std::underlying_type<T>::type>(b)); 
+        return static_cast<T>(static_cast<typename std::underlying_type<T>::type>(a) | static_cast<typename std::underlying_type<T>::type>(b)); 
     }
     
     template<class T, std::enable_if_t<std::is_enum_v<T>, int> = 0> inline T operator& (T a, T b) 
     { 
-        return static_cast<T>(static_cast<std::underlying_type<T>::type>(a) & static_cast<std::underlying_type<T>::type>(b)); 
+        return static_cast<T>(static_cast<typename std::underlying_type<T>::type>(a) & static_cast<typename std::underlying_type<T>::type>(b)); 
     }
 
     template<class T, std::enable_if_t<std::is_enum_v<T>, int> = 0> inline T operator^ (T a, T b) 
     { 
-        return static_cast<T>(static_cast<std::underlying_type<T>::type>(a) ^ static_cast<std::underlying_type<T>::type>(b)); 
+        return static_cast<T>(static_cast<typename std::underlying_type<T>::type>(a) ^ static_cast<typename std::underlying_type<T>::type>(b)); 
     }
 
     template<class T, std::enable_if_t<std::is_enum_v<T>, int> = 0> inline T& operator|= (T& a, T b) 
     { 
-        return static_cast<T&>(static_cast<std::underlying_type<T>::type&>(a) |= static_cast<std::underlying_type<T>::type>(b)); 
+        return static_cast<T&>(static_cast<typename std::underlying_type<T>::type&>(a) |= static_cast<typename std::underlying_type<T>::type>(b)); 
     }
 
     template<class T, std::enable_if_t<std::is_enum_v<T>, int> = 0> inline T& operator&= (T& a, T b) 
     { 
-        return static_cast<T&>(static_cast<std::underlying_type<T>::type&>(a) &= static_cast<std::underlying_type<T>::type>(b)); 
+        return static_cast<T&>(static_cast<typename std::underlying_type<T>::type&>(a) &= static_cast<typename std::underlying_type<T>::type>(b)); 
     }
 
     template<class T, std::enable_if_t<std::is_enum_v<T>, int> = 0> inline T& operator^= (T& a, T b) 
     { 
-        return static_cast<T&>(static_cast<std::underlying_type<T>::type&>(a) ^= static_cast<std::underlying_type<T>::type>(b)); 
+        return static_cast<T&>(static_cast<typename std::underlying_type<T>::type&>(a) ^= static_cast<typename std::underlying_type<T>::type>(b)); 
     }
 } // namespace FLuent
