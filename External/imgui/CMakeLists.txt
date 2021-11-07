@@ -14,7 +14,9 @@ set(srcs
 
 add_library(${target} STATIC ${srcs})
 
-target_link_libraries(${target} PUBLIC glfw)
+find_package(Vulkan REQUIRED)
+
+target_link_libraries(${target} PUBLIC glfw Vulkan::Vulkan)
 
 set(includePaths 
     ${CMAKE_CURRENT_SOURCE_DIR}
