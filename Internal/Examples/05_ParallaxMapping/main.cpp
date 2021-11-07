@@ -325,7 +325,7 @@ public:
         // Demo settings
         mParallaxSettings.lightPosition = Vector3(0.0, 1.0, 3.0);
         mParallaxSettings.viewPosition = Vector3(0.0, 0.0, 2.0);
-        mParallaxSettings.heightScale = 5.0;
+        mParallaxSettings.heightScale = 0.1;
     }
 
     void OnUnload() override
