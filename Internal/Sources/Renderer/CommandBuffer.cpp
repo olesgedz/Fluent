@@ -126,7 +126,7 @@ namespace Fluent
             mHandle.setViewport(0, viewport);
         }
 
-        void PushConstants(const Ref<Pipeline>& pipeline, ShaderStage stage, uint32_t offset, uint32_t size, const void* data) const override
+        void PushConstants(const Ref<Pipeline>& pipeline, uint32_t offset, uint32_t size, const void* data) const override
         {
             mHandle.pushConstants
             (

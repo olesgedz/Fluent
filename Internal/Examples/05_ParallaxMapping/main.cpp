@@ -18,10 +18,11 @@ struct CameraUBO
     Matrix4 model;
 };
 
-struct PushConstantBlock
+struct ParallaxMappingSettings
 {
     Vector3 lightPosition;
     Vector3 viewPosition;
+    float heightScale;
 };
 
 static Vector3 cubeCenter = Vector3(0.25, 0.25, -0.25);
@@ -87,8 +88,12 @@ private:
     Ref<Buffer>                 mUniformBuffer;
     Ref<DescriptorSetLayout>    mDescriptorSetLayout;
     Ref<DescriptorSet>          mDescriptorSet;
-    Ref<Image>                  mTexture;
+    Ref<Image>                  mAlbedoMap;
+    Ref<Image>                  mNormalMap;
+    Ref<Image>                  mHeightMap;
     Ref<Sampler>                mSampler;
+    
+    ParallaxMappingSettings     mParallaxSettings;
 
     Timer                       mTimer;
 
@@ -135,15 +140,22 @@ public:
         mUniformBuffer->WriteData(&mCameraUBO, bufferDesc.size, 0);
     }
 
-    void CreateTexture()
+    void CreateTextures()
     {
         auto& window = Application::Get().GetWindow();
-        ImageDescription imageDesc{};
-        imageDesc.initialUsage = ImageUsage::Bits::eSampled;
-        imageDesc.flags = ImageDescriptionFlagBits::eGenerateMipMaps;
-        imageDesc.filename = "05_ParallaxMapping/albedo.ktx";
-
-        mTexture = Image::Create(imageDesc);
+        ImageDescription imageDescs[3] = {};
+        imageDescs[0].initialUsage = ImageUsage::Bits::eSampled;
+        imageDescs[0].flags = ImageDescriptionFlagBits::eGenerateMipMaps;
+        imageDescs[0].filename = "05_ParallaxMapping/albedo.ktx";
+        imageDescs[1].initialUsage = ImageUsage::Bits::eSampled;
+        imageDescs[1].flags = ImageDescriptionFlagBits::eGenerateMipMaps;
+        imageDescs[1].filename = "05_ParallaxMapping/normal.ktx";
+        imageDescs[2].initialUsage = ImageUsage::Bits::eSampled;
+        imageDescs[2].flags = ImageDescriptionFlagBits::eGenerateMipMaps;
+        imageDescs[2].filename = "05_ParallaxMapping/displacement.ktx";
+        mAlbedoMap = Image::Create(imageDescs[0]);
+        mNormalMap = Image::Create(imageDescs[1]);
+        mHeightMap = Image::Create(imageDescs[2]);
     }
 
     void CreateSampler()
@@ -241,32 +253,42 @@ public:
         CreateVertexBuffer();
         CreateIndexBuffer();
         CreateUniformBuffer();
-        CreateTexture();
+        CreateTextures();
         CreateSampler();
 
         DescriptorSetDescription descriptorSetDesc{};
         descriptorSetDesc.descriptorSetLayout = mDescriptorSetLayout;
         mDescriptorSet = DescriptorSet::Create(descriptorSetDesc);
 
-        std::vector<DescriptorSetUpdateDesc> updateDescriptions(3);
+        std::vector<DescriptorSetUpdateDesc> updateDescriptions(5);
         updateDescriptions[0].binding = 0;
         updateDescriptions[0].bufferUpdate.buffer = mUniformBuffer;
         updateDescriptions[0].bufferUpdate.offset = 0;
         updateDescriptions[0].bufferUpdate.range = sizeof(CameraUBO);
         updateDescriptions[0].descriptorType = DescriptorType::eUniformBuffer;
         updateDescriptions[1].binding = 1;
-        updateDescriptions[1].imageUpdate.image = mTexture;
+        updateDescriptions[1].imageUpdate.image = mAlbedoMap;
         updateDescriptions[1].imageUpdate.usage = ImageUsage::eSampled;
         updateDescriptions[1].descriptorType = DescriptorType::eSampledImage;
         updateDescriptions[2].binding = 2;
-        updateDescriptions[2].imageUpdate.sampler = mSampler;
-        updateDescriptions[2].descriptorType = DescriptorType::eSampler;
+        updateDescriptions[2].imageUpdate.image = mNormalMap;
+        updateDescriptions[2].imageUpdate.usage = ImageUsage::eSampled;
+        updateDescriptions[2].descriptorType = DescriptorType::eSampledImage;
+        updateDescriptions[3].binding = 3;
+        updateDescriptions[3].imageUpdate.image = mHeightMap;
+        updateDescriptions[3].imageUpdate.usage = ImageUsage::eSampled;
+        updateDescriptions[3].descriptorType = DescriptorType::eSampledImage;
+        updateDescriptions[4].binding = 4;
+        updateDescriptions[4].imageUpdate.sampler = mSampler;
+        updateDescriptions[4].descriptorType = DescriptorType::eSampler;
         mDescriptorSet->UpdateDescriptorSet(updateDescriptions);
     }
 
     void OnDetach() override
     {
-        mTexture = nullptr;
+        mAlbedoMap = nullptr;
+        mNormalMap = nullptr;
+        mHeightMap = nullptr;
         mIndexBuffer = nullptr;
         mVertexBuffer = nullptr;
         mUniformBuffer = nullptr;
@@ -299,6 +321,11 @@ public:
         mRenderPass->SetRenderArea(window->GetWidth(), window->GetHeight());
 
         mCameraUBO.projection = CreatePerspectiveMatrix(Radians(45.0f), window->GetAspect(), 0, 100.f);
+
+        // Demo settings
+        mParallaxSettings.lightPosition = Vector3(0.0, 1.0, 3.0);
+        mParallaxSettings.viewPosition = Vector3(0.0, 0.0, 2.0);
+        mParallaxSettings.heightScale = 5.0;
     }
 
     void OnUnload() override
@@ -309,9 +336,6 @@ public:
 
     void OnUpdate(float deltaTime) override
     {
-        PushConstantBlock block{};
-        block.lightPosition = Vector3(1.0, 1.0, 0.0);
-        block.viewPosition = Vector3(1.0, 1.0, 0.0);
         mCameraUBO.model = Rotate(Matrix4(1.0), mTimer.Elapsed(), Vector3(0.0, 1.0, 0.0));
         mCameraUBO.model = Translate(mCameraUBO.model, -cubeCenter);
         mUniformBuffer->WriteData(&mCameraUBO, sizeof(CameraUBO), 0);
@@ -323,10 +347,9 @@ public:
         cmd->BeginRenderPass(mRenderPass, mFramebuffer);
         cmd->SetViewport(window->GetWidth(), window->GetHeight(), 0.0f, 1.0f, 0, 0);
         cmd->SetScissor(window->GetWidth(), window->GetHeight(), 0, 0);
-        auto imageView = mTexture->GetImageView();
         cmd->BindDescriptorSet(mPipeline, mDescriptorSet);
         cmd->BindPipeline(mPipeline);
-        cmd->PushConstants(mPipeline, ShaderStage::eFragment, 0, sizeof(PushConstantBlock), &block);
+        cmd->PushConstants(mPipeline, 0, sizeof(ParallaxMappingSettings), &mParallaxSettings);
         cmd->BindVertexBuffer(mVertexBuffer, 0);
         cmd->BindIndexBuffer(mIndexBuffer, 0, IndexType::eUint32);
         cmd->DrawIndexed(indices.size(), 1, 0, 0, 0);

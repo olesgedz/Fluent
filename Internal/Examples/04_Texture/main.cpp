@@ -314,7 +314,6 @@ public:
         cmd->BeginRenderPass(mRenderPass, mFramebuffer);
         cmd->SetViewport(window->GetWidth(), window->GetHeight(), 0.0f, 1.0f, 0, 0);
         cmd->SetScissor(window->GetWidth(), window->GetHeight(), 0, 0);
-        auto imageView = mTexture->GetImageView();
         cmd->BindDescriptorSet(mPipeline, mDescriptorSet);
         cmd->BindPipeline(mPipeline);
         cmd->BindVertexBuffer(mVertexBuffer, 0);

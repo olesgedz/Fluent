@@ -39,7 +39,7 @@ namespace Fluent
         virtual void BindVertexBuffer(const Ref<Buffer>& buffer, uint32_t offset) const = 0;
         virtual void BindIndexBuffer(const Ref<Buffer>& buffer, uint32_t offset, IndexType type) const = 0;
 
-        virtual void PushConstants(const Ref<Pipeline>& pipeline, ShaderStage stage, uint32_t offset, uint32_t size, const void* data) const = 0;
+        virtual void PushConstants(const Ref<Pipeline>& pipeline, uint32_t offset, uint32_t size, const void* data) const = 0;
 
         virtual void SetScissor(uint32_t width, uint32_t height, int32_t x, int32_t y) = 0;
         virtual void SetViewport(uint32_t width, uint32_t height, float minDepth, float maxDepth, uint32_t x, uint32_t y) = 0;
