@@ -34,11 +34,16 @@ namespace Fluent
         virtual Ref<Image> AcquireImage(uint32_t imageIndex, ImageUsage::Bits usage) = 0;
         virtual void ImmediateSubmit(const Ref<CommandBuffer>& cmd) const = 0;
         
+        virtual Handle              GetInstance() const = 0;
+        virtual Handle              GetPhysicalDevice() const = 0;
         virtual Handle              GetDevice() = 0;
+        virtual uint32_t            GetQueueIndex() = 0;
+        virtual Handle              GetDeviceQueue() = 0;
         virtual DeviceAllocator&    GetDeviceAllocator() = 0;
         virtual Handle              GetCommandPool() = 0;
         virtual Handle              GetSwapchain() = 0;
         virtual Handle              GetDescriptorPool() const = 0;
+        virtual uint32_t            GetPresentImageCount() const = 0;
         virtual uint32_t            GetActiveImageIndex() const = 0;
         virtual Ref<CommandBuffer>& GetCurrentCommandBuffer() = 0;
         virtual Ref<StagingBuffer>& GetStagingBuffer() = 0;

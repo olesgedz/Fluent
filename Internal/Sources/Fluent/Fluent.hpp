@@ -1,3 +1,5 @@
+#include <imgui.h>
+
 #include "Core/Base.hpp"
 #include "Core/Window.hpp"
 #include "Core/Application.hpp"
@@ -22,3 +24,5 @@
 #include "Renderer/DescriptorSet.hpp"
 #include "Renderer/Pipeline.hpp"
 #include "Renderer/Sampler.hpp"
+
+#include "UI/UIContext.hpp"

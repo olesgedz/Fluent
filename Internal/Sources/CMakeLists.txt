@@ -32,14 +32,18 @@ set(RendererSources
 set(MathSources
 	Math/Math.cpp)
 
+set(UiSources
+	UI/UIContext.cpp)
+
 set(Sources 
 	${CoreSources}
 	${RendererSources}
-	${MathSources})
+	${MathSources}
+	${UiSources})
 
 find_package(Vulkan REQUIRED)
 
-set(CommonLibs glfw glm spdlog vk_mem_alloc tiny_imageformat tiny_ktx Vulkan::Vulkan)
+set(CommonLibs glfw glm imgui spdlog vk_mem_alloc tiny_imageformat tiny_ktx Vulkan::Vulkan)
 
 if (MSVC)
     set(PlatformLibDirs $ENV{VULKAN_SDK}/Lib)
