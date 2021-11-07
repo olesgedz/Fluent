@@ -337,12 +337,17 @@ namespace Fluent
 
         ImageUsage::Bits GetSwapchainImageUsage(uint32_t index) const override { return mSwapchainImageUsages[index]; }
 
-        Handle GetDevice() override { return mDevice; }
-        DeviceAllocator& GetDeviceAllocator() override { return *mDeviceAllocator; }
-        Handle GetCommandPool() override { return mCommandPool; }
-        Handle GetSwapchain() override { return mSwapchain; }
-        Handle GetDescriptorPool() const override { return mDescriptorPool; }
-        uint32_t GetActiveImageIndex() const override { return mFrameProvider->GetActiveImageIndex(); };
+        Handle              GetInstance() const override { return mInstance; };
+        Handle              GetPhysicalDevice() const override { return mPhysicalDevice; };
+        Handle              GetDevice() override { return mDevice; }
+        uint32_t            GetQueueIndex() override { return mQueueIndex; }
+        Handle              GetDeviceQueue() override { return mDeviceQueue; };
+        DeviceAllocator&    GetDeviceAllocator() override { return *mDeviceAllocator; }
+        Handle              GetCommandPool() override { return mCommandPool; }
+        Handle              GetSwapchain() override { return mSwapchain; }
+        Handle              GetDescriptorPool() const override { return mDescriptorPool; }
+        uint32_t            GetPresentImageCount() const { return mPresentImageCount; }
+        uint32_t            GetActiveImageIndex() const override { return mFrameProvider->GetActiveImageIndex(); };
         Ref<CommandBuffer>& GetCurrentCommandBuffer() override { return mFrameProvider->GetCommandBuffer(); }
         Ref<StagingBuffer>& GetStagingBuffer() override { return mFrameProvider->GetStagingBuffer(); }
     };
