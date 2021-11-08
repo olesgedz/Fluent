@@ -69,6 +69,11 @@ namespace Fluent
             mHandle.endRenderPass();
         }
 
+        void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) const override
+        {
+            mHandle.dispatch(groupCountX, groupCountY, groupCountZ);
+        }
+
         void Draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) const override
         {
             mHandle.draw(vertexCount, instanceCount, firstVertex, firstInstance);

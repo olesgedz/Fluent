@@ -11,9 +11,8 @@ namespace Fluent
         vk::Pipeline mHandle;
         vk::PipelineLayout mPipelineLayout;
         const uint32_t mMaxPushConstantRange = 128;
-    public:
-        VulkanPipeline(const PipelineDescription& description)
-            : mType(description.type)
+
+        void InitGraphicsPipeline(const PipelineDescription& description)
         {
             std::vector<vk::PipelineShaderStageCreateInfo> shaderStageCreateInfos;
             for (auto& shader : description.descriptorSetLayout->GetShaders())
@@ -134,14 +133,78 @@ namespace Fluent
                 .setPVertexInputState(&vertexInputStateCreateInfo)
                 .setPInputAssemblyState(&inputAssemblyStateCreateInfo)
                 .setPViewportState(&viewportStateCreateInfo)
-                .setPRasterizationState(&rasterizationStateCreateInfo)
                 .setPMultisampleState(&multisampleStateCreateInfo)
+                .setPRasterizationState(&rasterizationStateCreateInfo)
                 .setPColorBlendState(&colorBlendStateCreateInfo)
                 .setPDynamicState(&dynamicStateCreateInfo)
                 .setLayout(mPipelineLayout)
                 .setRenderPass((VkRenderPass)description.renderPass->GetNativeHandle());
             
             mHandle = device.createGraphicsPipeline({}, pipelineCreateInfo).value;
+        }
+
+        void InitComputePipeline(const PipelineDescription& description)
+        {
+            // TODO: check that only one exist
+            auto& shader = description.descriptorSetLayout->GetShaders()[0];
+            vk::PipelineShaderStageCreateInfo shaderStageCreateInfo;
+            shaderStageCreateInfo
+                .setModule((VkShaderModule)shader->GetNativeHandle())
+                .setPName("main")
+                .setStage(ToVulkanShaderStage(shader->GetStage()));
+
+            std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
+            bindingDescriptions.reserve(description.bindingDescriptions.size());
+            for (auto& bindingDescription : description.bindingDescriptions)
+            {
+                bindingDescriptions.emplace_back
+                (
+                vk::VertexInputBindingDescription
+                { 
+                    bindingDescription.binding,
+                    bindingDescription.stride,
+                    ToVulkanVertexInputRate(bindingDescription.inputRate)
+                });
+            }
+
+            vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
+
+            vk::DescriptorSetLayout descriptorSetLayout = (VkDescriptorSetLayout)description.descriptorSetLayout->GetNativeHandle();
+            
+            vk::PushConstantRange pushConstantRange;
+            pushConstantRange
+                .setSize(mMaxPushConstantRange)
+                .setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eFragment);
+
+            vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo;
+            pipelineLayoutCreateInfo.setSetLayouts(descriptorSetLayout);
+            pipelineLayoutCreateInfo.setPushConstantRanges(pushConstantRange);
+
+            mPipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
+
+            vk::ComputePipelineCreateInfo computePipelineCreateInfo;
+            computePipelineCreateInfo
+                .setStage(shaderStageCreateInfo)
+                .setLayout(mPipelineLayout);
+            
+            mHandle = device.createComputePipeline({}, computePipelineCreateInfo).value;
+        }
+    public:
+        VulkanPipeline(const PipelineDescription& description)
+            : mType(description.type)
+        {
+            switch (mType)
+            {
+                case PipelineType::eGraphics:
+                    InitGraphicsPipeline(description);
+                    break;
+                case PipelineType::eCompute:
+                    InitComputePipeline(description);
+                    break;
+                default:
+                    LOG_WARN("Unknown pipeline type {}", uint32_t(mType));
+                    break;
+            }
         }
 
         ~VulkanPipeline() override

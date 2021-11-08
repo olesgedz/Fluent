@@ -125,6 +125,14 @@ namespace Fluent
                     auto [image, allocation] = allocator.AllocateImage(description, MemoryUsage::eGpu);
                     mHandle = static_cast<VkImage>(image);
                     mAllocation = allocation;
+                    auto& cmd = context.GetCurrentCommandBuffer();
+                    if (description.initialUsage != ImageUsage::eUndefined)
+                    {
+                        cmd->Begin();
+                        cmd->ImageBarrier(*this, ImageUsage::eUndefined, description.initialUsage);
+                        cmd->End();
+                        context.ImmediateSubmit(cmd);
+                    }
                 }
             }
 

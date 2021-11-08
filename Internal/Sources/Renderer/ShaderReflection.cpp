@@ -144,5 +144,25 @@ namespace Fluent
             LOG_TRACE("Vecsize: {}", compiler.get_type(image.base_type_id).vecsize);
             LOG_TRACE("Columns: {}", compiler.get_type(image.base_type_id).columns);
         }
+
+        LOG_TRACE("STORAGE IMAGES:");
+
+        for (auto& image : resources.storage_images)
+        {
+            auto& uniform = description.uniforms.emplace_back();
+            uniform.descriptorType = DescriptorType::eStorageImage;
+            uniform.binding = compiler.get_decoration(image.id, spv::Decoration::DecorationBinding);
+
+            // Here I try to count descriptors if it's array
+            for (auto count : compiler.get_type(image.type_id).array)
+                uniform.descriptorCount *= count;
+
+            LOG_TRACE("Name: {}", image.name);
+            LOG_TRACE("Set: {}", compiler.get_decoration(image.id, spv::Decoration::DecorationDescriptorSet));
+            LOG_TRACE("Binding: {}", compiler.get_decoration(image.id, spv::Decoration::DecorationBinding));
+            LOG_TRACE("Width: {}", compiler.get_type(image.base_type_id).width);
+            LOG_TRACE("Vecsize: {}", compiler.get_type(image.base_type_id).vecsize);
+            LOG_TRACE("Columns: {}", compiler.get_type(image.base_type_id).columns);
+        }
     }
 } // namespace Fluent
