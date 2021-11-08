@@ -20,9 +20,9 @@ struct CameraUBO
 
 struct ParallaxMappingSettings
 {
-    Vector3 lightPosition;
-    Vector3 viewPosition;
-    float heightScale;
+    alignas(16) Vector3 lightPosition;
+    alignas(16) Vector3 viewPosition;
+    alignas(4) float heightScale;
 };
 
 static Vector3 cubeCenter = Vector3(0.25, 0.25, -0.25);
@@ -145,13 +145,10 @@ public:
         auto& window = Application::Get().GetWindow();
         ImageDescription imageDescs[3] = {};
         imageDescs[0].initialUsage = ImageUsage::Bits::eSampled;
-        imageDescs[0].flags = ImageDescriptionFlagBits::eGenerateMipMaps;
         imageDescs[0].filename = "05_ParallaxMapping/albedo.ktx";
         imageDescs[1].initialUsage = ImageUsage::Bits::eSampled;
-        imageDescs[1].flags = ImageDescriptionFlagBits::eGenerateMipMaps;
         imageDescs[1].filename = "05_ParallaxMapping/normal.ktx";
         imageDescs[2].initialUsage = ImageUsage::Bits::eSampled;
-        imageDescs[2].flags = ImageDescriptionFlagBits::eGenerateMipMaps;
         imageDescs[2].filename = "05_ParallaxMapping/displacement.ktx";
         mAlbedoMap = Image::Create(imageDescs[0]);
         mNormalMap = Image::Create(imageDescs[1]);
@@ -325,7 +322,7 @@ public:
         // Demo settings
         mParallaxSettings.lightPosition = Vector3(0.0, 1.0, 3.0);
         mParallaxSettings.viewPosition = Vector3(0.0, 0.0, 2.0);
-        mParallaxSettings.heightScale = 0.1;
+        mParallaxSettings.heightScale = 0.05;
     }
 
     void OnUnload() override
@@ -336,7 +333,7 @@ public:
 
     void OnUpdate(float deltaTime) override
     {
-        mCameraUBO.model = Rotate(Matrix4(1.0), mTimer.Elapsed(), Vector3(0.0, 1.0, 0.0));
+        mCameraUBO.model = Rotate(Matrix4(1.0), Radians(mTimer.Elapsed() * -10.0f), Normalize(Vector3(1.0, 0.0, 1.0)));
         mCameraUBO.model = Translate(mCameraUBO.model, -cubeCenter);
         mUniformBuffer->WriteData(&mCameraUBO, sizeof(CameraUBO), 0);
 

@@ -18,6 +18,8 @@ namespace Fluent
     using Matrix4 = glm::mat4;
 
     float Radians(float degrees);
+    
+    Vector3 Normalize(const Vector3 &x);
     Matrix4 CreatePerspectiveMatrix(float fov, float aspect, float zNear, float zFar);
     Matrix4 CreateLookAtMatrix(const Vector3& position, const Vector3& direction, const Vector3& up);
     Matrix4 Rotate(const Matrix4& mat, float angle, Vector3 axis);

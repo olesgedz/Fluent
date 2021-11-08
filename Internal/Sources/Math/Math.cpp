@@ -26,4 +26,9 @@ namespace Fluent
     {
         return glm::translate(mat, v);
     }
+
+    Vector3 Normalize(const Vector3 &x)
+    {
+        return glm::normalize(x);
+    }
 } // namespace Fluent
