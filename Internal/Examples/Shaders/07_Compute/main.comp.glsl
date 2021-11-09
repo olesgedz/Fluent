@@ -4,16 +4,6 @@ layout (local_size_x = 16, local_size_y = 16) in;
 
 layout (set = 0, binding = 0, rgba32f) uniform image2D uOutputImage;
 
-float HitSphere(vec3 center, float radius, vec3 origin, vec3 dir)
-{
-    vec3 oc = origin - center;
-    float a = dot(dir, dir);
-    float b = 2.0 * dot(oc, dir);
-    float c = dot(oc,oc) - radius * radius;
-    float discriminant = b * b - 4 * a * c;
-    return discriminant;
-}
-
 int maxIterations = 100;
 
 float Map(float x, float in_min, float in_max, float out_min, float out_max)
