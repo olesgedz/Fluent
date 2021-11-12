@@ -312,12 +312,12 @@ namespace Fluent
 
         void BeginFrame() override
         {
-            mFrameProvider->BeginFrame();
+            mRenderingEnabled = mFrameProvider->BeginFrame();
         }
 
         void EndFrame() override
         {
-            mFrameProvider->EndFrame();
+            mRenderingEnabled = mFrameProvider->EndFrame();
         }
 
         void WaitIdle() override

@@ -10,9 +10,10 @@ namespace Fluent
         struct VirtualFrame
         {
             Ref<StagingBuffer>  stagingBuffer;
+            vk::Semaphore       acquireSemaphore;
             vk::Semaphore       renderCompleteSemaphore;
             Ref<CommandBuffer>  cmd;
-            vk::Fence fence;
+            vk::Fence           fence;
         };
     private:
         vk::Device                  mDevice;
@@ -20,8 +21,7 @@ namespace Fluent
         vk::SwapchainKHR            mSwapchain;
         vk::Queue                   mQueue;
         uint32_t                    mCurrentFrameIndex = 0;
-        std::vector<vk::Fence>      mImagesInFlight;
-        vk::Semaphore               mAcquireSemaphore;
+        std::vector<bool>           mCommandBuffersRecorded;
         std::vector<VirtualFrame>   mVirtualFrames;
         uint32_t                    mActiveImageIndex;
     public:
@@ -30,9 +30,10 @@ namespace Fluent
             , mCommandPool((VkCommandPool)description.commandPool)
             , mSwapchain((VkSwapchainKHR)description.swapchain)
             , mQueue((VkQueue)description.queue)
-            , mImagesInFlight(description.swapchainImageCount, nullptr)
+            , mCurrentFrameIndex(0)
         {
-            mAcquireSemaphore = mDevice.createSemaphore(vk::SemaphoreCreateInfo{});
+            mCommandBuffersRecorded.resize(description.frameCount);
+            std::fill(mCommandBuffersRecorded.begin(), mCommandBuffersRecorded.end(), false);
 
             CommandBufferDescription cmdDesc{};
             cmdDesc.commandPool = description.commandPool;
@@ -46,6 +47,7 @@ namespace Fluent
             for (uint32_t i = 0; i < description.frameCount; ++i)
             {
                 mVirtualFrames[i].renderCompleteSemaphore = mDevice.createSemaphore(vk::SemaphoreCreateInfo{});
+                mVirtualFrames[i].acquireSemaphore = mDevice.createSemaphore(vk::SemaphoreCreateInfo{});
                 mVirtualFrames[i].cmd = CommandBuffer::Create(cmdDesc);
                 mVirtualFrames[i].fence = mDevice.createFence(vk::FenceCreateInfo { vk::FenceCreateFlagBits::eSignaled });
                 mVirtualFrames[i].stagingBuffer = StagingBuffer::Create(stagingBufferDesc);
@@ -59,43 +61,36 @@ namespace Fluent
                 frame.stagingBuffer = nullptr;
                 mDevice.destroyFence(frame.fence);
                 mDevice.destroySemaphore(frame.renderCompleteSemaphore);
+                mDevice.destroy(frame.acquireSemaphore);
             }
-            mDevice.destroy(mAcquireSemaphore);
         }
 
         bool BeginFrame() override
         {
-            try
+            bool result = true;
+
+            auto acquireResult = mDevice.acquireNextImageKHR
+            (
+                mSwapchain,
+                std::numeric_limits<uint64_t>::max(),
+                mVirtualFrames[mCurrentFrameIndex].acquireSemaphore
+            );
+
+            mActiveImageIndex = acquireResult.value;
+
+            if (acquireResult.result != vk::Result::eSuccess) result = false;
+
+            if (mCommandBuffersRecorded[mCurrentFrameIndex] == false)
             {
-                auto acquireResult = mDevice.acquireNextImageKHR
-                (
-                    mSwapchain,
-                    std::numeric_limits<uint64_t>::max(),
-                    mAcquireSemaphore
-                );
-
-                mActiveImageIndex = acquireResult.value;
+                auto waitResult = mDevice.waitForFences(mVirtualFrames[mCurrentFrameIndex].fence, true, std::numeric_limits<uint64_t>::max());
+                mDevice.resetFences(mVirtualFrames[mCurrentFrameIndex].fence);
+                mCommandBuffersRecorded[mCurrentFrameIndex] = true;
             }
-            catch(vk::OutOfDateKHRError&)
-            {
-                return false;
-            }
-
-            auto waitResult = mDevice.waitForFences(mVirtualFrames[mCurrentFrameIndex].fence, true, std::numeric_limits<uint64_t>::max());
-
-            if (mImagesInFlight[mActiveImageIndex])
-            {
-                waitResult = mDevice.waitForFences(mImagesInFlight[mActiveImageIndex], true, std::numeric_limits<uint64_t>::max());
-            }
-
-            mImagesInFlight[mActiveImageIndex] = mVirtualFrames[mCurrentFrameIndex].fence;
-
-            mDevice.resetFences(mVirtualFrames[mCurrentFrameIndex].fence);
 
             /// Recording command buffers
             auto& cmd = mVirtualFrames[mCurrentFrameIndex].cmd;
             cmd->Begin();
-            return true;
+            return result;
         }
 
         bool EndFrame() override
@@ -134,13 +129,13 @@ namespace Fluent
 
             vk::SubmitInfo submitInfo;
             submitInfo
-                .setWaitSemaphores(mAcquireSemaphore)
+                .setWaitSemaphores(mVirtualFrames[mCurrentFrameIndex].acquireSemaphore)
                 .setWaitDstStageMask(waitDstStageMask)
                 .setSignalSemaphores(mVirtualFrames[mCurrentFrameIndex].renderCompleteSemaphore)
                 .setCommandBuffers(nativeCmd);
 
             mQueue.submit(submitInfo, mVirtualFrames[mCurrentFrameIndex].fence);
-
+    
             vk::PresentInfoKHR presentInfo;
             presentInfo
                 .setWaitSemaphores(mVirtualFrames[mCurrentFrameIndex].renderCompleteSemaphore)
@@ -150,16 +145,12 @@ namespace Fluent
             mVirtualFrames[mCurrentFrameIndex].stagingBuffer->Flush();
             mVirtualFrames[mCurrentFrameIndex].stagingBuffer->Reset();
 
-            try
-            {
-                auto presentResult = mQueue.presentKHR(presentInfo);
-            }
-            catch(vk::OutOfDateKHRError&)
-            {
-                return false;
-            }
+            auto presentResult = mQueue.presentKHR(presentInfo);
+            if (presentResult != vk::Result::eSuccess) return false;
 
+            mCommandBuffersRecorded[mCurrentFrameIndex] = false;
             mCurrentFrameIndex = (mCurrentFrameIndex + 1) % mVirtualFrames.size();
+
             return true;
         }
 
