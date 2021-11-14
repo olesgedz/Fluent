@@ -207,22 +207,22 @@ public:
         {
             VertexAttributeDescription
             {
-                .location = 0,
-                .binding = 0,
-                .format = Format::eR32G32B32Sfloat,
-                .offset = offsetof(Vertex, position)
+                0,
+                0,
+                Format::eR32G32B32Sfloat,
+                offsetof(Vertex, position)
             },
             {
-                .location = 1,
-                .binding = 0,
-                .format = Format::eR32G32B32Sfloat,
-                .offset = offsetof(Vertex, normal)
+                1,
+                0,
+                Format::eR32G32B32Sfloat,
+                offsetof(Vertex, normal)
             },
             {
-                .location = 2,
-                .binding = 0,
-                .format = Format::eR32G32Sfloat,
-                .offset = offsetof(Vertex, uv)
+                2,
+                0,
+                Format::eR32G32Sfloat,
+                offsetof(Vertex, uv)
             }
         };
 

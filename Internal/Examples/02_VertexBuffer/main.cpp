@@ -96,9 +96,9 @@ public:
         {
             VertexBindingDescription
             {
-                .binding = 0,
-                .stride = sizeof(Vertex),
-                .inputRate = VertexInputRate::eVertex
+                0, // binding
+                sizeof(Vertex), // stride
+                VertexInputRate::eVertex // input rate
             }
         };
 
@@ -106,16 +106,16 @@ public:
         {
             VertexAttributeDescription
             {
-                .location = 0,
-                .binding = 0,
-                .format = Format::eR32G32B32Sfloat,
-                .offset = offsetof(Vertex, position)
+                0,
+                0,
+                Format::eR32G32B32Sfloat,
+                offsetof(Vertex, position)
             },
             {
-                .location = 1,
-                .binding = 0,
-                .format = Format::eR32G32B32Sfloat,
-                .offset = offsetof(Vertex, color)
+                1,
+                0,
+                Format::eR32G32B32Sfloat,
+                offsetof(Vertex, color)
             }
         };
         pipelineDesc.descriptorSetLayout = mDescriptorSetLayout;
