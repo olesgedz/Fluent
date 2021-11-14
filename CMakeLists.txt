@@ -7,7 +7,7 @@ cmake_policy(SET CMP0042 NEW) # ENABLE CMP0042: MACOSX_RPATH is enabled by defau
 cmake_policy(SET CMP0063 NEW) # ENABLE CMP0063: Honor visibility properties for all target types.
 cmake_policy(SET CMP0077 NEW) # ENABLE CMP0077: option() honors normal variables
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 17)
 
 if (CMAKE_BUILD_TYPE EQUAL "Debug")
     set(DebugMode True)

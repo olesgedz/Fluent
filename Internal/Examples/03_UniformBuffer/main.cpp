@@ -252,6 +252,8 @@ public:
         mImage = Image::Create(imageDesc);
 
         FramebufferDescription framebufferDesc {};
+        framebufferDesc.width = window->GetWidth();
+        framebufferDesc.height = window->GetHeight();
         framebufferDesc.renderPass = mRenderPass;
         framebufferDesc.targets = {{ mImage }};
 
@@ -305,7 +307,8 @@ int main(int argc, char** argv)
     ApplicationDescription appDesc {};
     appDesc.argv = argv;
     appDesc.windowDescription = windowDescription;
-
+    appDesc.askGraphicValidation = true;
+    
     Application app(appDesc);
     UniformBufferLayer layer;
     app.PushLayer(layer);

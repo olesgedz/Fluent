@@ -49,9 +49,6 @@ namespace Fluent
                         });
 
                         vk::DescriptorBindingFlags descriptorBindingFlags = { };
-                        // descriptorBindingFlags |= vk::DescriptorBindingFlagBits::eUpdateAfterBind;
-                        if (uniform.descriptorCount > 1)
-                            descriptorBindingFlags |= vk::DescriptorBindingFlagBits::ePartiallyBound;
                         bindingFlags.push_back(descriptorBindingFlags);
                     }
                 }
@@ -61,7 +58,6 @@ namespace Fluent
             bindingFlagsCreateInfo.setBindingFlags(bindingFlags);
 
             vk::DescriptorSetLayoutCreateInfo layoutCreateInfo;
-            layoutCreateInfo.setFlags(vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool);
             layoutCreateInfo.setBindings(bindings);
             layoutCreateInfo.setPNext(&bindingFlagsCreateInfo);
 

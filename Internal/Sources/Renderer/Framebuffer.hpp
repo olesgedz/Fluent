@@ -8,6 +8,8 @@ namespace Fluent
 {
     struct FramebufferDescription
     {
+        uint32_t width;
+        uint32_t height;
         Ref<RenderPass> renderPass;
         std::vector<Ref<Image>> targets;
         Ref<Image> depthStencil;

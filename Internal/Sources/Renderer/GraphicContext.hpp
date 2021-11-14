@@ -9,7 +9,7 @@
 
 namespace Fluent
 {
-    struct GContextDescription
+    struct GraphicContextDescription
     {
         bool requestValidation;
         Handle window;
@@ -48,7 +48,7 @@ namespace Fluent
         virtual Ref<CommandBuffer>& GetCurrentCommandBuffer() = 0;
         virtual Ref<StagingBuffer>& GetStagingBuffer() = 0;
 
-        static Scope<GraphicContext> Create(const GContextDescription& description);
+        static Scope<GraphicContext> Create(const GraphicContextDescription& description);
     };
 
     void SetGraphicContext(GraphicContext& context);

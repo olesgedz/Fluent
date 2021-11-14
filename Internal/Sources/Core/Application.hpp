@@ -14,6 +14,7 @@ namespace Fluent
     {
         char** argv;
         WindowDescription windowDescription;
+        bool askGraphicValidation;
     };
 
     class Application

@@ -82,7 +82,7 @@ namespace Fluent
             mDescriptorPool = mDevice.createDescriptorPool(descriptorPoolCreateInfo);
         }
     public:
-        VulkanContext(const GContextDescription& description)
+        VulkanContext(const GraphicContextDescription& description)
             : mWindowHandle(description.window)
         {
             SetGraphicContext(*this);
@@ -210,7 +210,6 @@ namespace Fluent
             mCommandPool = mDevice.createCommandPool(cmdPoolCreateInfo);
 
             CreateDescriptorPool();
-            OnResize(mExtent.width, mExtent.height);
         }
 
         ~VulkanContext() override
@@ -346,7 +345,7 @@ namespace Fluent
         Handle              GetCommandPool() override { return mCommandPool; }
         Handle              GetSwapchain() override { return mSwapchain; }
         Handle              GetDescriptorPool() const override { return mDescriptorPool; }
-        uint32_t            GetPresentImageCount() const { return mPresentImageCount; }
+        uint32_t            GetPresentImageCount() const override { return mPresentImageCount; }
         uint32_t            GetActiveImageIndex() const override { return mFrameProvider->GetActiveImageIndex(); };
         Ref<CommandBuffer>& GetCurrentCommandBuffer() override { return mFrameProvider->GetCommandBuffer(); }
         Ref<StagingBuffer>& GetStagingBuffer() override { return mFrameProvider->GetStagingBuffer(); }
@@ -354,7 +353,7 @@ namespace Fluent
 
     /// Interface
 
-    Scope<GraphicContext> GraphicContext::Create(const GContextDescription& description)
+    Scope<GraphicContext> GraphicContext::Create(const GraphicContextDescription& description)
     {
         return CreateScope<VulkanContext>(description);
     }

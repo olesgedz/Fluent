@@ -17,10 +17,13 @@ namespace Fluent
             mWindow = Window::Create(description.windowDescription);
             mWindow->SetEventCallback([this](const Event &event) { OnEvent(event); });
             mRunning = true;
-            GContextDescription gcontextDescription{};
-            gcontextDescription.requestValidation = true;
+
+            GraphicContextDescription gcontextDescription{};
+            gcontextDescription.requestValidation = description.askGraphicValidation;
             gcontextDescription.window = mWindow->GetNativeHandle();
+
             mGraphicContext = GraphicContext::Create(gcontextDescription);
+            mGraphicContext->OnResize(mWindow->GetWidth(), mWindow->GetHeight());
             SetGraphicContext(*mGraphicContext);
             Input::Init();
         }

@@ -21,8 +21,8 @@ namespace Fluent
             framebufferCreateInfo
                 .setRenderPass((VkRenderPass)description.renderPass->GetNativeHandle())
                 .setAttachments(attachmentViews)
-                .setWidth(description.renderPass->GetWidth())
-                .setHeight(description.renderPass->GetHeight())
+                .setWidth(description.width)
+                .setHeight(description.height)
                 .setLayers(1);
 
             vk::Device device = (VkDevice)GetGraphicContext().GetDevice();

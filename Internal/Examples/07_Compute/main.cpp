@@ -121,7 +121,8 @@ int main(int argc, char** argv)
     ApplicationDescription appDesc {};
     appDesc.argv = argv;
     appDesc.windowDescription = windowDescription;
-
+    appDesc.askGraphicValidation = true;
+    
     Application app(appDesc);
     ComputeLayer layer;
     app.PushLayer(layer);
