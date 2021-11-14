@@ -114,6 +114,7 @@ namespace Fluent
 
             /// Select physical device
             auto physicalDevices = mInstance.enumeratePhysicalDevices();
+            mPhysicalDevice = physicalDevices[0];
             for (const auto& physicalDevice : physicalDevices)
             {
                 auto properties = physicalDevice.getProperties();
