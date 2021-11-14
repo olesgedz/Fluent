@@ -27,12 +27,18 @@ namespace Fluent
             mEventCallback(event);
         }
     public:
-        MultiplatformWindow(const WindowDescription& description)
+        explicit MultiplatformWindow(const WindowDescription& description)
             : mWidth(description.width), mHeight(description.height) 
         {
             glfwInit();
             glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-            mHandle = glfwCreateWindow(mWidth, mHeight, mTitle.c_str(), nullptr, nullptr);
+            mHandle = glfwCreateWindow
+                (
+                    static_cast<int>(mWidth),
+                    static_cast<int>(mHeight),
+                    mTitle.c_str(),
+                    nullptr,nullptr
+                );
             glfwSetWindowUserPointer(mHandle, this);
 
             glfwSetKeyCallback(mHandle, [](GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -48,7 +54,7 @@ namespace Fluent
             glfwSetCharCallback(mHandle, [](GLFWwindow* window, uint32_t codepoint)
             {
                 auto* handle = reinterpret_cast<MultiplatformWindow*>(glfwGetWindowUserPointer(window));
-                handle->SendEvent(KeyTypedEvent(codepoint));
+                handle->SendEvent(KeyTypedEvent(static_cast<int>(codepoint)));
             });
 
             glfwSetMouseButtonCallback(mHandle, [](GLFWwindow* win, int button, int action, int mods)

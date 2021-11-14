@@ -197,9 +197,9 @@ public:
         {
             VertexBindingDescription
             {
-                .binding = 0,
-                .stride = sizeof(Vertex),
-                .inputRate = VertexInputRate::eVertex
+                0,
+                sizeof(Vertex),
+                VertexInputRate::eVertex
             }
         };
 
