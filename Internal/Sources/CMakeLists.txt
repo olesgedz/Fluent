@@ -41,18 +41,16 @@ set(Sources
 	${MathSources}
 	${UiSources})
 
-find_package(Vulkan REQUIRED)
-
-set(CommonLibs glfw glm imgui spdlog vk_mem_alloc tiny_imageformat tiny_ktx Vulkan::Vulkan)
+set(CommonLibs glfw glm imgui spdlog vk_mem_alloc tiny_imageformat tiny_ktx)
 
 if (MSVC)
     set(PlatformLibDirs $ENV{VULKAN_SDK}/Lib)
-    set(PlatformLibs spirv-cross-cored spirv-cross-glsld shaderc_shared)
+    set(PlatformLibs spirv-cross-cored spirv-cross-glsld shaderc_shared vulkan-1.lib)
 elseif (UNIX AND NOT APPLE)
-	set(PlatformLibs spirv-cross-core spirv-cross-glsl shaderc_shared)
+	set(PlatformLibs spirv-cross-core spirv-cross-glsl shaderc_shared vulkan.so)
 elseif(APPLE)
     set(PlatformLibDirs $ENV{VULKAN_SDK}/lib)
-    set(PlatformLibs spirv-cross-core spirv-cross-glsl shaderc_shared)
+    set(PlatformLibs spirv-cross-core spirv-cross-glsl shaderc_shared vulkan.dylib)
 endif()
 
 if (DebugMode)
@@ -78,6 +76,7 @@ add_library(${Target} ${Sources})
 target_include_directories(${Target}
 	PUBLIC
 	${IncludePath}
+	${CMAKE_CURRENT_SOURCE_DIR}/../External/Vulkan-Headers
 
 	INTERFACE
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>

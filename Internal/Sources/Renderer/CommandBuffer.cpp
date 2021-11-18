@@ -210,7 +210,7 @@ namespace Fluent
             auto sourceRange = GetImageSubresourceRange(*src);
             auto distanceRange = GetImageSubresourceRange(*dst);
 
-            std::array<VkImageMemoryBarrier, 2> barriers{};
+            VkImageMemoryBarrier barriers[2] = {};
             size_t barrierCount = 0;
 
             VkImageMemoryBarrier toTransferSrcBarrier{};
@@ -250,7 +250,7 @@ namespace Fluent
                         {},
                         0, nullptr,
                         0, nullptr,
-                        static_cast<uint32_t>(barrierCount), barriers.data()
+                        static_cast<uint32_t>(barrierCount), barriers
                     );
             }
 
@@ -341,26 +341,16 @@ namespace Fluent
                 dstRange.baseMipLevel = i + 1;
                 dstRange.levelCount = 1;
 
-                std::array<VkImageMemoryBarrier, 2> imageBarriers{};
-                imageBarriers[0].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER; // to transfer source
-                imageBarriers[0].srcAccessMask = ImageUsageToAccessFlags(srcUsage);
-                imageBarriers[0].dstAccessMask = ImageUsageToAccessFlags(ImageUsage::eTransferDst);
-                imageBarriers[0].oldLayout = ImageUsageToImageLayout(srcUsage);
-                imageBarriers[0].newLayout = ImageUsageToImageLayout(ImageUsage::eTransferSrc);
-                imageBarriers[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                imageBarriers[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                imageBarriers[0].image = (VkImage)image.GetNativeHandle();
-                imageBarriers[0].subresourceRange = srcRange;
-
-                imageBarriers[1].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER; // to transfer source
-                imageBarriers[1].srcAccessMask = ImageUsageToAccessFlags(ImageUsage::eUndefined);
-                imageBarriers[1].dstAccessMask = ImageUsageToAccessFlags(ImageUsage::eTransferDst);
-                imageBarriers[1].oldLayout = ImageUsageToImageLayout(ImageUsage::eUndefined);
-                imageBarriers[1].newLayout = ImageUsageToImageLayout(ImageUsage::eTransferDst);
-                imageBarriers[1].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                imageBarriers[1].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                imageBarriers[1].image = (VkImage)image.GetNativeHandle();
-                imageBarriers[1].subresourceRange = dstRange;
+                VkImageMemoryBarrier imageBarrier = {};
+                imageBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER; // to transfer source
+                imageBarrier.srcAccessMask = ImageUsageToAccessFlags(srcUsage);
+                imageBarrier.dstAccessMask = ImageUsageToAccessFlags(ImageUsage::eTransferDst);
+                imageBarrier.oldLayout = ImageUsageToImageLayout(srcUsage);
+                imageBarrier.newLayout = ImageUsageToImageLayout(ImageUsage::eTransferSrc);
+                imageBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                imageBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                imageBarrier.image = (VkImage)image.GetNativeHandle();
+                imageBarrier.subresourceRange = srcRange;
 
                 vkCmdPipelineBarrier
                     (
@@ -370,7 +360,7 @@ namespace Fluent
                         {},
                         0, nullptr,
                         0, nullptr,
-                        1, imageBarriers.data()
+                        1, &imageBarrier
                     );
 
                 srcUsage = ImageUsage::eTransferDst;

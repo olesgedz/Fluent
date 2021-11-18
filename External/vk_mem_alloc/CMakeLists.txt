@@ -7,9 +7,6 @@ set(srcs vk_mem_alloc.cpp)
 
 add_library(vk_mem_alloc STATIC ${srcs})
 
-find_package(Vulkan REQUIRED)
-target_link_libraries(${target} PUBLIC Vulkan::Vulkan)
-
 if (APPLE)
     target_compile_options(${target} PUBLIC -Wno-nullability-completeness)
 endif()
@@ -19,6 +16,7 @@ set(includePath "${CMAKE_CURRENT_SOURCE_DIR}")
 target_include_directories(${target}
         PUBLIC
         ${includePath}
+        ${CMAKE_CURRENT_SOURCE_DIR}/../Vulkan-Headers
 
         INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>

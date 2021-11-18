@@ -37,13 +37,11 @@ namespace Fluent
                             continue; // do not add new binding
                         }
 
-                        bindings.push_back(VkDescriptorSetLayoutBinding
-                        {
-                            uniform.binding,
-                            ToVulkanDescriptorType(uniform.descriptorType),
-                            uniform.descriptorCount,
-                            ToVulkanShaderStage(shader->GetStage())
-                        });
+                        auto& binding = bindings.emplace_back();
+                        binding.binding = uniform.binding;
+                        binding.descriptorType = ToVulkanDescriptorType(uniform.descriptorType);
+                        binding.descriptorCount = uniform.descriptorCount;
+                        binding.stageFlags = ToVulkanShaderStage(shader->GetStage());
                     }
                 }
             }
