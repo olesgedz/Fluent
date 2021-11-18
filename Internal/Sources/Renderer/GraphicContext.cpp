@@ -1,3 +1,4 @@
+#include <algorithm>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 // I want to use my own vulkan headers, glfw do strange things
