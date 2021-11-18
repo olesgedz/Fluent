@@ -6,14 +6,13 @@ namespace Fluent
     class VulkanDescriptorSetLayout : public DescriptorSetLayout
     {
     private:
-        vk::DescriptorSetLayout mHandle;
+        VkDescriptorSetLayout mHandle = VK_NULL_HANDLE;
         std::vector<Ref<Shader>> mShaders;
     public:
         VulkanDescriptorSetLayout(const DescriptorSetLayoutDescription& description)
             : mShaders(description.shaders)
         {
-            std::vector<vk::DescriptorSetLayoutBinding> bindings;
-            std::vector<vk::DescriptorBindingFlags> bindingFlags;
+            std::vector<VkDescriptorSetLayoutBinding> bindings;
 
             size_t totalUniformCount = 0;
             for (const auto& shader : description.shaders)
@@ -23,8 +22,6 @@ namespace Fluent
             }
 
             bindings.reserve(totalUniformCount);
-            bindingFlags.reserve(totalUniformCount);
-
             for (const auto& shader : description.shaders)
             {
                 for (const auto& uniformsPerShader : shader->GetUniforms())
@@ -40,35 +37,30 @@ namespace Fluent
                             continue; // do not add new binding
                         }
 
-                        bindings.push_back(vk::DescriptorSetLayoutBinding
+                        bindings.push_back(VkDescriptorSetLayoutBinding
                         {
                             uniform.binding,
                             ToVulkanDescriptorType(uniform.descriptorType),
                             uniform.descriptorCount,
                             ToVulkanShaderStage(shader->GetStage())
                         });
-
-                        vk::DescriptorBindingFlags descriptorBindingFlags = { };
-                        bindingFlags.push_back(descriptorBindingFlags);
                     }
                 }
             }
 
-            vk::DescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsCreateInfo;
-            bindingFlagsCreateInfo.setBindingFlags(bindingFlags);
+            VkDescriptorSetLayoutCreateInfo layoutCreateInfo{};
+            layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            layoutCreateInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+            layoutCreateInfo.pBindings = bindings.data();
 
-            vk::DescriptorSetLayoutCreateInfo layoutCreateInfo;
-            layoutCreateInfo.setBindings(bindings);
-            layoutCreateInfo.setPNext(&bindingFlagsCreateInfo);
-
-            vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
-            mHandle = device.createDescriptorSetLayout(layoutCreateInfo);
+            VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
+            VK_ASSERT(vkCreateDescriptorSetLayout(device, &layoutCreateInfo, nullptr, &mHandle));
         }
 
         ~VulkanDescriptorSetLayout() override
         {
-            vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
-            device.destroyDescriptorSetLayout(mHandle);
+            VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
+            vkDestroyDescriptorSetLayout(device, mHandle, nullptr);
         }
 
         const std::vector<Ref<Shader>>& GetShaders() const override { return mShaders; }

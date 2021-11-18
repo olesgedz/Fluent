@@ -23,8 +23,9 @@ namespace Fluent
             gcontextDescription.window = mWindow->GetNativeHandle();
 
             mGraphicContext = GraphicContext::Create(gcontextDescription);
-            mGraphicContext->OnResize(mWindow->GetWidth(), mWindow->GetHeight());
+            /// Very important! You should do it right after creation
             SetGraphicContext(*mGraphicContext);
+            mGraphicContext->OnResize(mWindow->GetWidth(), mWindow->GetHeight());
             Input::Init();
         }
     }

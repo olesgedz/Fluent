@@ -1,4 +1,4 @@
-#include <vulkan/vulkan.hpp>
+#include "Renderer/Renderer.hpp"
 #include <vk_mem_alloc.h>
 #include "Renderer/DeviceAllocator.hpp"
 
@@ -7,9 +7,9 @@ namespace Fluent
     class VulkanAllocator : public DeviceAllocator
     {
     private:
-        vk::Instance        mInstance;
-        vk::PhysicalDevice  mPhysicalDevice;
-        vk::Device          mDevice;
+        VkInstance        mInstance;
+        VkPhysicalDevice  mPhysicalDevice;
+        VkDevice          mDevice;
         VmaAllocator        mAllocator;
     public:
         VulkanAllocator(const DeviceAllocatorDescription& description)
@@ -19,7 +19,7 @@ namespace Fluent
             , mAllocator(nullptr)
         {
             VmaAllocatorCreateInfo allocatorCreateInfo{};
-            allocatorCreateInfo.vulkanApiVersion    = VK_API_VERSION_1_2;
+            allocatorCreateInfo.vulkanApiVersion    = FLUENT_VK_API_VERSION;
             allocatorCreateInfo.instance            = mInstance;
             allocatorCreateInfo.physicalDevice      = mPhysicalDevice;
             allocatorCreateInfo.device              = mDevice;
@@ -39,27 +39,27 @@ namespace Fluent
             VmaAllocationCreateInfo allocationCreateInfo{};
             allocationCreateInfo.usage = static_cast<VmaMemoryUsage>(memoryUsage);
 
-            vk::ImageCreateInfo imageCreateInfo;
-            imageCreateInfo
-                .setArrayLayers(description.arraySize)
-                .setFormat(ToVulkanFormat(description.format))
-                .setExtent({ description.width, description.height, description.depth })
-                .setMipLevels(description.mipLevels)
-                .setSamples(ToVulkanSampleCount(description.sampleCount))
-                .setTiling(vk::ImageTiling::eOptimal)
-                .setInitialLayout(vk::ImageLayout::eUndefined)
-                .setImageType(vk::ImageType::e2D) // TODO: Am I really need this or hardcode it is ok
-                .setSharingMode(vk::SharingMode::eExclusive);
+            VkImageCreateInfo imageCreateInfo{};
+            imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            imageCreateInfo.arrayLayers = description.arraySize;
+            imageCreateInfo.format = ToVulkanFormat(description.format);
+            imageCreateInfo.extent = { description.width, description.height, description.depth };
+            imageCreateInfo.mipLevels = description.mipLevels;
+            imageCreateInfo.samples = ToVulkanSampleCount(description.sampleCount);
+            imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+            imageCreateInfo.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+            imageCreateInfo.imageType = VkImageType::VK_IMAGE_TYPE_2D;
+            imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-            vk::ImageUsageFlags imageUsage = ToVulkanImageUsage(description.initialUsage);
+            VkImageUsageFlags imageUsage = ToVulkanImageUsage(description.initialUsage);
             
             if (true) // TODO
-                imageUsage |= vk::ImageUsageFlagBits::eColorAttachment;
+                imageUsage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
                 
-            if ((imageUsage & vk::ImageUsageFlagBits::eSampled) || (imageUsage & vk::ImageUsageFlagBits::eStorage))
-                imageUsage |= (vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
+            if ((imageUsage & VK_IMAGE_USAGE_SAMPLED_BIT) || (imageUsage & VK_IMAGE_USAGE_STORAGE_BIT))
+                imageUsage |= (VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
-            imageCreateInfo.setUsage(imageUsage);
+            imageCreateInfo.usage = imageUsage;
 
             auto result = vmaCreateImage
             (
@@ -69,7 +69,7 @@ namespace Fluent
                 nullptr
             );
 
-            LOG_TRACE("Image allocate result {}", vk::to_string(vk::Result(result)));
+            VK_ASSERT(result);
        
             return { image, allocation };
         }

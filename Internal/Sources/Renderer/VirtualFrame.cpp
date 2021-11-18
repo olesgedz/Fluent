@@ -1,4 +1,4 @@
-#include <vulkan/vulkan.hpp>
+#include "Renderer/Renderer.hpp"
 #include "Renderer/GraphicContext.hpp"
 #include "Renderer/VirtualFrame.hpp"
 #include "Renderer/StagingBuffer.hpp"
@@ -10,22 +10,22 @@ namespace Fluent
         struct VirtualFrame
         {
             Ref<StagingBuffer>  stagingBuffer;
-            vk::Semaphore       acquireSemaphore;
-            vk::Semaphore       renderCompleteSemaphore;
+            VkSemaphore         acquireSemaphore;
+            VkSemaphore         renderCompleteSemaphore;
             Ref<CommandBuffer>  cmd;
-            vk::Fence           fence;
+            VkFence             fence;
         };
     private:
-        vk::Device                  mDevice;
-        vk::CommandPool             mCommandPool;
-        vk::SwapchainKHR            mSwapchain;
-        vk::Queue                   mQueue;
+        VkDevice                    mDevice;
+        VkCommandPool               mCommandPool;
+        VkSwapchainKHR              mSwapchain;
+        VkQueue                     mQueue;
         uint32_t                    mCurrentFrameIndex = 0;
         std::vector<bool>           mCommandBuffersRecorded;
         std::vector<VirtualFrame>   mVirtualFrames;
-        uint32_t                    mActiveImageIndex;
+        uint32_t                    mActiveImageIndex{};
     public:
-        VulkanFrameProvider(const VirtualFrameProviderDescription& description)
+        explicit VulkanFrameProvider(const VirtualFrameProviderDescription& description)
             : mDevice((VkDevice)description.device)
             , mCommandPool((VkCommandPool)description.commandPool)
             , mSwapchain((VkSwapchainKHR)description.swapchain)
@@ -46,10 +46,18 @@ namespace Fluent
 
             for (uint32_t i = 0; i < description.frameCount; ++i)
             {
-                mVirtualFrames[i].renderCompleteSemaphore = mDevice.createSemaphore(vk::SemaphoreCreateInfo{});
-                mVirtualFrames[i].acquireSemaphore = mDevice.createSemaphore(vk::SemaphoreCreateInfo{});
+                VkSemaphoreCreateInfo semaphoreCreateInfo{};
+                semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+                vkCreateSemaphore(mDevice, &semaphoreCreateInfo, nullptr, &mVirtualFrames[i].renderCompleteSemaphore);
+                vkCreateSemaphore(mDevice, &semaphoreCreateInfo, nullptr, &mVirtualFrames[i].acquireSemaphore);
+
                 mVirtualFrames[i].cmd = CommandBuffer::Create(cmdDesc);
-                mVirtualFrames[i].fence = mDevice.createFence(vk::FenceCreateInfo { vk::FenceCreateFlagBits::eSignaled });
+
+                VkFenceCreateInfo fenceCreateInfo{};
+                fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+                fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+                vkCreateFence(mDevice, &fenceCreateInfo, nullptr, &mVirtualFrames[i].fence);
+
                 mVirtualFrames[i].stagingBuffer = StagingBuffer::Create(stagingBufferDesc);
             }
         }
@@ -59,9 +67,9 @@ namespace Fluent
             for (auto& frame : mVirtualFrames)
             {
                 frame.stagingBuffer = nullptr;
-                mDevice.destroyFence(frame.fence);
-                mDevice.destroySemaphore(frame.renderCompleteSemaphore);
-                mDevice.destroy(frame.acquireSemaphore);
+                vkDestroyFence(mDevice, frame.fence, nullptr);
+                vkDestroySemaphore(mDevice, frame.renderCompleteSemaphore, nullptr);
+                vkDestroySemaphore(mDevice, frame.acquireSemaphore, nullptr);
             }
         }
 
@@ -69,21 +77,21 @@ namespace Fluent
         {
             bool result = true;
 
-            auto acquireResult = mDevice.acquireNextImageKHR
-            (
-                mSwapchain,
-                std::numeric_limits<uint64_t>::max(),
-                mVirtualFrames[mCurrentFrameIndex].acquireSemaphore
-            );
+            auto acquireResult = vkAcquireNextImageKHR
+                (
+                    mDevice, mSwapchain,
+                    std::numeric_limits<uint64_t>::max(),
+                    mVirtualFrames[mCurrentFrameIndex].acquireSemaphore,
+                    VK_NULL_HANDLE,
+                    &mActiveImageIndex
+                );
 
-            mActiveImageIndex = acquireResult.value;
+            if (acquireResult != VK_SUCCESS) result = false;
 
-            if (acquireResult.result != vk::Result::eSuccess) result = false;
-
-            if (mCommandBuffersRecorded[mCurrentFrameIndex] == false)
+            if (!mCommandBuffersRecorded[mCurrentFrameIndex])
             {
-                auto waitResult = mDevice.waitForFences(mVirtualFrames[mCurrentFrameIndex].fence, true, std::numeric_limits<uint64_t>::max());
-                mDevice.resetFences(mVirtualFrames[mCurrentFrameIndex].fence);
+                vkWaitForFences(mDevice, 1, &mVirtualFrames[mCurrentFrameIndex].fence, true, std::numeric_limits<uint64_t>::max());
+                vkResetFences(mDevice, 1, &mVirtualFrames[mCurrentFrameIndex].fence);
                 mCommandBuffersRecorded[mCurrentFrameIndex] = true;
             }
 
@@ -100,53 +108,62 @@ namespace Fluent
             auto imageUsage = GetGraphicContext().GetSwapchainImageUsage(mActiveImageIndex);
             auto image = GetGraphicContext().AcquireImage(mActiveImageIndex, ImageUsage::eUndefined);
 
-            vk::ImageSubresourceRange imageSubresourceRange = GetImageSubresourceRange(*image);
+            VkImageSubresourceRange imageSubresourceRange = GetImageSubresourceRange(*image);
 
-            vk::ImageMemoryBarrier transferDstToPresent;
-            transferDstToPresent
-                .setSrcAccessMask(ImageUsageToAccessFlags(imageUsage))
-                .setDstAccessMask(vk::AccessFlagBits::eMemoryRead)
-                .setOldLayout(ImageUsageToImageLayout(imageUsage))
-                .setNewLayout(vk::ImageLayout::ePresentSrcKHR)
-                .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-                .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-                .setImage((VkImage)image->GetNativeHandle())
-                .setSubresourceRange(imageSubresourceRange);
+            VkImageMemoryBarrier transferDstToPresent{};
+            transferDstToPresent.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            transferDstToPresent.srcAccessMask = ImageUsageToAccessFlags(imageUsage);
+            transferDstToPresent.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+            transferDstToPresent.oldLayout = ImageUsageToImageLayout(imageUsage);
+            transferDstToPresent.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+            transferDstToPresent.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            transferDstToPresent.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            transferDstToPresent.image = (VkImage)image->GetNativeHandle();
+            transferDstToPresent.subresourceRange = imageSubresourceRange;
 
-            vk::CommandBuffer nativeCmd = vk::CommandBuffer((VkCommandBuffer)cmd->GetNativeHandle());
+            auto nativeCmd = (VkCommandBuffer)cmd->GetNativeHandle();
 
-            nativeCmd.pipelineBarrier
+            vkCmdPipelineBarrier
             (
+                nativeCmd,
                 ImageUsageToPipelineStage(imageUsage),
-                vk::PipelineStageFlagBits::eBottomOfPipe,
-                {}, {}, {},
-                transferDstToPresent
+                VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                0,
+                0, nullptr,
+                0, nullptr,
+                1, &transferDstToPresent
             );
 
             cmd->End();
 
-            std::array waitDstStageMask = { static_cast<vk::PipelineStageFlags>(vk::PipelineStageFlagBits::eTransfer) };
+            VkPipelineStageFlags waitDstStageMask[] = { VK_PIPELINE_STAGE_TRANSFER_BIT };
 
-            vk::SubmitInfo submitInfo;
-            submitInfo
-                .setWaitSemaphores(mVirtualFrames[mCurrentFrameIndex].acquireSemaphore)
-                .setWaitDstStageMask(waitDstStageMask)
-                .setSignalSemaphores(mVirtualFrames[mCurrentFrameIndex].renderCompleteSemaphore)
-                .setCommandBuffers(nativeCmd);
+            VkSubmitInfo submitInfo{};
+            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submitInfo.waitSemaphoreCount = 1;
+            submitInfo.pWaitSemaphores = &mVirtualFrames[mCurrentFrameIndex].acquireSemaphore;
+            submitInfo.pWaitDstStageMask = waitDstStageMask;
+            submitInfo.signalSemaphoreCount = 1;
+            submitInfo.pSignalSemaphores = &mVirtualFrames[mCurrentFrameIndex].renderCompleteSemaphore;
+            submitInfo.commandBufferCount = 1;
+            submitInfo.pCommandBuffers = &nativeCmd;
 
-            mQueue.submit(submitInfo, mVirtualFrames[mCurrentFrameIndex].fence);
-    
-            vk::PresentInfoKHR presentInfo;
-            presentInfo
-                .setWaitSemaphores(mVirtualFrames[mCurrentFrameIndex].renderCompleteSemaphore)
-                .setSwapchains(mSwapchain)
-                .setImageIndices(mActiveImageIndex);
-            
+            vkQueueSubmit(mQueue, 1, &submitInfo, mVirtualFrames[mCurrentFrameIndex].fence);
+
+            VkPresentInfoKHR presentInfo{};
+            presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+            presentInfo.waitSemaphoreCount = 1;
+            presentInfo.pWaitSemaphores = &mVirtualFrames[mCurrentFrameIndex].renderCompleteSemaphore;
+            presentInfo.swapchainCount = 1;
+            presentInfo.pSwapchains = &mSwapchain;
+            presentInfo.pImageIndices = &mActiveImageIndex;
+
             mVirtualFrames[mCurrentFrameIndex].stagingBuffer->Flush();
             mVirtualFrames[mCurrentFrameIndex].stagingBuffer->Reset();
 
-            auto presentResult = mQueue.presentKHR(presentInfo);
-            if (presentResult != vk::Result::eSuccess) return false;
+            auto presentResult = vkQueuePresentKHR(mQueue, &presentInfo);
+
+            if (presentResult != VK_SUCCESS) return false;
 
             mCommandBuffersRecorded[mCurrentFrameIndex] = false;
             mCurrentFrameIndex = (mCurrentFrameIndex + 1) % mVirtualFrames.size();

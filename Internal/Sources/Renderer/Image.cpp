@@ -41,7 +41,7 @@ namespace Fluent
         if (!headerOkay)
         {
             TinyKtx_DestroyContext(ctx);
-            LOG_WARN("Failed to read ktx header");
+            LOG_WARN("[ KTX Image Load ] Failed to read ktx header");
         }
 
         description.width = TinyKtx_Width(ctx);
@@ -56,7 +56,7 @@ namespace Fluent
         if (description.format == Format::eUndefined)
         {
             TinyKtx_DestroyContext(ctx);
-            LOG_WARN("Format is undefined");
+            LOG_WARN("[ KTX Image Load ] Format is undefined");
         }
 
         if (TinyKtx_IsCubemap(ctx))
@@ -71,19 +71,19 @@ namespace Fluent
     {
     private:
         Allocation              mAllocation;
-        vk::Image               mHandle;
+        VkImage               mHandle;
         Format                  mFormat;
         uint32_t                mWidth;
         uint32_t                mHeight;
         uint32_t                mMipLevels;
-        vk::ImageView           mImageView;
+        VkImageView           mImageView;
 
         void ApplyDescription(ImageDescription& description)
         {
             mWidth = description.width;
             mHeight = description.height;
             mFormat = description.format;
-            if (static_cast<bool>(description.flags & ImageDescriptionFlagBits::eGenerateMipMaps))
+            if (static_cast<bool>((uint32_t)description.flags & (uint32_t)ImageDescriptionFlagBits::eGenerateMipMaps))
             {
                 description.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(mWidth, mHeight)))) + 1;
             }
@@ -137,7 +137,6 @@ namespace Fluent
             }
 
             CreateImageView();
-            LOG_TRACE("[ Image Created ] Size {}x{} Format {}", mWidth, mHeight, vk::to_string(ToVulkanFormat(mFormat)));
         }
     public:
         VulkanImage(const ImageDescription& description)
@@ -155,8 +154,8 @@ namespace Fluent
         {
             if (mImageView)
             {
-                vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
-                device.destroyImageView(mImageView);
+                VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
+                vkDestroyImageView(device, mImageView, nullptr);
             }
             
             if (mAllocation)
@@ -171,21 +170,22 @@ namespace Fluent
         {
             auto imageSubresourceRange = GetImageSubresourceRange(*this);
 
-            vk::ImageViewCreateInfo imageViewCreateInfo;
-            imageViewCreateInfo
-                .setViewType(vk::ImageViewType::e2D)
-                .setFormat(ToVulkanFormat(mFormat))
-                .setImage(mHandle)
-                .setSubresourceRange(imageSubresourceRange)
-                .setComponents(vk::ComponentMapping{
-                    vk::ComponentSwizzle::eIdentity,
-                    vk::ComponentSwizzle::eIdentity,
-                    vk::ComponentSwizzle::eIdentity,
-                    vk::ComponentSwizzle::eIdentity
-                });
-            
-            vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
-            mImageView = device.createImageView(imageViewCreateInfo);
+            VkImageViewCreateInfo imageViewCreateInfo{};
+            imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            imageViewCreateInfo.format = ToVulkanFormat(mFormat);
+            imageViewCreateInfo.image = mHandle;
+            imageViewCreateInfo.subresourceRange = imageSubresourceRange;
+            imageViewCreateInfo.components = VkComponentMapping
+                {
+                    VK_COMPONENT_SWIZZLE_IDENTITY,
+                    VK_COMPONENT_SWIZZLE_IDENTITY,
+                    VK_COMPONENT_SWIZZLE_IDENTITY,
+                    VK_COMPONENT_SWIZZLE_IDENTITY
+                };
+
+            VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
+            vkCreateImageView(device, &imageViewCreateInfo, nullptr, &mImageView);
         }
 
         Format GetFormat() const override

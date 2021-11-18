@@ -6,32 +6,31 @@ namespace Fluent
     class VulkanDescriptorSet : public DescriptorSet
     {
     private:
-        vk::DescriptorSet mHandle;
+        VkDescriptorSet mHandle;
     public:
         VulkanDescriptorSet(const DescriptorSetDescription& description)
         {
-            vk::DescriptorPool descriptorPool = (VkDescriptorPool)GetGraphicContext().GetDescriptorPool();
-            vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
-            vk::DescriptorSetLayout layout = (VkDescriptorSetLayout)description.descriptorSetLayout->GetNativeHandle();
+            VkDescriptorPool descriptorPool = (VkDescriptorPool)GetGraphicContext().GetDescriptorPool();
+            VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
+            VkDescriptorSetLayout layout = (VkDescriptorSetLayout)description.descriptorSetLayout->GetNativeHandle();
 
-            vk::DescriptorSetAllocateInfo descriptorAllocateInfo;
-            descriptorAllocateInfo
-                .setDescriptorPool(descriptorPool)
-                .setSetLayouts(layout);
+            VkDescriptorSetAllocateInfo descriptorAllocateInfo{};
+            descriptorAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+            descriptorAllocateInfo.descriptorPool = descriptorPool;
+            descriptorAllocateInfo.descriptorSetCount = 1;
+            descriptorAllocateInfo.pSetLayouts = &layout;
 
-            mHandle = device.allocateDescriptorSets(descriptorAllocateInfo).front();
+            vkAllocateDescriptorSets(device, &descriptorAllocateInfo, &mHandle);
         }
 
-        ~VulkanDescriptorSet() override
-        {
-        }
+        ~VulkanDescriptorSet() override = default;
 
         void UpdateDescriptorSet(const std::vector<DescriptorSetUpdateDesc>& updateDescs) override
         {
             // TODO: Very bad
-            std::vector<vk::DescriptorBufferInfo> bufferUpdates(updateDescs.size());
-            std::vector<vk::DescriptorImageInfo> imageUpdates(updateDescs.size());
-            std::vector<vk::WriteDescriptorSet> descriptorWrites(updateDescs.size());
+            std::vector<VkDescriptorBufferInfo> bufferUpdates(updateDescs.size());
+            std::vector<VkDescriptorImageInfo> imageUpdates(updateDescs.size());
+            std::vector<VkWriteDescriptorSet> descriptorWrites(updateDescs.size());
 
             uint32_t buffer = 0;
             uint32_t image = 0;
@@ -40,20 +39,20 @@ namespace Fluent
             for (const auto& update : updateDescs)
             {
                 auto& writeDescriptorSet = descriptorWrites[write++];
-                writeDescriptorSet
-                    .setDstBinding(update.binding)
-                    .setDstSet(mHandle)
-                    .setDescriptorType(ToVulkanDescriptorType(update.descriptorType));
+                writeDescriptorSet.sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                writeDescriptorSet.dstBinding       = update.binding;
+                writeDescriptorSet.descriptorCount  = 1;
+                writeDescriptorSet.dstSet           = mHandle;
+                writeDescriptorSet.descriptorType   = ToVulkanDescriptorType(update.descriptorType);
 
                 if (update.bufferUpdate.buffer != nullptr)
                 {
                     auto& bufferUpdateInfo = bufferUpdates[buffer++];
-                    bufferUpdateInfo
-                        .setBuffer((VkBuffer)update.bufferUpdate.buffer->GetNativeHandle())
-                        .setOffset(update.bufferUpdate.offset)
-                        .setRange(update.bufferUpdate.range);
-                        
-                    writeDescriptorSet.setBufferInfo(bufferUpdateInfo);
+                    bufferUpdateInfo.buffer = (VkBuffer)update.bufferUpdate.buffer->GetNativeHandle();
+                    bufferUpdateInfo.offset = update.bufferUpdate.offset;
+                    bufferUpdateInfo.range = update.bufferUpdate.range;
+
+                    writeDescriptorSet.pBufferInfo = &bufferUpdateInfo;
                 }
 
                 if (update.imageUpdate.sampler != nullptr || update.imageUpdate.image != nullptr)
@@ -61,23 +60,21 @@ namespace Fluent
                     auto& imageUpdateInfo = imageUpdates[image++];
                     if (update.imageUpdate.sampler != nullptr)
                     {
-                        imageUpdateInfo
-                            .setSampler((VkSampler)update.imageUpdate.sampler->GetNativeHandle());
+                        imageUpdateInfo.sampler = (VkSampler)update.imageUpdate.sampler->GetNativeHandle();
                     }
 
                     if (update.imageUpdate.image != nullptr)
                     {
-                        imageUpdateInfo
-                            .setImageLayout(ImageUsageToImageLayout(update.imageUpdate.usage))
-                            .setImageView((VkImageView)update.imageUpdate.image->GetImageView());
+                        imageUpdateInfo.imageLayout = ImageUsageToImageLayout(update.imageUpdate.usage);
+                        imageUpdateInfo.imageView = (VkImageView)update.imageUpdate.image->GetImageView();
                     }
 
-                    writeDescriptorSet.setImageInfo(imageUpdateInfo);
+                    writeDescriptorSet.pImageInfo = &imageUpdateInfo;
                 }
             }
 
-            vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
-            device.updateDescriptorSets(descriptorWrites, {});
+            VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
+            vkUpdateDescriptorSets(device, (uint32_t)descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
         }
 
         Handle GetNativeHandle() const override { return mHandle; }

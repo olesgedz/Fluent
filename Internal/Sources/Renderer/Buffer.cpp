@@ -8,7 +8,7 @@ namespace Fluent
     {
     private:
         Allocation mAllocation;
-        vk::Buffer mHandle;
+        VkBuffer mHandle;
         uint32_t mSize;
         void* mMappedMemory = nullptr;
 

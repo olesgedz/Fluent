@@ -11,8 +11,8 @@ namespace Fluent
 {
     struct GraphicContextDescription
     {
-        bool requestValidation;
-        Handle window;
+        bool                    requestValidation;
+        Handle                  window;
     };
 
     class GraphicContext

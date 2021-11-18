@@ -316,8 +316,8 @@ public:
         cmd->BeginRenderPass(mRenderPass, mFramebuffer);
         cmd->SetViewport(window->GetWidth(), window->GetHeight(), 0.0f, 1.0f, 0, 0);
         cmd->SetScissor(window->GetWidth(), window->GetHeight(), 0, 0);
-        cmd->BindDescriptorSet(mPipeline, mDescriptorSet);
         cmd->BindPipeline(mPipeline);
+        cmd->BindDescriptorSet(mPipeline, mDescriptorSet);
         cmd->BindVertexBuffer(mVertexBuffer, 0);
         cmd->BindIndexBuffer(mIndexBuffer, 0, IndexType::eUint32);
         cmd->DrawIndexed(indices.size(), 1, 0, 0, 0);

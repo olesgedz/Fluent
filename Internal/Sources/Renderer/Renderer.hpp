@@ -2,9 +2,13 @@
 
 #include <type_traits>
 #include <cstdint>
-#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan.h>
 #include <tinyimageformat_base.h>
 #include "Core/Base.hpp"
+
+// TODO: Implement
+#define VK_ASSERT(x) x
+#define FLUENT_VK_API_VERSION VK_API_VERSION_1_2
 
 namespace Fluent
 {
@@ -408,65 +412,28 @@ namespace Fluent
         eAlways         = 7
     };
 
-    vk::Format                  ToVulkanFormat(Format format);
-    Format                      FromVulkanFormatToFormat(vk::Format format);
-    vk::ImageUsageFlagBits      ToVulkanImageUsage(ImageUsage::Bits imageUsage);
-    vk::SampleCountFlagBits     ToVulkanSampleCount(SampleCount sampleCount);
-    vk::BufferUsageFlagBits     ToVulkanBufferUsage(BufferUsage::Bits bufferUsage);
-    vk::AttachmentLoadOp        ToVulkanLoadOp(AttachmentLoadOp loadOp);
-    vk::ShaderStageFlagBits     ToVulkanShaderStage(ShaderStage shaderStage);
-    vk::CullModeFlagBits        ToVulkanCullMode(CullMode cullMode);
-    vk::FrontFace               ToVulkanFrontFace(FrontFace frontFace);
-    vk::Filter                  ToVulkanFilter(Filter filter);
-    vk::PipelineBindPoint       ToVulkanPipelineBindPoint(PipelineType type);
-    vk::VertexInputRate         ToVulkanVertexInputRate(VertexInputRate inputRate);
-    vk::DescriptorType          ToVulkanDescriptorType(DescriptorType type);
-    vk::IndexType               ToVulkanIndexType(IndexType type);
-    vk::SamplerMipmapMode       ToVulkanSamplerMipmapMode(SamplerMipmapMode mode);
-    vk::SamplerAddressMode      ToVulkanSamplerAddressMode(SamplerAddressMode mode);
-    vk::CompareOp               ToVulkanCompareOp(CompareOp op);
+    VkFormat                  ToVulkanFormat(Format format);
+    Format                      FromVulkanFormatToFormat(VkFormat format);
+    VkImageUsageFlagBits      ToVulkanImageUsage(ImageUsage::Bits imageUsage);
+    VkSampleCountFlagBits     ToVulkanSampleCount(SampleCount sampleCount);
+    VkBufferUsageFlagBits     ToVulkanBufferUsage(BufferUsage::Bits bufferUsage);
+    VkAttachmentLoadOp        ToVulkanLoadOp(AttachmentLoadOp loadOp);
+    VkShaderStageFlagBits     ToVulkanShaderStage(ShaderStage shaderStage);
+    VkCullModeFlagBits        ToVulkanCullMode(CullMode cullMode);
+    VkFrontFace               ToVulkanFrontFace(FrontFace frontFace);
+    VkFilter                  ToVulkanFilter(Filter filter);
+    VkPipelineBindPoint       ToVulkanPipelineBindPoint(PipelineType type);
+    VkVertexInputRate         ToVulkanVertexInputRate(VertexInputRate inputRate);
+    VkDescriptorType          ToVulkanDescriptorType(DescriptorType type);
+    VkIndexType               ToVulkanIndexType(IndexType type);
+    VkSamplerMipmapMode       ToVulkanSamplerMipmapMode(SamplerMipmapMode mode);
+    VkSamplerAddressMode      ToVulkanSamplerAddressMode(SamplerAddressMode mode);
+    VkCompareOp               ToVulkanCompareOp(CompareOp op);
     
-    vk::ImageAspectFlags        ImageFormatToImageAspect(vk::Format format);
-    vk::AccessFlags             ImageUsageToAccessFlags(ImageUsage::Bits usage);
-    vk::ImageLayout             ImageUsageToImageLayout(ImageUsage::Bits usage);
-    vk::PipelineStageFlags      ImageUsageToPipelineStage(ImageUsage::Bits usage);
-    vk::ImageSubresourceRange   GetImageSubresourceRange(const Image& image);
-    vk::ImageSubresourceLayers  GetImageSubresourceLayers(const Image& image);
-
-    // TODO: Is it safety?
-    // Enum classes as flags
-    template<class T, std::enable_if_t<std::is_enum_v<T>, int> = 0> inline T operator~ (T a) 
-    { 
-        return static_cast<T>(~static_cast<typename std::underlying_type<T>::type>(a)); 
-    }
-
-    template<class T, std::enable_if_t<std::is_enum_v<T>, int> = 0> inline T operator| (T a, T b) 
-    { 
-        return static_cast<T>(static_cast<typename std::underlying_type<T>::type>(a) | static_cast<typename std::underlying_type<T>::type>(b)); 
-    }
-    
-    template<class T, std::enable_if_t<std::is_enum_v<T>, int> = 0> inline T operator& (T a, T b) 
-    { 
-        return static_cast<T>(static_cast<typename std::underlying_type<T>::type>(a) & static_cast<typename std::underlying_type<T>::type>(b)); 
-    }
-
-    template<class T, std::enable_if_t<std::is_enum_v<T>, int> = 0> inline T operator^ (T a, T b) 
-    { 
-        return static_cast<T>(static_cast<typename std::underlying_type<T>::type>(a) ^ static_cast<typename std::underlying_type<T>::type>(b)); 
-    }
-
-    template<class T, std::enable_if_t<std::is_enum_v<T>, int> = 0> inline T& operator|= (T& a, T b) 
-    { 
-        return static_cast<T&>(static_cast<typename std::underlying_type<T>::type&>(a) |= static_cast<typename std::underlying_type<T>::type>(b)); 
-    }
-
-    template<class T, std::enable_if_t<std::is_enum_v<T>, int> = 0> inline T& operator&= (T& a, T b) 
-    { 
-        return static_cast<T&>(static_cast<typename std::underlying_type<T>::type&>(a) &= static_cast<typename std::underlying_type<T>::type>(b)); 
-    }
-
-    template<class T, std::enable_if_t<std::is_enum_v<T>, int> = 0> inline T& operator^= (T& a, T b) 
-    { 
-        return static_cast<T&>(static_cast<typename std::underlying_type<T>::type&>(a) ^= static_cast<typename std::underlying_type<T>::type>(b)); 
-    }
+    VkImageAspectFlags        ImageFormatToImageAspect(VkFormat format);
+    VkAccessFlags             ImageUsageToAccessFlags(ImageUsage::Bits usage);
+    VkImageLayout             ImageUsageToImageLayout(ImageUsage::Bits usage);
+    VkPipelineStageFlags      ImageUsageToPipelineStage(ImageUsage::Bits usage);
+    VkImageSubresourceRange   GetImageSubresourceRange(const Image& image);
+    VkImageSubresourceLayers  GetImageSubresourceLayers(const Image& image);
 } // namespace FLuent

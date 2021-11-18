@@ -6,34 +6,34 @@ namespace Fluent
     class VulkanSampler : public Sampler
     {
     private:
-        vk::Sampler mHandle;
+        VkSampler mHandle;
     public:
         VulkanSampler(const SamplerDescription& description)
         {
-            vk::SamplerCreateInfo samplerCreateInfo;
-            samplerCreateInfo
-                .setMagFilter(ToVulkanFilter(description.magFilter))
-                .setMinFilter(ToVulkanFilter(description.minFilter))
-                .setMipmapMode(ToVulkanSamplerMipmapMode(description.mipmapMode))
-                .setAddressModeU(ToVulkanSamplerAddressMode(description.addressModeU))
-                .setAddressModeV(ToVulkanSamplerAddressMode(description.addressModeV))
-                .setAddressModeW(ToVulkanSamplerAddressMode(description.addressModeW))
-                .setMipLodBias(description.mipLodBias)
-                .setAnisotropyEnable(description.anisotropyEnable)
-                .setMaxAnisotropy(description.maxAnisotropy)
-                .setCompareEnable(description.compareEnable)
-                .setCompareOp(ToVulkanCompareOp(description.compareOp))
-                .setMinLod(description.minLod)
-                .setMaxLod(description.maxLod);
-            
-            vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
-            mHandle = device.createSampler(samplerCreateInfo);
+            VkSamplerCreateInfo samplerCreateInfo{};
+            samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+            samplerCreateInfo.magFilter = ToVulkanFilter(description.magFilter);
+            samplerCreateInfo.minFilter = ToVulkanFilter(description.minFilter);
+            samplerCreateInfo.mipmapMode = ToVulkanSamplerMipmapMode(description.mipmapMode);
+            samplerCreateInfo.addressModeU = ToVulkanSamplerAddressMode(description.addressModeU);
+            samplerCreateInfo.addressModeV = ToVulkanSamplerAddressMode(description.addressModeV);
+            samplerCreateInfo.addressModeW = ToVulkanSamplerAddressMode(description.addressModeW);
+            samplerCreateInfo.mipLodBias = description.mipLodBias;
+            samplerCreateInfo.anisotropyEnable = description.anisotropyEnable;
+            samplerCreateInfo.maxAnisotropy = description.maxAnisotropy;
+            samplerCreateInfo.compareEnable = description.compareEnable;
+            samplerCreateInfo.compareOp = ToVulkanCompareOp(description.compareOp);
+            samplerCreateInfo.minLod = description.minLod;
+            samplerCreateInfo.maxLod = description.maxLod;
+
+            VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
+            VK_ASSERT(vkCreateSampler(device, &samplerCreateInfo, nullptr, &mHandle));
         }
 
         ~VulkanSampler() override
         {
-            vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
-            device.destroySampler(mHandle);
+            VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
+            vkDestroySampler(device, mHandle, nullptr);
         }
 
         Handle GetNativeHandle() const override { return mHandle; }

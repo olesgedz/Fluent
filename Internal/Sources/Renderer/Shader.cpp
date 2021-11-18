@@ -38,7 +38,7 @@ namespace Fluent
     {
     protected:
         ShaderStage                 mShaderStage;
-        vk::ShaderModule            mHandle;
+        VkShaderModule              mHandle;
         std::vector<ShaderType>     mInputAttributes;
         std::vector<ShaderUniforms> mUniforms;
     public:
@@ -51,15 +51,14 @@ namespace Fluent
                 desc.byteCode = CompileShader(FileSystem::GetShadersDirectory() + desc.filename, desc.stage);
             }
             
-            vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
+            VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
 
-            vk::ShaderModuleCreateInfo shaderCreateInfo;
-            shaderCreateInfo
-                .setCodeSize(desc.byteCode.size() * sizeof(uint32_t))
-                .setPCode(desc.byteCode.data());
+            VkShaderModuleCreateInfo shaderCreateInfo{};
+            shaderCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+            shaderCreateInfo.codeSize = desc.byteCode.size() * sizeof(uint32_t);
+            shaderCreateInfo.pCode = desc.byteCode.data();
 
-            mHandle = device.createShaderModule(shaderCreateInfo);
-
+            VK_ASSERT(vkCreateShaderModule(device, &shaderCreateInfo, nullptr, &mHandle));
             Reflect(desc);
 
             if (desc.stage == ShaderStage::eVertex)
@@ -72,8 +71,8 @@ namespace Fluent
 
         ~VulkanShader() override
         {
-            vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
-            device.destroyShaderModule(mHandle);
+            VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
+            vkDestroyShaderModule(device, mHandle, nullptr);
         }
 
         const std::vector<ShaderUniforms>& GetUniforms() const override { return mUniforms; }

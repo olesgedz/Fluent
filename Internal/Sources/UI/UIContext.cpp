@@ -1,4 +1,4 @@
-#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan.h>
 #include <imgui.h>
 #include <imgui_impl_vulkan.h>
 #include <imgui_impl_glfw.h>
@@ -12,34 +12,35 @@ namespace Fluent
     class VulkanUI : public UIContext
     {
     private:
-        vk::DescriptorPool  mDescriptorPool;
+        VkDescriptorPool  mDescriptorPool;
     public:
         VulkanUI(const UIContextDescription& description)
         {
             auto& context = GetGraphicContext();
-            std::vector<vk::DescriptorPoolSize> poolSizes = 
+            std::vector<VkDescriptorPoolSize> poolSizes =
             {
-                { vk::DescriptorType::eSampler, 1000 },
-                { vk::DescriptorType::eCombinedImageSampler, 1000 },
-                { vk::DescriptorType::eSampledImage, 1000 },
-                { vk::DescriptorType::eStorageImage, 1000 },
-                { vk::DescriptorType::eUniformTexelBuffer, 1000 },
-                { vk::DescriptorType::eStorageTexelBuffer, 1000 },
-                { vk::DescriptorType::eUniformBuffer, 1000 },
-                { vk::DescriptorType::eStorageBuffer, 1000 },
-                { vk::DescriptorType::eUniformBufferDynamic, 1000 },
-                { vk::DescriptorType::eStorageBufferDynamic, 1000 },
-                { vk::DescriptorType::eInputAttachment, 1000 }
+                { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+                { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+                { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+                { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+                { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+                { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+                { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+                { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+                { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+                { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+                { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
             };
 
-            vk::DescriptorPoolCreateInfo poolInfo;
-            poolInfo
-                .setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
-                .setMaxSets(1000)
-                .setPoolSizes(poolSizes);
+            VkDescriptorPoolCreateInfo poolInfo{};
+            poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+            poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+            poolInfo.maxSets = 1000;
+            poolInfo.poolSizeCount = poolSizes.size();
+            poolInfo.pPoolSizes = poolSizes.data();
 
-            vk::Device device = (VkDevice)context.GetDevice();
-            mDescriptorPool = device.createDescriptorPool(poolInfo);
+            VkDevice device = (VkDevice)context.GetDevice();
+            VK_ASSERT(vkCreateDescriptorPool(device, &poolInfo, nullptr, &mDescriptorPool));
 
             ImGui::CreateContext();
             ImGui_ImplVulkan_InitInfo init_info{};
@@ -48,7 +49,7 @@ namespace Fluent
             init_info.Device                = (VkDevice)context.GetDevice();
             init_info.QueueFamily           = context.GetQueueIndex();
             init_info.Queue                 = (VkQueue)context.GetDeviceQueue();
-            init_info.PipelineCache         = vk::PipelineCache{};
+            init_info.PipelineCache         = VkPipelineCache{};
             init_info.DescriptorPool        = mDescriptorPool;
             init_info.Allocator             = nullptr;
             init_info.MinImageCount         = context.GetPresentImageCount();
@@ -72,8 +73,8 @@ namespace Fluent
         {
             ImGui_ImplGlfw_Shutdown();
             ImGui_ImplVulkan_Shutdown();
-            vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
-            device.destroyDescriptorPool(mDescriptorPool);
+            VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
+            vkDestroyDescriptorPool(device, mDescriptorPool, nullptr);
         }
 
         void BeginFrame() const override

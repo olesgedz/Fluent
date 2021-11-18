@@ -1,6 +1,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include <vulkan/vulkan.hpp>
+// I want to use my own vulkan headers, glfw do strange things
+#include <vulkan/vulkan.h>
 #include "Renderer/VirtualFrame.hpp"
 #include "Renderer/GraphicContext.hpp"
 
@@ -33,24 +34,24 @@ namespace Fluent
     {
     private:
         void*                           mWindowHandle;
-        vk::Instance                    mInstance;
-        vk::SurfaceKHR                  mSurface;
-        vk::PhysicalDevice              mPhysicalDevice;
-        vk::Device                      mDevice;
+        VkInstance                      mInstance = VK_NULL_HANDLE;
+        VkSurfaceKHR                    mSurface = VK_NULL_HANDLE;
+        VkPhysicalDevice                mPhysicalDevice;
+        VkDevice                        mDevice = VK_NULL_HANDLE;
         uint32_t                        mQueueIndex;
-        vk::Queue                       mDeviceQueue;
-        vk::SurfaceFormatKHR            mSurfaceFormat;
-        vk::PresentModeKHR              mPresentMode;
+        VkQueue                         mDeviceQueue = VK_NULL_HANDLE;
+        VkSurfaceFormatKHR              mSurfaceFormat;
+        VkPresentModeKHR                mPresentMode;
         uint32_t                        mPresentImageCount;
         Scope<DeviceAllocator>          mDeviceAllocator;
-        vk::CommandPool                 mCommandPool;
-        uint32_t                        mActiveImageIndex;
-        bool                            mRenderingEnabled;
-        vk::Extent2D                    mExtent;
-        vk::SwapchainKHR                mSwapchain;
+        VkCommandPool                   mCommandPool = VK_NULL_HANDLE;
+        uint32_t                        mActiveImageIndex{};
+        bool                            mRenderingEnabled{};
+        VkExtent2D                      mExtent{};
+        VkSwapchainKHR                  mSwapchain = VK_NULL_HANDLE;
         std::vector<Ref<Image>>         mSwapchainImages;
         std::vector<ImageUsage::Bits>   mSwapchainImageUsages;
-        vk::DescriptorPool              mDescriptorPool;
+        VkDescriptorPool                mDescriptorPool = VK_NULL_HANDLE;
 
         static constexpr uint32_t       FRAME_COUNT = 2;
         Scope<VirtualFrameProvider>     mFrameProvider;
@@ -58,52 +59,57 @@ namespace Fluent
         void CreateDescriptorPool()
         {
             // TODO
-            std::array descriptorPoolSizes = 
+            const uint32_t poolSizeCount = 11;
+            VkDescriptorPoolSize descriptorPoolSizes [poolSizeCount] =
             {
-                vk::DescriptorPoolSize { vk::DescriptorType::eSampler,              1024 },
-                vk::DescriptorPoolSize { vk::DescriptorType::eCombinedImageSampler, 1024 },
-                vk::DescriptorPoolSize { vk::DescriptorType::eSampledImage,         1024 },
-                vk::DescriptorPoolSize { vk::DescriptorType::eStorageImage,         1024 },
-                vk::DescriptorPoolSize { vk::DescriptorType::eUniformTexelBuffer,   1024 },
-                vk::DescriptorPoolSize { vk::DescriptorType::eStorageTexelBuffer,   1024 },
-                vk::DescriptorPoolSize { vk::DescriptorType::eUniformBuffer,        1024 },
-                vk::DescriptorPoolSize { vk::DescriptorType::eStorageBuffer,        1024 },
-                vk::DescriptorPoolSize { vk::DescriptorType::eUniformBufferDynamic, 1024 },
-                vk::DescriptorPoolSize { vk::DescriptorType::eStorageBufferDynamic, 1024 },
-                vk::DescriptorPoolSize { vk::DescriptorType::eInputAttachment,      1024 },
+                { VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLER,                1024 },
+                { VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1024 },
+                { VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,          1024 },
+                { VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,          1024 },
+                { VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,   1024 },
+                { VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,   1024 },
+                { VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         1024 },
+                { VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,         1024 },
+                { VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1024 },
+                { VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1024 },
+                { VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,       1024 },
             };
 
-            vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo;
-            descriptorPoolCreateInfo
-                .setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet | vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind)
-                .setPoolSizes(descriptorPoolSizes)
-                .setMaxSets(2048 * (uint32_t)descriptorPoolSizes.size());
+            VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
+            descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+            descriptorPoolCreateInfo.flags = 0;
+            descriptorPoolCreateInfo.poolSizeCount = poolSizeCount;
+            descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes;
+            descriptorPoolCreateInfo.maxSets = 2048 * poolSizeCount;
 
-            mDescriptorPool = mDevice.createDescriptorPool(descriptorPoolCreateInfo);
+            VK_ASSERT(vkCreateDescriptorPool(mDevice, &descriptorPoolCreateInfo, nullptr, &mDescriptorPool));
         }
     public:
-        VulkanContext(const GraphicContextDescription& description)
+        explicit VulkanContext(const GraphicContextDescription& description)
             : mWindowHandle(description.window)
         {
+            auto* oldContext = &GetGraphicContext();
             SetGraphicContext(*this);
-            vk::ApplicationInfo appInfo;
-            appInfo
-                .setPEngineName("FluentGFX")
-                .setApiVersion(VK_API_VERSION_1_2);
+
+            VkApplicationInfo appInfo{};
+            appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+            appInfo.pEngineName = "Fluent";
+            appInfo.apiVersion = FLUENT_VK_API_VERSION;
 
             auto instanceLayers = GetBestInstanceLayers(description.requestValidation);
             auto instanceExtensions = GetBestInstanceExtensions();
 
-            vk::InstanceCreateInfo instanceCI;
-            instanceCI
-                .setPApplicationInfo(&appInfo)
-                .setEnabledExtensionCount(static_cast<uint32_t>(instanceExtensions.size()))
-                .setPpEnabledExtensionNames(instanceExtensions.data())
-                .setEnabledLayerCount(static_cast<uint32_t>(instanceLayers.size()))
-                .setPpEnabledLayerNames(instanceLayers.data());
+            VkInstanceCreateInfo instanceCI{};
+            instanceCI.sType                    = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+            instanceCI.pApplicationInfo         = &appInfo;
+            instanceCI.enabledExtensionCount    = static_cast<uint32_t>(instanceExtensions.size());
+            instanceCI.ppEnabledExtensionNames  = instanceExtensions.data();
+            instanceCI.enabledLayerCount        = static_cast<uint32_t>(instanceLayers.size());
+            instanceCI.ppEnabledLayerNames      = instanceLayers.data();
 
-            mInstance = vk::createInstance(instanceCI);
+            VK_ASSERT(vkCreateInstance(&instanceCI, nullptr, &mInstance));
 
+            // TODO: Wrap
             auto result = glfwCreateWindowSurface
             (
                 static_cast<VkInstance>(mInstance), 
@@ -113,25 +119,41 @@ namespace Fluent
             );
 
             /// Select physical device
-            auto physicalDevices = mInstance.enumeratePhysicalDevices();
+            uint32_t physicalDevicesCount = 0;
+            vkEnumeratePhysicalDevices(mInstance, &physicalDevicesCount, nullptr);
+            std::vector<VkPhysicalDevice> physicalDevices(physicalDevicesCount);
+            vkEnumeratePhysicalDevices(mInstance, &physicalDevicesCount, physicalDevices.data());
+
             mPhysicalDevice = physicalDevices[0];
             for (const auto& physicalDevice : physicalDevices)
             {
-                auto properties = physicalDevice.getProperties();
-                if (properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu)
+                VkPhysicalDeviceProperties properties{};
+                vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+
+                if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
                 {
                     mPhysicalDevice = physicalDevice;
                     break;
                 }
             }
 
-            auto queueFamilyProperties  = mPhysicalDevice.getQueueFamilyProperties();
+            uint32_t queuePropertiesCount = 0;
+            vkGetPhysicalDeviceQueueFamilyProperties(mPhysicalDevice, &queuePropertiesCount, nullptr);
+            std::vector<VkQueueFamilyProperties> queueFamilyProperties(queuePropertiesCount);
+            vkGetPhysicalDeviceQueueFamilyProperties(mPhysicalDevice, &queuePropertiesCount, queueFamilyProperties.data());
+
             uint32_t index = 0;
             for (const auto& property : queueFamilyProperties)
             {
-                if ((property.queueCount > 0) &&
-                    (property.queueFlags & vk::QueueFlagBits::eGraphics) &&
-                    mPhysicalDevice.getSurfaceSupportKHR(index, mSurface))
+                VkBool32 supportSurface = false;
+                vkGetPhysicalDeviceSurfaceSupportKHR(mPhysicalDevice, index, mSurface, &supportSurface);
+
+                if
+                (
+                    (property.queueCount > 0) &&
+                    (property.queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
+                    supportSurface
+                )
                 {
                     mQueueIndex = index;
                     break;
@@ -140,33 +162,43 @@ namespace Fluent
             }
 
             /// Collect surface present info
-            auto presentModes           = mPhysicalDevice.getSurfacePresentModesKHR(mSurface);
-            auto surfaceCapabilities    = mPhysicalDevice.getSurfaceCapabilitiesKHR(mSurface);
-            auto surfaceFormats         = mPhysicalDevice.getSurfaceFormatsKHR(mSurface);
+            uint32_t presentModeCount = 0;
+            vkGetPhysicalDeviceSurfacePresentModesKHR(mPhysicalDevice, mSurface, &presentModeCount, nullptr);
+            std::vector<VkPresentModeKHR> presentModes(presentModeCount);
+            vkGetPhysicalDeviceSurfacePresentModesKHR(mPhysicalDevice, mSurface, &presentModeCount, presentModes.data());
+            VkSurfaceCapabilitiesKHR surfaceCapabilities{};
+            vkGetPhysicalDeviceSurfaceCapabilitiesKHR(mPhysicalDevice, mSurface, &surfaceCapabilities);
+            uint32_t surfaceFormatsCount = 0;
+            vkGetPhysicalDeviceSurfaceFormatsKHR(mPhysicalDevice, mSurface, &surfaceFormatsCount, nullptr);
+            std::vector<VkSurfaceFormatKHR> surfaceFormats(surfaceFormatsCount);
+            vkGetPhysicalDeviceSurfaceFormatsKHR(mPhysicalDevice, mSurface, &surfaceFormatsCount, surfaceFormats.data());
 
             /// Find best surface present mode
-            mPresentMode = vk::PresentModeKHR::eImmediate;
-            if (std::find(presentModes.begin(), presentModes.end(), vk::PresentModeKHR::eMailbox) != presentModes.end())
-                mPresentMode = vk::PresentModeKHR::eMailbox;
+            mPresentMode = VkPresentModeKHR::VK_PRESENT_MODE_IMMEDIATE_KHR;
+            if (std::find(presentModes.begin(), presentModes.end(), VkPresentModeKHR::VK_PRESENT_MODE_MAILBOX_KHR) != presentModes.end())
+                mPresentMode = VkPresentModeKHR::VK_PRESENT_MODE_MAILBOX_KHR;
 
             /// Determine present image count
             mPresentImageCount = std::max(surfaceCapabilities.minImageCount, surfaceCapabilities.maxImageCount);
 
             /// Find best surface format
-            auto surfaceFormat = surfaceFormats.front();
+            mSurfaceFormat = surfaceFormats.front();
             for (const auto& format : surfaceFormats)
             {
-                if (format.format == vk::Format::eR8G8B8A8Unorm || format.format == vk::Format::eB8G8R8A8Unorm)
+                if (format.format == VK_FORMAT_R8G8B8A8_UNORM || format.format == VK_FORMAT_B8G8R8A8_UNORM)
                     mSurfaceFormat = format;
             }
             
             /// Find device extensions
-            auto installedExtensions = mPhysicalDevice.enumerateDeviceExtensionProperties();
+            uint32_t extensionsCount = 0;
+            vkEnumerateDeviceExtensionProperties(mPhysicalDevice, nullptr, &extensionsCount, nullptr);
+            std::vector<VkExtensionProperties> installedExtensions(extensionsCount);
+            vkEnumerateDeviceExtensionProperties(mPhysicalDevice, nullptr, &extensionsCount, installedExtensions.data());
 
             /// If this extension available it should be included
             auto it = std::find_if(installedExtensions.begin(), installedExtensions.end(), [](auto& p)
             {
-                if (std::string(p.extensionName.data()) == "VK_KHR_portability_subset")
+                if (std::string(p.extensionName) == "VK_KHR_portability_subset")
                     return true;
                 else
                     return false;
@@ -177,23 +209,22 @@ namespace Fluent
                 deviceExtensions.emplace_back("VK_KHR_portability_subset");
 
             /// Logical device and device queue
-            std::array queuePriorities { 1.0f };
-            vk::DeviceQueueCreateInfo deviceQueueCreateInfo;
-            deviceQueueCreateInfo
-                .setQueueFamilyIndex(mQueueIndex)
-                .setQueuePriorities(queuePriorities);
+            float queuePriorities [] = { 1.0f };
+            VkDeviceQueueCreateInfo deviceQueueCreateInfo{};
+            deviceQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            deviceQueueCreateInfo.queueCount = 1;
+            deviceQueueCreateInfo.queueFamilyIndex = mQueueIndex;
+            deviceQueueCreateInfo.pQueuePriorities = queuePriorities;
 
-            vk::PhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures;
-            descriptorIndexingFeatures.descriptorBindingPartiallyBound = true;
+            VkDeviceCreateInfo deviceCreateInfo{};
+            deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+            deviceCreateInfo.queueCreateInfoCount = 1;
+            deviceCreateInfo.pQueueCreateInfos = &deviceQueueCreateInfo;
+            deviceCreateInfo.enabledExtensionCount = deviceExtensions.size();
+            deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
-            vk::DeviceCreateInfo deviceCreateInfo;
-            deviceCreateInfo
-                .setQueueCreateInfos(deviceQueueCreateInfo)
-                .setPEnabledExtensionNames(deviceExtensions)
-                .setPNext(&descriptorIndexingFeatures);
-
-            mDevice = mPhysicalDevice.createDevice(deviceCreateInfo);
-            mDeviceQueue  = mDevice.getQueue(mQueueIndex, 0);
+            vkCreateDevice(mPhysicalDevice, &deviceCreateInfo, nullptr, &mDevice);
+            vkGetDeviceQueue(mDevice, mQueueIndex, 0, &mDeviceQueue);
 
             /// Create memory allocator
             DeviceAllocatorDescription deviceAllocatorDescription{};
@@ -203,66 +234,73 @@ namespace Fluent
             mDeviceAllocator = DeviceAllocator::Create(deviceAllocatorDescription);
 
             /// Create command pool
-            vk::CommandPoolCreateInfo cmdPoolCreateInfo{};
-            cmdPoolCreateInfo
-                .setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer | vk::CommandPoolCreateFlagBits::eTransient)
-                .setQueueFamilyIndex(mQueueIndex);
+            VkCommandPoolCreateInfo cmdPoolCreateInfo{};
+            cmdPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+            cmdPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+            cmdPoolCreateInfo.queueFamilyIndex = mQueueIndex;
 
-            mCommandPool = mDevice.createCommandPool(cmdPoolCreateInfo);
-
+            VK_ASSERT(vkCreateCommandPool(mDevice, &cmdPoolCreateInfo, nullptr, &mCommandPool));
             CreateDescriptorPool();
+
+            SetGraphicContext(*oldContext);
         }
 
         ~VulkanContext() override
         {
             mSwapchainImages.clear();
             mFrameProvider.reset(nullptr);
-            mDevice.destroyDescriptorPool(mDescriptorPool);
-            mDevice.destroyCommandPool(mCommandPool);
-            mDevice.destroySwapchainKHR(mSwapchain);
+            vkDestroyDescriptorPool(mDevice, mDescriptorPool, nullptr);
+            vkDestroyCommandPool(mDevice, mCommandPool, nullptr);
+            vkDestroySwapchainKHR(mDevice, mSwapchain, nullptr);
             mDeviceAllocator.reset(nullptr);
-            mDevice.destroy();
-            mInstance.destroySurfaceKHR(mSurface);
-            mInstance.destroy();
+            vkDestroyDevice(mDevice, nullptr);
+            vkDestroySurfaceKHR(mInstance, mSurface, nullptr);
+            vkDestroyInstance(mInstance, nullptr);
         }
 
         void OnResize(uint32_t width, uint32_t height) override
         {
             mRenderingEnabled = false;
-            mDevice.waitIdle();
+            vkDeviceWaitIdle(mDevice);
 
             auto surfaceWidth   = static_cast<uint32_t>(width);
             auto surfaceHeight  = static_cast<uint32_t>(height);
 
-            auto surfaceCapabilities = mPhysicalDevice.getSurfaceCapabilitiesKHR(mSurface);
-            mExtent = vk::Extent2D(
-                std::clamp(surfaceWidth,  surfaceCapabilities.minImageExtent.width,  surfaceCapabilities.maxImageExtent.width),
-                std::clamp(surfaceHeight, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height)
-            );
+            VkSurfaceCapabilitiesKHR surfaceCapabilities{};
+            vkGetPhysicalDeviceSurfaceCapabilitiesKHR(mPhysicalDevice, mSurface, &surfaceCapabilities);
+            mExtent = VkExtent2D
+                {
+                    std::clamp(surfaceWidth, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width),
+                    std::clamp(surfaceHeight, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height)
+                };
 
-            vk::SwapchainCreateInfoKHR swapchainCreateInfo;
-            swapchainCreateInfo
-                .setSurface(mSurface)
-                .setMinImageCount(mPresentImageCount)
-                .setImageFormat(mSurfaceFormat.format)
-                .setImageColorSpace(mSurfaceFormat.colorSpace)
-                .setImageExtent(mExtent)
-                .setImageArrayLayers(1)
-                .setImageUsage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst)
-                .setImageSharingMode(vk::SharingMode::eExclusive)
-                .setPreTransform(surfaceCapabilities.currentTransform)
-                .setCompositeAlpha(vk::CompositeAlphaFlagBitsKHR::eOpaque)
-                .setPresentMode(mPresentMode)
-                .setClipped(true)
-                .setOldSwapchain(mSwapchain);
+            VkSwapchainCreateInfoKHR swapchainCreateInfo{};
+            swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+            swapchainCreateInfo.surface = mSurface;
+            swapchainCreateInfo.minImageCount = mPresentImageCount;
+            swapchainCreateInfo.imageFormat = mSurfaceFormat.format;
+            swapchainCreateInfo.imageColorSpace = mSurfaceFormat.colorSpace;
+            swapchainCreateInfo.imageExtent = mExtent;
+            swapchainCreateInfo.imageArrayLayers = 1;
+            swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+            swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            swapchainCreateInfo.preTransform = surfaceCapabilities.currentTransform;
+            swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+            swapchainCreateInfo.presentMode = mPresentMode;
+            swapchainCreateInfo.clipped = true;
+            swapchainCreateInfo.oldSwapchain = mSwapchain;
 
-            mSwapchain = mDevice.createSwapchainKHR(swapchainCreateInfo);
+            auto result = vkCreateSwapchainKHR(mDevice, &swapchainCreateInfo, nullptr, &mSwapchain);
 
-            if (static_cast<bool>(swapchainCreateInfo.oldSwapchain))
-                mDevice.destroySwapchainKHR(swapchainCreateInfo.oldSwapchain);
+            if (swapchainCreateInfo.oldSwapchain)
+                vkDestroySwapchainKHR(mDevice, swapchainCreateInfo.oldSwapchain, nullptr);
 
             /// Create swapchain images
-            const auto& swapchainImages = mDevice.getSwapchainImagesKHR(mSwapchain);
+            uint32_t swapchainImagesCount = 0;
+            vkGetSwapchainImagesKHR(mDevice, mSwapchain, &swapchainImagesCount, nullptr);
+            std::vector<VkImage> swapchainImages(swapchainImagesCount);
+            vkGetSwapchainImagesKHR(mDevice, mSwapchain, &swapchainImagesCount, swapchainImages.data());
+
             ImageDescription swapchainImageDescription{};
             swapchainImageDescription.width = mExtent.width;
             swapchainImageDescription.height = mExtent.height;
@@ -322,16 +360,18 @@ namespace Fluent
 
         void WaitIdle() override
         {
-            mDevice.waitIdle();
+            vkDeviceWaitIdle(mDevice);
         }
         
         void ImmediateSubmit(const Ref<CommandBuffer>& cmd) const override
         {
-            vk::CommandBuffer nativeCmd = (VkCommandBuffer)cmd->GetNativeHandle();
-            vk::SubmitInfo submitInfo;
-            submitInfo.setCommandBuffers(nativeCmd);
-            mDeviceQueue.submit(submitInfo);
-            mDeviceQueue.waitIdle();
+            auto nativeCmd = (VkCommandBuffer)cmd->GetNativeHandle();
+            VkSubmitInfo submitInfo{};
+            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submitInfo.commandBufferCount = 1;
+            submitInfo.pCommandBuffers = &nativeCmd;
+            vkQueueSubmit(mDeviceQueue, 1, &submitInfo, VK_NULL_HANDLE);
+            vkQueueWaitIdle(mDeviceQueue);
         }
 
 

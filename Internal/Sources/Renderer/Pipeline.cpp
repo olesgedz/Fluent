@@ -1,4 +1,3 @@
-#include <vulkan/vulkan.hpp>
 #include "Renderer/GraphicContext.hpp"
 #include "Renderer/Pipeline.hpp"
 
@@ -8,44 +7,45 @@ namespace Fluent
     {
     private:
         PipelineType mType;
-        vk::Pipeline mHandle;
-        vk::PipelineLayout mPipelineLayout;
+        VkPipeline mHandle = VK_NULL_HANDLE;
+        VkPipelineLayout mPipelineLayout = VK_NULL_HANDLE;
         const uint32_t mMaxPushConstantRange = 128;
 
         void InitGraphicsPipeline(const PipelineDescription& description)
         {
-            std::vector<vk::PipelineShaderStageCreateInfo> shaderStageCreateInfos;
+            std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfos;
             for (auto& shader : description.descriptorSetLayout->GetShaders())
             {
-                vk::PipelineShaderStageCreateInfo shaderStageCreateInfo;
-                shaderStageCreateInfo
-                    .setModule((VkShaderModule)shader->GetNativeHandle())
-                    .setPName("main")
-                    .setStage(ToVulkanShaderStage(shader->GetStage()));
+                VkPipelineShaderStageCreateInfo shaderStageCreateInfo{};
+                shaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+                shaderStageCreateInfo.module = (VkShaderModule)shader->GetNativeHandle();
+                shaderStageCreateInfo.pName = "main";
+                shaderStageCreateInfo.stage = ToVulkanShaderStage(shader->GetStage());
                 shaderStageCreateInfos.push_back(shaderStageCreateInfo);
             }
 
-            std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
+            std::vector<VkVertexInputBindingDescription> bindingDescriptions;
             bindingDescriptions.reserve(description.bindingDescriptions.size());
             for (auto& bindingDescription : description.bindingDescriptions)
             {
                 bindingDescriptions.emplace_back
                 (
-                vk::VertexInputBindingDescription
-                { 
-                    bindingDescription.binding,
-                    bindingDescription.stride,
-                    ToVulkanVertexInputRate(bindingDescription.inputRate)
-                });
+                    VkVertexInputBindingDescription
+                    {
+                        bindingDescription.binding,
+                        bindingDescription.stride,
+                        ToVulkanVertexInputRate(bindingDescription.inputRate)
+                    }
+                );
             }
 
-            std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
+            std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
             attributeDescriptions.reserve(description.attributeDescriptions.size());
             for (auto& attributeDescription : description.attributeDescriptions)
             {
                 attributeDescriptions.emplace_back
                 (
-                vk::VertexInputAttributeDescription
+                VkVertexInputAttributeDescription
                 { 
                     attributeDescription.location,
                     attributeDescription.binding,
@@ -54,112 +54,121 @@ namespace Fluent
                 });
             }
 
-            vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo;
-            vertexInputStateCreateInfo
-                .setVertexBindingDescriptions(bindingDescriptions)
-                .setVertexAttributeDescriptions(attributeDescriptions);
-                
-            vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo;
-            inputAssemblyStateCreateInfo
-                .setTopology(vk::PrimitiveTopology::eTriangleList)
-                .setPrimitiveRestartEnable(false);
+            VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{};
+            vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+            vertexInputStateCreateInfo.vertexBindingDescriptionCount = bindingDescriptions.size();
+            vertexInputStateCreateInfo.pVertexBindingDescriptions = bindingDescriptions.data();
+            vertexInputStateCreateInfo.vertexAttributeDescriptionCount = attributeDescriptions.size();
+            vertexInputStateCreateInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+
+            VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{};
+            inputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+            inputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+            inputAssemblyStateCreateInfo.primitiveRestartEnable = false;
 
             // Dynamic states
-            vk::Viewport viewport;
-            vk::Rect2D scissor;
+            VkViewport viewport{};
+            VkRect2D scissor{};
 
-            vk::PipelineViewportStateCreateInfo viewportStateCreateInfo;
-            viewportStateCreateInfo
-                .setViewports(viewport)
-                .setScissors(scissor);
+            VkPipelineViewportStateCreateInfo viewportStateCreateInfo{};
+            viewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+            viewportStateCreateInfo.viewportCount = 1;
+            viewportStateCreateInfo.pViewports = &viewport;
+            viewportStateCreateInfo.scissorCount = 1;
+            viewportStateCreateInfo.pScissors = &scissor;
 
-            vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo;
-            rasterizationStateCreateInfo
-                .setPolygonMode(vk::PolygonMode::eFill)
-                .setCullMode(ToVulkanCullMode(description.rasterizerDescription.cullMode))
-                .setFrontFace(ToVulkanFrontFace(description.rasterizerDescription.frontFace))
-                .setLineWidth(1.0f);
+            VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo{};
+            rasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+            rasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
+            rasterizationStateCreateInfo.cullMode = ToVulkanCullMode(description.rasterizerDescription.cullMode);
+            rasterizationStateCreateInfo.frontFace = ToVulkanFrontFace(description.rasterizerDescription.frontFace);
+            rasterizationStateCreateInfo.lineWidth = 1.0f;
 
-            vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo;
-            multisampleStateCreateInfo
-                .setRasterizationSamples(vk::SampleCountFlagBits::e1)
-                .setMinSampleShading(1.0f);
+            VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo{};
+            multisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+            multisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+            multisampleStateCreateInfo.minSampleShading = 1.0f;
 
-            vk::PipelineColorBlendAttachmentState colorBlendAttachmentState;
-            colorBlendAttachmentState
-                .setSrcColorBlendFactor(vk::BlendFactor::eOne)
-                .setDstColorBlendFactor(vk::BlendFactor::eZero)
-                .setColorBlendOp(vk::BlendOp::eAdd)
-                .setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
-                .setDstAlphaBlendFactor(vk::BlendFactor::eZero)
-                .setColorWriteMask
-                (
-                    vk::ColorComponentFlagBits::eR |
-                    vk::ColorComponentFlagBits::eG |
-                    vk::ColorComponentFlagBits::eB |
-                    vk::ColorComponentFlagBits::eA
-                );
+            VkPipelineColorBlendAttachmentState colorBlendAttachmentState{};
+            colorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+            colorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+            colorBlendAttachmentState.colorBlendOp = VK_BLEND_OP_ADD;
+            colorBlendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+            colorBlendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+            colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT
+                                                     | VK_COLOR_COMPONENT_G_BIT
+                                                     | VK_COLOR_COMPONENT_B_BIT
+                                                     | VK_COLOR_COMPONENT_A_BIT;
 
-            vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo;
-            colorBlendStateCreateInfo
-                .setLogicOpEnable(false)
-                .setLogicOp(vk::LogicOp::eCopy)
-                .setAttachments(colorBlendAttachmentState)
-                .setBlendConstants({ 0.0f, 0.0f, 0.0f, 0.0f });
+            VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo{};
+            colorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+            colorBlendStateCreateInfo.logicOpEnable = false;
+            colorBlendStateCreateInfo.logicOp = VK_LOGIC_OP_COPY;
+            colorBlendStateCreateInfo.attachmentCount = 1;
+            colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
 
-            std::array dynamicStates { vk::DynamicState::eScissor, vk::DynamicState::eViewport };
-            vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo;
-            dynamicStateCreateInfo
-                .setDynamicStates(dynamicStates);
+            const uint32_t dynamicStatesCount = 2;
+            VkDynamicState dynamicStates[dynamicStatesCount] =
+                { VK_DYNAMIC_STATE_SCISSOR, VK_DYNAMIC_STATE_VIEWPORT };
 
-            vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
+            VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo{};
+            dynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+            dynamicStateCreateInfo.dynamicStateCount = dynamicStatesCount;
+            dynamicStateCreateInfo.pDynamicStates = dynamicStates;
 
-            vk::DescriptorSetLayout descriptorSetLayout = (VkDescriptorSetLayout)description.descriptorSetLayout->GetNativeHandle();
+            VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
+
+            VkDescriptorSetLayout descriptorSetLayout = (VkDescriptorSetLayout)description.descriptorSetLayout->GetNativeHandle();
             
-            vk::PushConstantRange pushConstantRange;
-            pushConstantRange
-                .setSize(mMaxPushConstantRange)
-                .setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eFragment);
+            VkPushConstantRange pushConstantRange{};
+            pushConstantRange.size = mMaxPushConstantRange;
+            pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT
+                                         | VK_SHADER_STAGE_COMPUTE_BIT
+                                         | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-            vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo;
-            pipelineLayoutCreateInfo.setSetLayouts(descriptorSetLayout);
-            pipelineLayoutCreateInfo.setPushConstantRanges(pushConstantRange);
+            VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
+            pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+            pipelineLayoutCreateInfo.setLayoutCount = 1;
+            pipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
+            pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+            pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
-            mPipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
+            VK_ASSERT(vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, &mPipelineLayout));
 
-            vk::GraphicsPipelineCreateInfo pipelineCreateInfo;
-            pipelineCreateInfo
-                .setStages(shaderStageCreateInfos)
-                .setPVertexInputState(&vertexInputStateCreateInfo)
-                .setPInputAssemblyState(&inputAssemblyStateCreateInfo)
-                .setPViewportState(&viewportStateCreateInfo)
-                .setPMultisampleState(&multisampleStateCreateInfo)
-                .setPRasterizationState(&rasterizationStateCreateInfo)
-                .setPColorBlendState(&colorBlendStateCreateInfo)
-                .setPDynamicState(&dynamicStateCreateInfo)
-                .setLayout(mPipelineLayout)
-                .setRenderPass((VkRenderPass)description.renderPass->GetNativeHandle());
-            
-            mHandle = device.createGraphicsPipeline({}, pipelineCreateInfo).value;
+            VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
+            pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+            pipelineCreateInfo.stageCount = shaderStageCreateInfos.size();
+            pipelineCreateInfo.pStages = shaderStageCreateInfos.data();
+            pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
+            pipelineCreateInfo.pInputAssemblyState = &inputAssemblyStateCreateInfo;
+            pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
+            pipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
+            pipelineCreateInfo.pRasterizationState = &rasterizationStateCreateInfo;
+            pipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
+            pipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
+            pipelineCreateInfo.layout = mPipelineLayout;
+            pipelineCreateInfo.renderPass = (VkRenderPass)description.renderPass->GetNativeHandle();
+
+            VK_ASSERT(vkCreateGraphicsPipelines(device, {}, 1, &pipelineCreateInfo, nullptr, &mHandle));
         }
 
         void InitComputePipeline(const PipelineDescription& description)
         {
             // TODO: check that only one exist
             auto& shader = description.descriptorSetLayout->GetShaders()[0];
-            vk::PipelineShaderStageCreateInfo shaderStageCreateInfo;
-            shaderStageCreateInfo
-                .setModule((VkShaderModule)shader->GetNativeHandle())
-                .setPName("main")
-                .setStage(ToVulkanShaderStage(shader->GetStage()));
+            VkPipelineShaderStageCreateInfo shaderStageCreateInfo{};
+            shaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            shaderStageCreateInfo.module = (VkShaderModule)shader->GetNativeHandle();
+            shaderStageCreateInfo.pName = "main";
+            shaderStageCreateInfo.stage = ToVulkanShaderStage(shader->GetStage());
 
-            std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
+            std::vector<VkVertexInputBindingDescription> bindingDescriptions;
             bindingDescriptions.reserve(description.bindingDescriptions.size());
             for (auto& bindingDescription : description.bindingDescriptions)
             {
                 bindingDescriptions.emplace_back
                 (
-                vk::VertexInputBindingDescription
+                VkVertexInputBindingDescription
                 { 
                     bindingDescription.binding,
                     bindingDescription.stride,
@@ -167,27 +176,34 @@ namespace Fluent
                 });
             }
 
-            vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
+            VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
 
-            vk::DescriptorSetLayout descriptorSetLayout = (VkDescriptorSetLayout)description.descriptorSetLayout->GetNativeHandle();
+            VkDescriptorSetLayout descriptorSetLayout = (VkDescriptorSetLayout)description.descriptorSetLayout->GetNativeHandle();
             
-            vk::PushConstantRange pushConstantRange;
-            pushConstantRange
-                .setSize(mMaxPushConstantRange)
-                .setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eFragment);
+            VkPushConstantRange pushConstantRange{};
+            pushConstantRange.size = mMaxPushConstantRange;
+            pushConstantRange.stageFlags = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
 
-            vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo;
-            pipelineLayoutCreateInfo.setSetLayouts(descriptorSetLayout);
-            pipelineLayoutCreateInfo.setPushConstantRanges(pushConstantRange);
+            VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
+            pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+            pipelineLayoutCreateInfo.setLayoutCount = 1;
+            pipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
+            pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+            pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
-            mPipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
+            VK_ASSERT(vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, &mPipelineLayout));
 
-            vk::ComputePipelineCreateInfo computePipelineCreateInfo;
-            computePipelineCreateInfo
-                .setStage(shaderStageCreateInfo)
-                .setLayout(mPipelineLayout);
-            
-            mHandle = device.createComputePipeline({}, computePipelineCreateInfo).value;
+            VkComputePipelineCreateInfo computePipelineCreateInfo{};
+            computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+            computePipelineCreateInfo.stage = shaderStageCreateInfo;
+            computePipelineCreateInfo.layout = mPipelineLayout;
+
+            VK_ASSERT
+            (vkCreateComputePipelines
+                (device, {}, 1,
+                 &computePipelineCreateInfo,
+                 nullptr, &mHandle)
+             );
         }
     public:
         VulkanPipeline(const PipelineDescription& description)
@@ -209,9 +225,9 @@ namespace Fluent
 
         ~VulkanPipeline() override
         {
-            vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
-            device.destroyPipelineLayout(mPipelineLayout);
-            device.destroyPipeline(mHandle);
+            VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
+            vkDestroyPipelineLayout(device, mPipelineLayout, nullptr);
+            vkDestroyPipeline(device, mHandle, nullptr);
         }
 
         PipelineType GetType() const override { return mType; }

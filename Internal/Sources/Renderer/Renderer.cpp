@@ -4,340 +4,340 @@
 
 namespace Fluent
 {
-    vk::Format ToVulkanFormat(Format format)
+    VkFormat ToVulkanFormat(Format format)
     {
-        return static_cast<vk::Format>(TinyImageFormat_ToVkFormat(static_cast<TinyImageFormat>(format)));
+        return static_cast<VkFormat>(TinyImageFormat_ToVkFormat(static_cast<TinyImageFormat>(format)));
     }
 
-    Format FromVulkanFormatToFormat(vk::Format format)
+    Format FromVulkanFormatToFormat(VkFormat format)
     {
         return static_cast<Format>(TinyImageFormat_FromVkFormat(static_cast<TinyImageFormat_VkFormat>(format)));
     }
 
-    vk::ImageUsageFlagBits ToVulkanImageUsage(ImageUsage::Bits imageUsage)
+    VkImageUsageFlagBits ToVulkanImageUsage(ImageUsage::Bits imageUsage)
     {
         switch (imageUsage)
         {
-            case ImageUsage::eTransferSrc: return vk::ImageUsageFlagBits::eTransferSrc;
-            case ImageUsage::eTransferDst: return vk::ImageUsageFlagBits::eTransferDst;
-            case ImageUsage::eSampled: return vk::ImageUsageFlagBits::eSampled;
-            case ImageUsage::eStorage: return vk::ImageUsageFlagBits::eStorage;
-            case ImageUsage::eColorAttachment: return vk::ImageUsageFlagBits::eColorAttachment;
-            case ImageUsage::eDepthStencilAttachment: return vk::ImageUsageFlagBits::eDepthStencilAttachment;
-            case ImageUsage::eInputAttachment: return vk::ImageUsageFlagBits::eInputAttachment;
-            case ImageUsage::eFragmentShadingRateAttachment: return vk::ImageUsageFlagBits::eFragmentShadingRateAttachmentKHR;
+            case ImageUsage::eTransferSrc: return VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+            case ImageUsage::eTransferDst: return VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+            case ImageUsage::eSampled: return VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT;
+            case ImageUsage::eStorage: return VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT;
+            case ImageUsage::eColorAttachment: return VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+            case ImageUsage::eDepthStencilAttachment: return VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+            case ImageUsage::eInputAttachment: return VkImageUsageFlagBits::VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+            case ImageUsage::eFragmentShadingRateAttachment: return VkImageUsageFlagBits::VK_IMAGE_USAGE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR;
             default: break;
         }
 
-        return vk::ImageUsageFlagBits(-1);
+        return VkImageUsageFlagBits(-1);
     }
 
-    vk::SampleCountFlagBits ToVulkanSampleCount(SampleCount sampleCount)
+    VkSampleCountFlagBits ToVulkanSampleCount(SampleCount sampleCount)
     {
         switch (sampleCount)
         {
-            case SampleCount::e1: return vk::SampleCountFlagBits::e1;
-            case SampleCount::e2: return vk::SampleCountFlagBits::e2;
-            case SampleCount::e4: return vk::SampleCountFlagBits::e4;
-            case SampleCount::e8: return vk::SampleCountFlagBits::e8;
-            case SampleCount::e16: return vk::SampleCountFlagBits::e16;
-            case SampleCount::e32: return vk::SampleCountFlagBits::e32;
+            case SampleCount::e1: return VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+            case SampleCount::e2: return VkSampleCountFlagBits::VK_SAMPLE_COUNT_2_BIT;
+            case SampleCount::e4: return VkSampleCountFlagBits::VK_SAMPLE_COUNT_4_BIT;
+            case SampleCount::e8: return VkSampleCountFlagBits::VK_SAMPLE_COUNT_8_BIT;
+            case SampleCount::e16: return VkSampleCountFlagBits::VK_SAMPLE_COUNT_16_BIT;
+            case SampleCount::e32: return VkSampleCountFlagBits::VK_SAMPLE_COUNT_32_BIT;
             default: break;
         }
 
-        return vk::SampleCountFlagBits(-1);
+        return VkSampleCountFlagBits(-1);
     }
 
-    vk::BufferUsageFlagBits ToVulkanBufferUsage(BufferUsage::Bits bufferUsage)
+    VkBufferUsageFlagBits ToVulkanBufferUsage(BufferUsage::Bits bufferUsage)
     {
         switch (bufferUsage)
         {
-            case BufferUsage::eTransferSrc: return vk::BufferUsageFlagBits::eTransferSrc;
-            case BufferUsage::eTransferDst: return vk::BufferUsageFlagBits::eTransferDst;
-            case BufferUsage::eUniformTexelBuffer: return vk::BufferUsageFlagBits::eUniformTexelBuffer;
-            case BufferUsage::eStorageTexelBuffer: return vk::BufferUsageFlagBits::eStorageTexelBuffer;
-            case BufferUsage::eUniformBuffer: return vk::BufferUsageFlagBits::eUniformBuffer;
-            case BufferUsage::eStorageBuffer: return vk::BufferUsageFlagBits::eStorageBuffer;
-            case BufferUsage::eIndexBuffer: return vk::BufferUsageFlagBits::eIndexBuffer;
-            case BufferUsage::eVertexBuffer: return vk::BufferUsageFlagBits::eVertexBuffer;
-            case BufferUsage::eIndirectBuffer: return vk::BufferUsageFlagBits::eIndirectBuffer;
-            case BufferUsage::eShaderDeviceAddress: return vk::BufferUsageFlagBits::eShaderDeviceAddress;
+            case BufferUsage::eTransferSrc: return VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+            case BufferUsage::eTransferDst: return VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+            case BufferUsage::eUniformTexelBuffer: return VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
+            case BufferUsage::eStorageTexelBuffer: return VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT;
+            case BufferUsage::eUniformBuffer: return VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+            case BufferUsage::eStorageBuffer: return VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+            case BufferUsage::eIndexBuffer: return VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+            case BufferUsage::eVertexBuffer: return VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+            case BufferUsage::eIndirectBuffer: return VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
+            case BufferUsage::eShaderDeviceAddress: return VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
             default: break;
         }
 
-        return vk::BufferUsageFlagBits(-1);
+        return VkBufferUsageFlagBits(-1);
     }
 
-    vk::AttachmentLoadOp ToVulkanLoadOp(AttachmentLoadOp loadOp)
+    VkAttachmentLoadOp ToVulkanLoadOp(AttachmentLoadOp loadOp)
     {
         switch (loadOp)
         {
-            case AttachmentLoadOp::eClear: return vk::AttachmentLoadOp::eClear;
-            case AttachmentLoadOp::eDontCare: return vk::AttachmentLoadOp::eDontCare;
-            case AttachmentLoadOp::eLoad: return vk::AttachmentLoadOp::eLoad;
+            case AttachmentLoadOp::eClear: return VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
+            case AttachmentLoadOp::eDontCare: return VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            case AttachmentLoadOp::eLoad: return VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_LOAD;
             default: break;
         }
-        return vk::AttachmentLoadOp(-1);
+        return VkAttachmentLoadOp(-1);
     }
 
-    vk::ShaderStageFlagBits ToVulkanShaderStage(ShaderStage shaderStage)
+    VkShaderStageFlagBits ToVulkanShaderStage(ShaderStage shaderStage)
     {
         switch (shaderStage)
         {
-            case ShaderStage::eVertex: return vk::ShaderStageFlagBits::eVertex;
-            case ShaderStage::eTessellationControl: return vk::ShaderStageFlagBits::eTessellationControl;
-            case ShaderStage::eTessellationEvaluation: return vk::ShaderStageFlagBits::eTessellationEvaluation;
-            case ShaderStage::eGeometry: return vk::ShaderStageFlagBits::eGeometry;
-            case ShaderStage::eFragment: return vk::ShaderStageFlagBits::eFragment;
-            case ShaderStage::eCompute: return vk::ShaderStageFlagBits::eCompute;
-            case ShaderStage::eAllGraphics: return vk::ShaderStageFlagBits::eAllGraphics;
-            case ShaderStage::eAll: return vk::ShaderStageFlagBits::eAll;
-            case ShaderStage::eRaygenKHR: return vk::ShaderStageFlagBits::eRaygenKHR;
-            case ShaderStage::eAnyHitKHR: return vk::ShaderStageFlagBits::eAnyHitKHR;
-            case ShaderStage::eClosestHitKHR: return vk::ShaderStageFlagBits::eClosestHitKHR;
-            case ShaderStage::eMissKHR: return vk::ShaderStageFlagBits::eMissKHR;
-            case ShaderStage::eIntersectionKHR: return vk::ShaderStageFlagBits::eIntersectionKHR;
-            case ShaderStage::eCallableKHR: return vk::ShaderStageFlagBits::eCallableKHR;
+            case ShaderStage::eVertex: return VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
+            case ShaderStage::eTessellationControl: return VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+            case ShaderStage::eTessellationEvaluation: return VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+            case ShaderStage::eGeometry: return VkShaderStageFlagBits::VK_SHADER_STAGE_GEOMETRY_BIT;
+            case ShaderStage::eFragment: return VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
+            case ShaderStage::eCompute: return VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT;
+            case ShaderStage::eAllGraphics: return VkShaderStageFlagBits::VK_SHADER_STAGE_ALL_GRAPHICS;
+            case ShaderStage::eAll: return VkShaderStageFlagBits::VK_SHADER_STAGE_ALL;
+            case ShaderStage::eRaygenKHR: return VkShaderStageFlagBits::VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+            case ShaderStage::eAnyHitKHR: return VkShaderStageFlagBits::VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
+            case ShaderStage::eClosestHitKHR: return VkShaderStageFlagBits::VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+            case ShaderStage::eMissKHR: return VkShaderStageFlagBits::VK_SHADER_STAGE_MISS_BIT_KHR;
+            case ShaderStage::eIntersectionKHR: return VkShaderStageFlagBits::VK_SHADER_STAGE_INTERSECTION_BIT_KHR;
+            case ShaderStage::eCallableKHR: return VkShaderStageFlagBits::VK_SHADER_STAGE_CALLABLE_BIT_KHR;
             default: break;
         }
-        return vk::ShaderStageFlagBits(-1);
+        return VkShaderStageFlagBits(-1);
     }
 
-    vk::CullModeFlagBits ToVulkanCullMode(CullMode cullMode)
+    VkCullModeFlagBits ToVulkanCullMode(CullMode cullMode)
     {
         switch (cullMode)
         {
-            case CullMode::eBack: return vk::CullModeFlagBits::eBack;
-            case CullMode::eFront: return vk::CullModeFlagBits::eFront;
-            case CullMode::eNone: return vk::CullModeFlagBits::eNone;
+            case CullMode::eBack: return VkCullModeFlagBits::VK_CULL_MODE_BACK_BIT;
+            case CullMode::eFront: return VkCullModeFlagBits::VK_CULL_MODE_FRONT_BIT;
+            case CullMode::eNone: return VkCullModeFlagBits::VK_CULL_MODE_NONE;
             default: break;
         }
 
-        return vk::CullModeFlagBits(-1);
+        return VkCullModeFlagBits(-1);
     }
 
-    vk::FrontFace ToVulkanFrontFace(FrontFace frontFace)
+    VkFrontFace ToVulkanFrontFace(FrontFace frontFace)
     {
         switch(frontFace)
         {
-            case FrontFace::eClockwise: return vk::FrontFace::eClockwise;
-            case FrontFace::eCounterClockwise: return vk::FrontFace::eCounterClockwise;
+            case FrontFace::eClockwise: return VkFrontFace::VK_FRONT_FACE_CLOCKWISE;
+            case FrontFace::eCounterClockwise: return VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE;
             default: break;
         }
 
-        return vk::FrontFace(-1);
+        return VkFrontFace(-1);
     }
 
-    vk::Filter ToVulkanFilter(Filter filter)
+    VkFilter ToVulkanFilter(Filter filter)
     {
         switch (filter)
         {
-            case Filter::eLinear: return vk::Filter::eLinear;
-            case Filter::eNearest: return vk::Filter::eNearest;
+            case Filter::eLinear: return VK_FILTER_LINEAR;
+            case Filter::eNearest: return VK_FILTER_NEAREST;
             default: break;
         }
         
-        return vk::Filter(-1);
+        return VkFilter(-1);
     }
 
-    vk::PipelineBindPoint ToVulkanPipelineBindPoint(PipelineType type)
+    VkPipelineBindPoint ToVulkanPipelineBindPoint(PipelineType type)
     {
         switch (type)
         {
-            case PipelineType::eCompute: return vk::PipelineBindPoint::eCompute;
-            case PipelineType::eGraphics: return vk::PipelineBindPoint::eGraphics;
-            case PipelineType::eRayTracing: return vk::PipelineBindPoint::eRayTracingKHR;
+            case PipelineType::eCompute: return VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE;
+            case PipelineType::eGraphics: return VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
+            case PipelineType::eRayTracing: return VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR;
             default: break;
         }
 
-        return vk::PipelineBindPoint(-1);
+        return VkPipelineBindPoint(-1);
     }
 
-    vk::VertexInputRate ToVulkanVertexInputRate(VertexInputRate inputRate)
+    VkVertexInputRate ToVulkanVertexInputRate(VertexInputRate inputRate)
     {
         switch (inputRate)
         {
-            case VertexInputRate::eVertex: return vk::VertexInputRate::eVertex;
-            case VertexInputRate::eInstance: return vk::VertexInputRate::eInstance;
+            case VertexInputRate::eVertex: return VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
+            case VertexInputRate::eInstance: return VkVertexInputRate::VK_VERTEX_INPUT_RATE_INSTANCE;
             default: break;
         }
-        return vk::VertexInputRate(-1);
+        return VkVertexInputRate(-1);
     }
 
-    vk::DescriptorType ToVulkanDescriptorType(DescriptorType type)
+    VkDescriptorType ToVulkanDescriptorType(DescriptorType type)
     {
         switch(type)
         {
-            case DescriptorType::eSampler: return vk::DescriptorType::eSampler;
-            case DescriptorType::eCombinedImageSampler: return vk::DescriptorType::eCombinedImageSampler;
-            case DescriptorType::eSampledImage: return vk::DescriptorType::eSampledImage;
-            case DescriptorType::eStorageImage: return vk::DescriptorType::eStorageImage;
-            case DescriptorType::eUniformTexelBuffer: return vk::DescriptorType::eUniformTexelBuffer;
-            case DescriptorType::eStorageTexelBuffer: return vk::DescriptorType::eStorageTexelBuffer;
-            case DescriptorType::eUniformBuffer: return vk::DescriptorType::eUniformBuffer;
-            case DescriptorType::eStorageBuffer: return vk::DescriptorType::eStorageBuffer;
-            case DescriptorType::eUniformBufferDynamic: return vk::DescriptorType::eUniformBufferDynamic;
-            case DescriptorType::eStorageBufferDynamic: return vk::DescriptorType::eStorageBufferDynamic;
-            case DescriptorType::eInputAttachment: return vk::DescriptorType::eInputAttachment;
+            case DescriptorType::eSampler: return VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLER;
+            case DescriptorType::eCombinedImageSampler: return VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            case DescriptorType::eSampledImage: return VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+            case DescriptorType::eStorageImage: return VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+            case DescriptorType::eUniformTexelBuffer: return VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+            case DescriptorType::eStorageTexelBuffer: return VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+            case DescriptorType::eUniformBuffer: return VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            case DescriptorType::eStorageBuffer: return VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            case DescriptorType::eUniformBufferDynamic: return VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+            case DescriptorType::eStorageBufferDynamic: return VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+            case DescriptorType::eInputAttachment: return VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
             default: break;
         }
 
-        return vk::DescriptorType(-1);
+        return VkDescriptorType(-1);
     }
     
-    vk::IndexType ToVulkanIndexType(IndexType type)
+    VkIndexType ToVulkanIndexType(IndexType type)
     {
         switch (type)
         {
-            case IndexType::eUint16: return vk::IndexType::eUint16;
-            case IndexType::eUint32: return vk::IndexType::eUint32;
+            case IndexType::eUint16: return VkIndexType::VK_INDEX_TYPE_UINT16;
+            case IndexType::eUint32: return VkIndexType::VK_INDEX_TYPE_UINT32;
             default: break;
         }
         
-        return vk::IndexType(-1);
+        return VkIndexType(-1);
     }
 
-    vk::SamplerMipmapMode ToVulkanSamplerMipmapMode(SamplerMipmapMode mode)
+    VkSamplerMipmapMode ToVulkanSamplerMipmapMode(SamplerMipmapMode mode)
     {
         switch (mode)
         {
-            case SamplerMipmapMode::eNearest: return vk::SamplerMipmapMode::eNearest;
-            case SamplerMipmapMode::eLinear: return vk::SamplerMipmapMode::eLinear;
+            case SamplerMipmapMode::eNearest: return VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_NEAREST;
+            case SamplerMipmapMode::eLinear: return VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_LINEAR;
             default: break;
         }
 
-        return vk::SamplerMipmapMode(-1);
+        return VkSamplerMipmapMode(-1);
     }
 
-    vk::SamplerAddressMode ToVulkanSamplerAddressMode(SamplerAddressMode mode)
+    VkSamplerAddressMode ToVulkanSamplerAddressMode(SamplerAddressMode mode)
     {
         switch (mode)
         {
-            case SamplerAddressMode::eRepeat: return vk::SamplerAddressMode::eRepeat;
-            case SamplerAddressMode::eMirroredRepeat: return vk::SamplerAddressMode::eMirroredRepeat;
-            case SamplerAddressMode::eClampToEdge: return vk::SamplerAddressMode::eClampToEdge;
-            case SamplerAddressMode::eClampToBorder: return vk::SamplerAddressMode::eClampToBorder;
-            case SamplerAddressMode::eMirrorClampToEdge: return vk::SamplerAddressMode::eMirrorClampToEdge;
+            case SamplerAddressMode::eRepeat: return VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            case SamplerAddressMode::eMirroredRepeat: return VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+            case SamplerAddressMode::eClampToEdge: return VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            case SamplerAddressMode::eClampToBorder: return VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+            case SamplerAddressMode::eMirrorClampToEdge: return VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
             default: break;
         }
-        return vk::SamplerAddressMode(-1);
+        return VkSamplerAddressMode(-1);
     }
 
-    vk::CompareOp ToVulkanCompareOp(CompareOp op)
+    VkCompareOp ToVulkanCompareOp(CompareOp op)
     {
         switch (op)
         {
-            case CompareOp::eNever          : return vk::CompareOp::eNever;
-            case CompareOp::eLess           : return vk::CompareOp::eLess;
-            case CompareOp::eEqual          : return vk::CompareOp::eEqual;
-            case CompareOp::eLessOrEqual    : return vk::CompareOp::eLessOrEqual;
-            case CompareOp::eGreater        : return vk::CompareOp::eGreater;
-            case CompareOp::eNotEqual       : return vk::CompareOp::eNotEqual;
-            case CompareOp::eGreaterOrEqual : return vk::CompareOp::eGreaterOrEqual;
-            case CompareOp::eAlways         : return vk::CompareOp::eAlways;
+            case CompareOp::eNever          : return VkCompareOp::VK_COMPARE_OP_NEVER;
+            case CompareOp::eLess           : return VkCompareOp::VK_COMPARE_OP_LESS;
+            case CompareOp::eEqual          : return VkCompareOp::VK_COMPARE_OP_EQUAL;
+            case CompareOp::eLessOrEqual    : return VkCompareOp::VK_COMPARE_OP_LESS_OR_EQUAL;
+            case CompareOp::eGreater        : return VkCompareOp::VK_COMPARE_OP_GREATER;
+            case CompareOp::eNotEqual       : return VkCompareOp::VK_COMPARE_OP_NOT_EQUAL;
+            case CompareOp::eGreaterOrEqual : return VkCompareOp::VK_COMPARE_OP_GREATER_OR_EQUAL;
+            case CompareOp::eAlways         : return VkCompareOp::VK_COMPARE_OP_ALWAYS;
             default: break;
         }
 
-        return vk::CompareOp(-1);
+        return VkCompareOp(-1);
     }
 
-    vk::ImageAspectFlags ImageFormatToImageAspect(vk::Format format)
+    VkImageAspectFlags ImageFormatToImageAspect(VkFormat format)
     {
-        static const std::unordered_map<vk::Format, vk::ImageAspectFlags> formatToAspect
+        static const std::unordered_map<VkFormat, VkImageAspectFlags> formatToAspect
         {
-            { vk::Format::eD16Unorm, vk::ImageAspectFlagBits::eDepth },
-            { vk::Format::eX8D24UnormPack32, vk::ImageAspectFlagBits::eDepth },
-            { vk::Format::eD32Sfloat, vk::ImageAspectFlagBits::eDepth },
-            { vk::Format::eD16UnormS8Uint, vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil },
-            { vk::Format::eD24UnormS8Uint, vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil },
-            { vk::Format::eD32SfloatS8Uint, vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil }
+            { VkFormat::VK_FORMAT_D16_UNORM, VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT },
+            { VkFormat::VK_FORMAT_X8_D24_UNORM_PACK32, VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT },
+            { VkFormat::VK_FORMAT_D32_SFLOAT, VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT },
+            { VkFormat::VK_FORMAT_D16_UNORM_S8_UINT, VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT | VkImageAspectFlagBits::VK_IMAGE_ASPECT_STENCIL_BIT },
+            { VkFormat::VK_FORMAT_D24_UNORM_S8_UINT, VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT | VkImageAspectFlagBits::VK_IMAGE_ASPECT_STENCIL_BIT },
+            { VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT, VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT | VkImageAspectFlagBits::VK_IMAGE_ASPECT_STENCIL_BIT }
         };
 
         if (formatToAspect.find(format) != formatToAspect.cend())
             return formatToAspect.at(format);
         else
-            return vk::ImageAspectFlagBits::eColor;
+            return VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT;
     }
 
-    vk::AccessFlags ImageUsageToAccessFlags(ImageUsage::Bits usage)
+    VkAccessFlags ImageUsageToAccessFlags(ImageUsage::Bits usage)
     {
-        static const std::unordered_map<ImageUsage::Bits, vk::AccessFlags> usageToAccess
+        static const std::unordered_map<ImageUsage::Bits, VkAccessFlags> usageToAccess
         {
-            { ImageUsage::eUndefined, vk::AccessFlags{} },
-            { ImageUsage::eTransferSrc, vk::AccessFlagBits::eTransferRead },
-            { ImageUsage::eTransferDst, vk::AccessFlagBits::eTransferWrite },
-            { ImageUsage::eSampled, vk::AccessFlagBits::eShaderRead },
-            { ImageUsage::eStorage, vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite },
-            { ImageUsage::eColorAttachment, vk::AccessFlagBits::eColorAttachmentWrite },
-            { ImageUsage::eDepthStencilAttachment, vk::AccessFlagBits::eDepthStencilAttachmentWrite },
-            { ImageUsage::eInputAttachment, vk::AccessFlagBits::eInputAttachmentRead },
-            { ImageUsage::eFragmentShadingRateAttachment, vk::AccessFlagBits::eFragmentShadingRateAttachmentReadKHR }
+            { ImageUsage::eUndefined, VkAccessFlags{} },
+            { ImageUsage::eTransferSrc, VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT },
+            { ImageUsage::eTransferDst, VkAccessFlagBits::VK_ACCESS_TRANSFER_WRITE_BIT },
+            { ImageUsage::eSampled, VkAccessFlagBits::VK_ACCESS_SHADER_READ_BIT },
+            { ImageUsage::eStorage, VkAccessFlagBits::VK_ACCESS_SHADER_READ_BIT | VkAccessFlagBits::VK_ACCESS_SHADER_WRITE_BIT },
+            { ImageUsage::eColorAttachment, VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT },
+            { ImageUsage::eDepthStencilAttachment, VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT },
+            { ImageUsage::eInputAttachment, VkAccessFlagBits::VK_ACCESS_INPUT_ATTACHMENT_READ_BIT },
+            { ImageUsage::eFragmentShadingRateAttachment, VkAccessFlagBits::VK_ACCESS_FRAGMENT_SHADING_RATE_ATTACHMENT_READ_BIT_KHR }
         };
 
         if (usageToAccess.find(usage) != usageToAccess.cend())
             return usageToAccess.at(usage);
         else
-            return vk::AccessFlags{};
+            return VkAccessFlags{};
     }
 
-    vk::ImageLayout ImageUsageToImageLayout(ImageUsage::Bits usage)
+    VkImageLayout ImageUsageToImageLayout(ImageUsage::Bits usage)
     {
-        static const std::unordered_map<ImageUsage::Bits, vk::ImageLayout> usageToLayout
+        static const std::unordered_map<ImageUsage::Bits, VkImageLayout> usageToLayout
         {
-            { ImageUsage::eUndefined, vk::ImageLayout::eUndefined },
-            { ImageUsage::eTransferSrc, vk::ImageLayout::eTransferSrcOptimal },
-            { ImageUsage::eTransferDst, vk::ImageLayout::eTransferDstOptimal },
-            { ImageUsage::eSampled, vk::ImageLayout::eShaderReadOnlyOptimal },
-            { ImageUsage::eStorage, vk::ImageLayout::eGeneral },
-            { ImageUsage::eColorAttachment, vk::ImageLayout::eColorAttachmentOptimal },
-            { ImageUsage::eDepthStencilAttachment, vk::ImageLayout::eDepthStencilAttachmentOptimal },
-            { ImageUsage::eInputAttachment, vk::ImageLayout::eAttachmentOptimalKHR },
-            { ImageUsage::eFragmentShadingRateAttachment, vk::ImageLayout::eFragmentShadingRateAttachmentOptimalKHR }
+            { ImageUsage::eUndefined, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED },
+            { ImageUsage::eTransferSrc, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL },
+            { ImageUsage::eTransferDst, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL },
+            { ImageUsage::eSampled, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL },
+            { ImageUsage::eStorage, VkImageLayout::VK_IMAGE_LAYOUT_GENERAL },
+            { ImageUsage::eColorAttachment, VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL },
+            { ImageUsage::eDepthStencilAttachment, VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL },
+            { ImageUsage::eInputAttachment, VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL },
+            { ImageUsage::eFragmentShadingRateAttachment, VkImageLayout::VK_IMAGE_LAYOUT_FRAGMENT_SHADING_RATE_ATTACHMENT_OPTIMAL_KHR }
         };
 
         if (usageToLayout.find(usage) != usageToLayout.cend())
             return usageToLayout.at(usage);
         else
-            return vk::ImageLayout::eUndefined;
+            return VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
     }
 
-    vk::PipelineStageFlags ImageUsageToPipelineStage(ImageUsage::Bits usage)
+    VkPipelineStageFlags ImageUsageToPipelineStage(ImageUsage::Bits usage)
     {
-        static const std::unordered_map<ImageUsage::Bits, vk::PipelineStageFlags> usageToStage
+        static const std::unordered_map<ImageUsage::Bits, VkPipelineStageFlags> usageToStage
         {
-            { ImageUsage::eUndefined, vk::PipelineStageFlagBits::eTopOfPipe },
-            { ImageUsage::eTransferSrc, vk::PipelineStageFlagBits::eTransfer },
-            { ImageUsage::eTransferDst, vk::PipelineStageFlagBits::eTransfer },
-            { ImageUsage::eSampled, vk::PipelineStageFlagBits::eFragmentShader },
-            { ImageUsage::eStorage, vk::PipelineStageFlagBits::eFragmentShader },
-            { ImageUsage::eColorAttachment, vk::PipelineStageFlagBits::eColorAttachmentOutput },
-            { ImageUsage::eDepthStencilAttachment, vk::PipelineStageFlagBits::eEarlyFragmentTests },
-            { ImageUsage::eInputAttachment, vk::PipelineStageFlagBits::eFragmentShader },
-            { ImageUsage::eFragmentShadingRateAttachment, vk::PipelineStageFlagBits::eFragmentShadingRateAttachmentKHR }
+            { ImageUsage::eUndefined, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT },
+            { ImageUsage::eTransferSrc, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT },
+            { ImageUsage::eTransferDst, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT },
+            { ImageUsage::eSampled, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT },
+            { ImageUsage::eStorage, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT },
+            { ImageUsage::eColorAttachment, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT },
+            { ImageUsage::eDepthStencilAttachment, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT },
+            { ImageUsage::eInputAttachment, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT },
+            { ImageUsage::eFragmentShadingRateAttachment, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR }
         };
 
         if (usageToStage.find(usage) != usageToStage.cend())
             return usageToStage.at(usage);
         else
-            return vk::PipelineStageFlagBits::eTopOfPipe;
+            return VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
     }
 
-    vk::ImageSubresourceRange GetImageSubresourceRange(const Image& image)
+    VkImageSubresourceRange GetImageSubresourceRange(const Image& image)
     {
-        vk::ImageSubresourceRange imageSubresourceRange;
-        imageSubresourceRange
-            .setAspectMask(ImageFormatToImageAspect(static_cast<vk::Format>(image.GetFormat())))
-            .setBaseMipLevel(0)
-            .setLevelCount(image.GetMipLevelsCount())
-            .setBaseArrayLayer(0)
-            .setLayerCount(1);
-        return imageSubresourceRange;
+        return
+        {
+            ImageFormatToImageAspect(static_cast<VkFormat>(image.GetFormat())),
+            0,                // base mip level
+            image.GetMipLevelsCount(),   // mip levels
+            0,              // base array layer
+            1                  // layer count
+        };
     }
 
-    vk::ImageSubresourceLayers GetImageSubresourceLayers(const Image& image)
+    VkImageSubresourceLayers GetImageSubresourceLayers(const Image& image)
     {
         auto subresourceRange = GetImageSubresourceRange(image);
-        return vk::ImageSubresourceLayers{
+        return VkImageSubresourceLayers{
             subresourceRange.aspectMask,
             subresourceRange.baseMipLevel,
             subresourceRange.baseArrayLayer,

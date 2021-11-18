@@ -6,33 +6,34 @@ namespace Fluent
     class VulkanFramebuffer : public Framebuffer
     {
     private:
-        vk::Framebuffer mHandle;
+        VkFramebuffer mHandle = nullptr;
     public:
         VulkanFramebuffer(const FramebufferDescription& description)
         {
-            std::vector<vk::ImageView> attachmentViews;
+            std::vector<VkImageView> attachmentViews;
 
             for (auto& target : description.targets)
                 attachmentViews.emplace_back((VkImageView)target->GetImageView());
             if (description.depthStencil)
                 attachmentViews.emplace_back((VkImageView)description.depthStencil->GetImageView());
                 
-            vk::FramebufferCreateInfo framebufferCreateInfo;
-            framebufferCreateInfo
-                .setRenderPass((VkRenderPass)description.renderPass->GetNativeHandle())
-                .setAttachments(attachmentViews)
-                .setWidth(description.width)
-                .setHeight(description.height)
-                .setLayers(1);
+            VkFramebufferCreateInfo framebufferCreateInfo{};
+            framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferCreateInfo.renderPass = (VkRenderPass)description.renderPass->GetNativeHandle();
+            framebufferCreateInfo.attachmentCount = attachmentViews.size();
+            framebufferCreateInfo.pAttachments = attachmentViews.data();
+            framebufferCreateInfo.width = description.width;
+            framebufferCreateInfo.height = description.height;
+            framebufferCreateInfo.layers = 1;
 
-            vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
-            mHandle = device.createFramebuffer(framebufferCreateInfo);
+            VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
+            vkCreateFramebuffer(device, &framebufferCreateInfo, nullptr, &mHandle);
         }
 
         ~VulkanFramebuffer() override
         {
-            vk::Device device = (VkDevice)GetGraphicContext().GetDevice();
-            device.destroyFramebuffer(mHandle);
+            VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
+            vkDestroyFramebuffer(device, mHandle, nullptr);
         }
 
         Handle GetNativeHandle() const override { return mHandle; }
