@@ -57,7 +57,7 @@ namespace Fluent
         return ShaderType{ format, componentCount, byteSize };
     }
 
-    void Reflect(ShaderDescription& description)
+    ShaderDescription& Reflect(ShaderDescription& description)
     {
         switch (description.stage)
         {
@@ -164,5 +164,7 @@ namespace Fluent
             LOG_TRACE("Vecsize: {}", compiler.get_type(image.base_type_id).vecsize);
             LOG_TRACE("Columns: {}", compiler.get_type(image.base_type_id).columns);
         }
+
+        return description;
     }
 } // namespace Fluent

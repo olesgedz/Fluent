@@ -27,5 +27,5 @@ namespace Fluent
         std::vector<Uniform> uniforms;
     };
 
-    void Reflect(ShaderDescription& description);
+    ShaderDescription& Reflect(ShaderDescription& description);
 } // namespace Fluent
