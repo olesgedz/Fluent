@@ -52,7 +52,7 @@ set(CommonLibs
 		tiny_ktx)
 
 if (MSVC)
-    set(PlatformLibs spirv-cross-utild)
+    set(PlatformLibs spirv-cross-cored)
 elseif (UNIX)
 	set(PlatformLibs spirv-cross-util)
 endif()
