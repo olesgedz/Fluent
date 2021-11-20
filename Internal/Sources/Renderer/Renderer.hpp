@@ -2,13 +2,13 @@
 
 #include <type_traits>
 #include <cstdint>
-#include <vulkan/vulkan.h>
+#include <volk.h>
 #include <tinyimageformat_base.h>
 #include "Core/Base.hpp"
 
 // TODO: Implement
 #define VK_ASSERT(x) x
-#define FLUENT_VK_API_VERSION VK_API_VERSION_1_2
+#define FLUENT_VK_API_VERSION VK_API_VERSION_1_1
 
 namespace Fluent
 {

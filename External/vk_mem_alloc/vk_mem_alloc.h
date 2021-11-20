@@ -147,7 +147,7 @@ available through VmaAllocatorCreateInfo::pRecordSettings.
 #endif // #if defined(__ANDROID__) && VMA_STATIC_VULKAN_FUNCTIONS && VK_NO_PROTOTYPES
 
 #ifndef VULKAN_H_
-    #include <vulkan/vulkan.h>
+    #include <volk.h>
 #endif
 
 // Define this macro to declare maximum supported Vulkan version in format AAABBBCCC,

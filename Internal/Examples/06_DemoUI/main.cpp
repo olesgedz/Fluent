@@ -11,9 +11,9 @@ private:
     Scope<UIContext>    mUIContext;
 public:
     ImGuiLayer() : Layer("ImGui") {}
-    ~ImGuiLayer() = default;
+    ~ImGuiLayer() override = default;
 
-    void OnAttach()
+    void OnAttach() override
     {
         auto& window = Application::Get().GetWindow();
 
@@ -36,7 +36,7 @@ public:
         mUIContext = UIContext::Create(uiDesc);
     }
 
-    void OnLoad()
+    void OnLoad() override
     {
         auto& window = Application::Get().GetWindow();
 
@@ -62,19 +62,19 @@ public:
         mRenderPass->SetRenderArea(window->GetWidth(), window->GetHeight());
     }
 
-    void OnUnload()
+    void OnUnload() override
     {
         mFramebuffer = nullptr;
         mImage = nullptr;
     }
 
-    void OnDetach()
+    void OnDetach() override
     {
         mUIContext = nullptr;
         mRenderPass = nullptr;
     }
 
-    void OnUpdate(float deltaTime)
+    void OnUpdate(float deltaTime) override
     {
         auto& context = GetGraphicContext();
         auto& cmd = context.GetCurrentCommandBuffer();

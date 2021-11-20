@@ -47,17 +47,14 @@ set(CommonLibs
 		imgui
 		spdlog
 		vk_mem_alloc
+		volk
 		tiny_imageformat
 		tiny_ktx)
 
 if (MSVC)
-    set(PlatformLibDirs $ENV{VULKAN_SDK}/Lib)
-    set(PlatformLibs spirv-cross-cored.lib spirv-cross-glsld.lib vulkan-1.lib)
-elseif (UNIX AND NOT APPLE)
-	set(PlatformLibs spirv-cross-core.a vulkan.so)
-elseif(APPLE)
-    set(PlatformLibDirs $ENV{VULKAN_SDK}/lib)
-    set(PlatformLibs spirv-cross-core.a spirv-cross-glsl.a vulkan.dylib)
+    set(PlatformLibs spirv-cross-utild)
+elseif (UNIX)
+	set(PlatformLibs spirv-cross-util)
 endif()
 
 if (DebugMode)
@@ -89,6 +86,5 @@ target_include_directories(${Target}
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 
-target_link_directories(${Target} PUBLIC ${LibDirs})
 target_link_libraries(${Target} PUBLIC ${Libs})
 target_compile_options(${Target} PUBLIC ${CompileOptions})

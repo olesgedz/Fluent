@@ -1,8 +1,6 @@
 #include <algorithm>
-#define GLFW_INCLUDE_VULKAN
+#include <volk.h>
 #include <GLFW/glfw3.h>
-// I want to use my own vulkan headers, glfw do strange things
-#include <vulkan/vulkan.h>
 #include "Renderer/VirtualFrame.hpp"
 #include "Renderer/GraphicContext.hpp"
 
@@ -92,6 +90,8 @@ namespace Fluent
             auto* oldContext = &GetGraphicContext();
             SetGraphicContext(*this);
 
+            volkInitialize();
+
             VkApplicationInfo appInfo{};
             appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
             appInfo.pEngineName = "Fluent";
@@ -109,6 +109,7 @@ namespace Fluent
             instanceCI.ppEnabledLayerNames      = instanceLayers.data();
 
             VK_ASSERT(vkCreateInstance(&instanceCI, nullptr, &mInstance));
+            volkLoadInstance(mInstance);
 
             // TODO: Wrap
             auto result = glfwCreateWindowSurface
@@ -225,6 +226,7 @@ namespace Fluent
             deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
             vkCreateDevice(mPhysicalDevice, &deviceCreateInfo, nullptr, &mDevice);
+            volkLoadDevice(mDevice);
             vkGetDeviceQueue(mDevice, mQueueIndex, 0, &mDeviceQueue);
 
             /// Create memory allocator
