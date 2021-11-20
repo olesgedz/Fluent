@@ -1,4 +1,4 @@
-#include <spirv_cross/spirv_glsl.hpp>
+#include <spirv_glsl.hpp>
 #include "Core/Base.hpp"
 #include "Renderer/Shader.hpp"
 #include "Renderer/ShaderReflection.hpp"

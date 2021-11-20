@@ -42,20 +42,17 @@ set(Sources
 	${UiSources})
 
 set(CommonLibs
+		volk
 		glfw
 		glm
 		imgui
 		spdlog
+		spirv-cross-core
 		vk_mem_alloc
-		volk
 		tiny_imageformat
 		tiny_ktx)
 
-if (MSVC)
-    set(PlatformLibs spirv-cross-cored)
-elseif (UNIX)
-	set(PlatformLibs spirv-cross-util)
-endif()
+set(Libs ${CommonLibs})
 
 if (DebugMode)
 	if (MSVC)
@@ -66,14 +63,10 @@ if (DebugMode)
 else()
 	if (MSVC)
 		# set(CompileOptions /O2)
-		# TODO Fix on windows
 	else()
 		set(CompileOptions -O3)
 	endif()
 endif()
-
-set(Libs ${CommonLibs} ${PlatformLibs})
-set(LibDirs ${PlatformLibDirs})
 
 add_library(${Target} ${Sources})
 
