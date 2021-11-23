@@ -22,7 +22,7 @@ namespace Fluent
             , mHeight(description.height)
             , mHasDepthStencil(false)
         {
-            uint32_t attachmentsCount = description.attachmentLoadOps.size();
+            uint32_t attachmentsCount = description.initialUsages.size();
             std::vector<VkAttachmentDescription> attachmentDescriptions;
             std::vector<VkAttachmentReference> attachmentReferences;
 
@@ -46,10 +46,15 @@ namespace Fluent
 
                 if (description.finalUsages[i] == ImageUsage::eDepthStencilAttachment)
                 {
-                    depthStencilAttachmentReference = attachmentReference;
+                    attachmentDescription.format = ToVulkanFormat(description.depthStencilFormat);
+                    attachmentDescription.loadOp = ToVulkanLoadOp(description.depthLoadOp);
                     attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
                     attachmentDescription.stencilLoadOp = ToVulkanLoadOp(description.depthLoadOp);
                     attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+                    attachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+                    depthStencilAttachmentReference = attachmentReference;
 
                     mHasDepthStencil = true;
                     mDepth = description.clearValues[i].depth;

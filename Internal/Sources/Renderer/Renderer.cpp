@@ -4,6 +4,11 @@
 
 namespace Fluent
 {
+    bool IsDepthFormat(Format format)
+    {
+        return (format == Format::eD32Sfloat || format == Format::eD16Unorm);
+    }
+
     VkFormat ToVulkanFormat(Format format)
     {
         return static_cast<VkFormat>(TinyImageFormat_ToVkFormat(static_cast<TinyImageFormat>(format)));
@@ -290,7 +295,7 @@ namespace Fluent
             { ImageUsage::eSampled, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL },
             { ImageUsage::eStorage, VkImageLayout::VK_IMAGE_LAYOUT_GENERAL },
             { ImageUsage::eColorAttachment, VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL },
-            { ImageUsage::eDepthStencilAttachment, VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL },
+            { ImageUsage::eDepthStencilAttachment, VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL },
             { ImageUsage::eInputAttachment, VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL },
             { ImageUsage::eFragmentShadingRateAttachment, VkImageLayout::VK_IMAGE_LAYOUT_FRAGMENT_SHADING_RATE_ATTACHMENT_OPTIMAL_KHR }
         };
@@ -326,7 +331,7 @@ namespace Fluent
     {
         return
         {
-            ImageFormatToImageAspect(static_cast<VkFormat>(image.GetFormat())),
+            ImageFormatToImageAspect(ToVulkanFormat(image.GetFormat())),
             0,                // base mip level
             image.GetMipLevelsCount(),   // mip levels
             0,              // base array layer

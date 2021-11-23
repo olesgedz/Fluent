@@ -79,7 +79,8 @@ static std::vector<uint32_t> indices
 class ParallaxMappingLayer : public Layer
 {
 private:
-    Ref<Image>                  mImage;
+    Ref<Image>                  mRenderImage;
+    Ref<Image>                  mDepthImage;
     Ref<RenderPass>             mRenderPass;
     Ref<Framebuffer>            mFramebuffer;
     Ref<Pipeline>               mPipeline;
@@ -179,9 +180,12 @@ public:
         renderPassDesc.height = window->GetHeight();
         renderPassDesc.clearValues = { clearValue };
         renderPassDesc.colorFormats = { Format::eR8G8B8A8Unorm };
-        renderPassDesc.initialUsages = { ImageUsage::eUndefined };
-        renderPassDesc.finalUsages = { ImageUsage::eStorage };
+        renderPassDesc.initialUsages = { ImageUsage::eUndefined, ImageUsage::eUndefined };
+        renderPassDesc.finalUsages = { ImageUsage::eStorage, ImageUsage::eDepthStencilAttachment };
         renderPassDesc.attachmentLoadOps = { AttachmentLoadOp::eClear };
+        renderPassDesc.depthStencilFormat = Format::eD32Sfloat;
+        renderPassDesc.depthLoadOp = AttachmentLoadOp::eClear;
+        renderPassDesc.stencilLoadOp = AttachmentLoadOp::eClear;
         renderPassDesc.sampleCount = SampleCount::e1;
 
         mRenderPass = RenderPass::Create(renderPassDesc);
@@ -205,6 +209,11 @@ public:
         RasterizerStateDescription rasterizerState{};
         rasterizerState.cullMode = CullMode::eBack;
         rasterizerState.frontFace = FrontFace::eCounterClockwise;
+
+        DepthStateDescription depthStateDescription{};
+        depthStateDescription.depthTest = true;
+        depthStateDescription.depthWrite = true;
+        depthStateDescription.compareOp = CompareOp::eLess;
 
         PipelineDescription pipelineDesc{};
         pipelineDesc.type = PipelineType::eGraphics;
@@ -291,14 +300,14 @@ public:
         mUniformBuffer = nullptr;
         mPipeline = nullptr;
         mFramebuffer = nullptr;
-        mImage = nullptr;
+        mRenderImage = nullptr;
     }
 
     void OnLoad() override
     {
         auto& window = Application::Get().GetWindow();
 
-        ImageDescription imageDesc {};
+        ImageDescription imageDesc{};
         imageDesc.arraySize = 1;
         imageDesc.mipLevels = 1;
         imageDesc.depth = 1;
@@ -307,13 +316,19 @@ public:
         imageDesc.height = window->GetHeight();
         imageDesc.initialUsage = ImageUsage::Bits::eStorage;
 
-        mImage = Image::Create(imageDesc);
+        mRenderImage = Image::Create(imageDesc);
+
+        imageDesc.format = Format::eD32Sfloat;
+        imageDesc.initialUsage = ImageUsage::Bits::eDepthStencilAttachment;
+
+        mDepthImage = Image::Create(imageDesc);
 
         FramebufferDescription framebufferDesc {};
         framebufferDesc.width = window->GetWidth();
         framebufferDesc.height = window->GetHeight();
         framebufferDesc.renderPass = mRenderPass;
-        framebufferDesc.targets = {{ mImage }};
+        framebufferDesc.targets = {{ mRenderImage }};
+        framebufferDesc.depthStencil = mDepthImage;
 
         mFramebuffer = Framebuffer::Create(framebufferDesc);
 
@@ -330,7 +345,8 @@ public:
     void OnUnload() override
     {
         mFramebuffer = nullptr;
-        mImage = nullptr;
+        mRenderImage = nullptr;
+        mDepthImage = nullptr;
     }
 
     void OnUpdate(float deltaTime) override
@@ -356,7 +372,7 @@ public:
         uint32_t activeImage = context->GetActiveImageIndex();
         auto swapchainImageUsage = context->GetSwapchainImageUsage(activeImage);
         auto swapchainImage = context->AcquireImage(activeImage, ImageUsage::eTransferDst);
-        cmd->BlitImage(mImage, ImageUsage::eStorage, swapchainImage, swapchainImageUsage, Filter::eLinear);
+        cmd->BlitImage(mRenderImage, ImageUsage::eStorage, swapchainImage, swapchainImageUsage, Filter::eLinear);
     }
 };
 

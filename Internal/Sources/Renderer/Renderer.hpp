@@ -412,8 +412,9 @@ namespace Fluent
         eAlways         = 7
     };
 
+    bool                      IsDepthFormat(Format format);
     VkFormat                  ToVulkanFormat(Format format);
-    Format                      FromVulkanFormatToFormat(VkFormat format);
+    Format                    FromVulkanFormatToFormat(VkFormat format);
     VkImageUsageFlagBits      ToVulkanImageUsage(ImageUsage::Bits imageUsage);
     VkSampleCountFlagBits     ToVulkanSampleCount(SampleCount sampleCount);
     VkBufferUsageFlagBits     ToVulkanBufferUsage(BufferUsage::Bits bufferUsage);

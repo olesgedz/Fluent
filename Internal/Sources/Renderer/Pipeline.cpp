@@ -107,6 +107,18 @@ namespace Fluent
             colorBlendStateCreateInfo.attachmentCount = 1;
             colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
 
+            VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo{};
+            depthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+            depthStencilStateCreateInfo.depthTestEnable = description.depthStateDescription.depthTest ? VK_TRUE : VK_FALSE;
+            depthStencilStateCreateInfo.depthWriteEnable = description.depthStateDescription.depthWrite ? VK_TRUE : VK_FALSE;
+            depthStencilStateCreateInfo.depthCompareOp = description.depthStateDescription.depthTest ?
+                                                         ToVulkanCompareOp(description.depthStateDescription.compareOp)
+                                                         : VK_COMPARE_OP_ALWAYS;
+            depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
+            depthStencilStateCreateInfo.minDepthBounds = 0.0f; // Optional
+            depthStencilStateCreateInfo.maxDepthBounds = 1.0f; // Optional
+            depthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
+
             const uint32_t dynamicStatesCount = 2;
             VkDynamicState dynamicStates[dynamicStatesCount] =
                 { VK_DYNAMIC_STATE_SCISSOR, VK_DYNAMIC_STATE_VIEWPORT };
@@ -145,6 +157,7 @@ namespace Fluent
             pipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
             pipelineCreateInfo.pRasterizationState = &rasterizationStateCreateInfo;
             pipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
+            pipelineCreateInfo.pDepthStencilState = &depthStencilStateCreateInfo;
             pipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
             pipelineCreateInfo.layout = mPipelineLayout;
             pipelineCreateInfo.renderPass = (VkRenderPass)description.renderPass->GetNativeHandle();

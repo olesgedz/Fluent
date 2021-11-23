@@ -14,6 +14,13 @@ namespace Fluent
         FrontFace frontFace;
     };
 
+    struct DepthStateDescription
+    {
+        bool depthTest;
+        bool depthWrite;
+        CompareOp compareOp;
+    };
+
     struct PipelineDescription
     {
         PipelineType                            type;
@@ -21,6 +28,7 @@ namespace Fluent
         std::vector<VertexBindingDescription>   bindingDescriptions;
         std::vector<VertexAttributeDescription> attributeDescriptions;
         RasterizerStateDescription              rasterizerDescription;
+        DepthStateDescription                   depthStateDescription;
         Ref<RenderPass>                         renderPass;
     };
 
