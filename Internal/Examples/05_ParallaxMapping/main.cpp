@@ -266,27 +266,38 @@ public:
         descriptorSetDesc.descriptorSetLayout = mDescriptorSetLayout;
         mDescriptorSet = DescriptorSet::Create(descriptorSetDesc);
 
-        std::vector<DescriptorSetUpdateDesc> updateDescriptions(5);
+        std::vector<ImageUpdateDesc> imageUpdates;
+        ImageUpdateDesc imageUpdate{};
+        imageUpdate.image = mAlbedoMap;
+        imageUpdate.usage = ImageUsage::eSampled;
+        imageUpdates.emplace_back(imageUpdate);
+        imageUpdate.image = mNormalMap;
+        imageUpdate.usage = ImageUsage::eSampled;
+        imageUpdates.emplace_back(imageUpdate);
+        imageUpdate.image = mHeightMap;
+        imageUpdate.usage = ImageUsage::eSampled;
+        imageUpdates.emplace_back(imageUpdate);
+
+        BufferUpdateDesc bufferUpdateDesc{};
+        bufferUpdateDesc.buffer = mUniformBuffer;
+        bufferUpdateDesc.offset = 0;
+        bufferUpdateDesc.range = sizeof(CameraUBO);
+
+        std::vector<DescriptorSetUpdateDesc> updateDescriptions(3);
         updateDescriptions[0].binding = 0;
-        updateDescriptions[0].bufferUpdate.buffer = mUniformBuffer;
-        updateDescriptions[0].bufferUpdate.offset = 0;
-        updateDescriptions[0].bufferUpdate.range = sizeof(CameraUBO);
+        updateDescriptions[0].bufferUpdates = { bufferUpdateDesc };
         updateDescriptions[0].descriptorType = DescriptorType::eUniformBuffer;
+
+        imageUpdate = {};
+        imageUpdate.sampler = mSampler;
         updateDescriptions[1].binding = 1;
-        updateDescriptions[1].imageUpdate.image = mAlbedoMap;
-        updateDescriptions[1].imageUpdate.usage = ImageUsage::eSampled;
-        updateDescriptions[1].descriptorType = DescriptorType::eSampledImage;
+        updateDescriptions[1].imageUpdates = { imageUpdate };
+        updateDescriptions[1].descriptorType = DescriptorType::eSampler;
+
         updateDescriptions[2].binding = 2;
-        updateDescriptions[2].imageUpdate.image = mNormalMap;
-        updateDescriptions[2].imageUpdate.usage = ImageUsage::eSampled;
+        updateDescriptions[2].imageUpdates = imageUpdates;
         updateDescriptions[2].descriptorType = DescriptorType::eSampledImage;
-        updateDescriptions[3].binding = 3;
-        updateDescriptions[3].imageUpdate.image = mHeightMap;
-        updateDescriptions[3].imageUpdate.usage = ImageUsage::eSampled;
-        updateDescriptions[3].descriptorType = DescriptorType::eSampledImage;
-        updateDescriptions[4].binding = 4;
-        updateDescriptions[4].imageUpdate.sampler = mSampler;
-        updateDescriptions[4].descriptorType = DescriptorType::eSampler;
+
         mDescriptorSet->UpdateDescriptorSet(updateDescriptions);
     }
 

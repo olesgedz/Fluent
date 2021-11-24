@@ -28,12 +28,12 @@ namespace Fluent
         void UpdateDescriptorSet(const std::vector<DescriptorSetUpdateDesc>& updateDescs) override
         {
             // TODO: Very bad
-            std::vector<VkDescriptorBufferInfo> bufferUpdates(updateDescs.size());
-            std::vector<VkDescriptorImageInfo> imageUpdates(updateDescs.size());
+            std::vector<std::vector<VkDescriptorBufferInfo>> bufferUpdates(updateDescs.size());
+            std::vector<std::vector<VkDescriptorImageInfo>> imageUpdates(updateDescs.size());
             std::vector<VkWriteDescriptorSet> descriptorWrites(updateDescs.size());
 
-            uint32_t buffer = 0;
-            uint32_t image = 0;
+            uint32_t bufferUpdateIdx = 0;
+            uint32_t imageUpdateIdx = 0;
             uint32_t write = 0;
 
             for (const auto& update : updateDescs)
@@ -45,31 +45,43 @@ namespace Fluent
                 writeDescriptorSet.dstSet           = mHandle;
                 writeDescriptorSet.descriptorType   = ToVulkanDescriptorType(update.descriptorType);
 
-                if (update.bufferUpdate.buffer != nullptr)
+                if (!update.bufferUpdates.empty())
                 {
-                    auto& bufferUpdateInfo = bufferUpdates[buffer++];
-                    bufferUpdateInfo.buffer = (VkBuffer)update.bufferUpdate.buffer->GetNativeHandle();
-                    bufferUpdateInfo.offset = update.bufferUpdate.offset;
-                    bufferUpdateInfo.range = update.bufferUpdate.range;
+                    auto& bufferUpdateInfos = bufferUpdates[bufferUpdateIdx++];
+                    bufferUpdateInfos.resize(update.bufferUpdates.size(), {});
 
-                    writeDescriptorSet.pBufferInfo = &bufferUpdateInfo;
+                    for (uint32_t i = 0; i < bufferUpdateInfos.size(); ++i)
+                    {
+                        bufferUpdateInfos[i].buffer = (VkBuffer)update.bufferUpdates[i].buffer->GetNativeHandle();
+                        bufferUpdateInfos[i].offset = update.bufferUpdates[i].offset;
+                        bufferUpdateInfos[i].range = update.bufferUpdates[i].range;
+                    }
+
+                    writeDescriptorSet.descriptorCount = bufferUpdateInfos.size();
+                    writeDescriptorSet.pBufferInfo = bufferUpdateInfos.data();
                 }
 
-                if (update.imageUpdate.sampler != nullptr || update.imageUpdate.image != nullptr)
+                if (!update.imageUpdates.empty())
                 {
-                    auto& imageUpdateInfo = imageUpdates[image++];
-                    if (update.imageUpdate.sampler != nullptr)
+                    auto& imageUpdateInfos = imageUpdates[imageUpdateIdx++];
+                    imageUpdateInfos.resize(update.imageUpdates.size(), {});
+
+                    for (uint32_t i = 0; i < imageUpdateInfos.size(); ++i)
                     {
-                        imageUpdateInfo.sampler = (VkSampler)update.imageUpdate.sampler->GetNativeHandle();
+                        if (update.imageUpdates[i].sampler != nullptr)
+                        {
+                            imageUpdateInfos[i].sampler = (VkSampler)update.imageUpdates[i].sampler->GetNativeHandle();
+                        }
+
+                        if (update.imageUpdates[i].image != nullptr)
+                        {
+                            imageUpdateInfos[i].imageLayout = ImageUsageToImageLayout(update.imageUpdates[i].usage);
+                            imageUpdateInfos[i].imageView = (VkImageView)update.imageUpdates[i].image->GetImageView();
+                        }
                     }
 
-                    if (update.imageUpdate.image != nullptr)
-                    {
-                        imageUpdateInfo.imageLayout = ImageUsageToImageLayout(update.imageUpdate.usage);
-                        imageUpdateInfo.imageView = (VkImageView)update.imageUpdate.image->GetImageView();
-                    }
-
-                    writeDescriptorSet.pImageInfo = &imageUpdateInfo;
+                    writeDescriptorSet.descriptorCount = imageUpdateInfos.size();
+                    writeDescriptorSet.pImageInfo = imageUpdateInfos.data();
                 }
             }
 

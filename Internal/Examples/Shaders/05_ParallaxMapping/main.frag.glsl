@@ -6,10 +6,9 @@ layout(location = 2) in vec3 iNormal;
 
 layout(location = 0) out vec4 FragColor;
 
-layout(set = 0, binding = 1) uniform texture2D uAlbedoMap;
-layout(set = 0, binding = 2) uniform texture2D uNormalMap;
-layout(set = 0, binding = 3) uniform texture2D uHeightMap;
-layout(set = 0, binding = 4) uniform sampler uSampler; 
+layout(set = 0, binding = 1) uniform sampler uSampler;
+layout(set = 0, binding = 2) uniform texture2D uTextures[3];
+
 
 layout (push_constant) uniform constants
 {
@@ -31,19 +30,19 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
     vec2 deltaTexCoords = P / numLayers;
   
     vec2  currentTexCoords     = texCoords;
-    float currentDepthMapValue = texture(sampler2D(uHeightMap, uSampler), currentTexCoords).r;
+    float currentDepthMapValue = texture(sampler2D(uTextures[2], uSampler), currentTexCoords).r;
       
     while (currentLayerDepth < currentDepthMapValue)
     {
         currentTexCoords -= deltaTexCoords;
-        currentDepthMapValue = texture(sampler2D(uHeightMap, uSampler), currentTexCoords).r;  
+        currentDepthMapValue = texture(sampler2D(uTextures[2], uSampler), currentTexCoords).r;
         currentLayerDepth += layerDepth;  
     }
     
     vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
 
     float afterDepth  = currentDepthMapValue - currentLayerDepth;
-    float beforeDepth = texture(sampler2D(uHeightMap, uSampler), prevTexCoords).r - currentLayerDepth + layerDepth;
+    float beforeDepth = texture(sampler2D(uTextures[2], uSampler), prevTexCoords).r - currentLayerDepth + layerDepth;
  
     float weight = afterDepth / (afterDepth - beforeDepth);
     vec2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
@@ -58,10 +57,10 @@ void main()
     vec3 V = invTBN * normalize(PushConstants.viewPosition - iFragmentPosition);
     vec2 texCoords = ParallaxMapping(iTexCoord, V);
 
-    vec3 normal = texture(sampler2D(uNormalMap, uSampler), texCoords).rgb;
+    vec3 normal = texture(sampler2D(uTextures[1], uSampler), texCoords).rgb;
     normal = normalize(normal * 2.0 - 1.0);
 
-    vec3 albedo = texture(sampler2D(uAlbedoMap, uSampler), texCoords).rgb;
+    vec3 albedo = texture(sampler2D(uTextures[0], uSampler), texCoords).rgb;
     vec3 ambient = 0.1 * albedo;
     // diffuse
     vec3 lightDir = invTBN * normalize(PushConstants.lightPosition - iFragmentPosition);

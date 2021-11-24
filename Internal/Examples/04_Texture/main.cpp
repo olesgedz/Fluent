@@ -242,18 +242,26 @@ public:
         descriptorSetDesc.descriptorSetLayout = mDescriptorSetLayout;
         mDescriptorSet = DescriptorSet::Create(descriptorSetDesc);
 
+        BufferUpdateDesc bufferUpdateDesc{};
+        bufferUpdateDesc.buffer = mUniformBuffer;
+        bufferUpdateDesc.offset = 0;
+        bufferUpdateDesc.range = sizeof(CameraUBO);
+
+        ImageUpdateDesc imageUpdateDesc{};
+        imageUpdateDesc.image = mTexture;
+        imageUpdateDesc.usage = ImageUsage::eSampled;
+
         std::vector<DescriptorSetUpdateDesc> updateDescriptions(3);
         updateDescriptions[0].binding = 0;
-        updateDescriptions[0].bufferUpdate.buffer = mUniformBuffer;
-        updateDescriptions[0].bufferUpdate.offset = 0;
-        updateDescriptions[0].bufferUpdate.range = sizeof(CameraUBO);
+        updateDescriptions[0].bufferUpdates = { bufferUpdateDesc };
         updateDescriptions[0].descriptorType = DescriptorType::eUniformBuffer;
         updateDescriptions[1].binding = 1;
-        updateDescriptions[1].imageUpdate.image = mTexture;
-        updateDescriptions[1].imageUpdate.usage = ImageUsage::eSampled;
+        updateDescriptions[1].imageUpdates = { imageUpdateDesc };
         updateDescriptions[1].descriptorType = DescriptorType::eSampledImage;
+        imageUpdateDesc = {};
+        imageUpdateDesc.sampler = mSampler;
         updateDescriptions[2].binding = 2;
-        updateDescriptions[2].imageUpdate.sampler = mSampler;
+        updateDescriptions[2].imageUpdates = { imageUpdateDesc };
         updateDescriptions[2].descriptorType = DescriptorType::eSampler;
         mDescriptorSet->UpdateDescriptorSet(updateDescriptions);
     }

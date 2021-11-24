@@ -30,10 +30,10 @@ namespace Fluent
 
     struct DescriptorSetUpdateDesc
     {
-        DescriptorType      descriptorType;
-        uint32_t            binding;
-        BufferUpdateDesc    bufferUpdate;
-        ImageUpdateDesc     imageUpdate;
+        DescriptorType                  descriptorType;
+        uint32_t                        binding;
+        std::vector<BufferUpdateDesc>   bufferUpdates;
+        std::vector<ImageUpdateDesc>    imageUpdates;
     };
 
     class DescriptorSet
