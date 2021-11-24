@@ -41,6 +41,13 @@ namespace Fluent
                 );
             glfwSetWindowUserPointer(mHandle, this);
 
+            // TODO: Find normal solution
+            // On macos framebuffer size and window size its different things
+            int w, h;
+            glfwGetFramebufferSize(mHandle, &w, &h);
+            mWidth = static_cast<uint32_t>(w);
+            mHeight = static_cast<uint32_t>(h);
+
             glfwSetKeyCallback(mHandle, [](GLFWwindow* window, int key, int scancode, int action, int mods)
             {
                 auto* handle = reinterpret_cast<MultiplatformWindow*>(glfwGetWindowUserPointer(window));
@@ -84,11 +91,11 @@ namespace Fluent
                 handle->SendEvent(WindowCloseEvent());
             });
 
-            glfwSetWindowSizeCallback(mHandle, [](GLFWwindow* window, int width, int height)
-            {
-                auto* handle = reinterpret_cast<MultiplatformWindow*>(glfwGetWindowUserPointer(window));
-                handle->SendEvent(WindowResizeEvent(width, height));
-            });
+//            glfwSetWindowSizeCallback(mHandle, [](GLFWwindow* window, int width, int height)
+//            {
+//                auto* handle = reinterpret_cast<MultiplatformWindow*>(glfwGetWindowUserPointer(window));
+//                handle->SendEvent(WindowResizeEvent(width, height));
+//            });
 
             glfwSetFramebufferSizeCallback(mHandle, [](GLFWwindow* window, int width, int height)
             {

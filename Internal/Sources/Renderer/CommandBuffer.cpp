@@ -38,11 +38,16 @@ namespace Fluent
 
         void BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& framebuffer) const override
         {
-            std::vector<VkClearValue> clearValues(renderPass->GetClearValues().size());
+            std::vector<VkClearValue> clearValues(renderPass->GetClearValues().size()
+                                                    + (renderPass->HasDepthStencil() ? 1 : 0));
             uint32_t i = 0;
             for (auto& clearValue : renderPass->GetClearValues())
             {
-                clearValues[i].color = { clearValue.color.r, clearValue.color.g, clearValue.color.b, clearValue.color.a };
+                auto& vkClearValue = clearValues[i].color.float32;
+                vkClearValue[0] = clearValue.color.r;
+                vkClearValue[1] = clearValue.color.g;
+                vkClearValue[2] = clearValue.color.b;
+                vkClearValue[3] = clearValue.color.a;
             }
 
             if (renderPass->HasDepthStencil())

@@ -181,8 +181,7 @@ namespace Fluent
                 mPresentMode = VkPresentModeKHR::VK_PRESENT_MODE_MAILBOX_KHR;
 
             /// Determine present image count
-            mPresentImageCount = std::max(surfaceCapabilities.minImageCount, surfaceCapabilities.maxImageCount);
-
+            mPresentImageCount = std::clamp(FRAME_COUNT, surfaceCapabilities.minImageCount, surfaceCapabilities.maxImageCount);
             /// Find best surface format
             mSurfaceFormat = surfaceFormats.front();
             for (const auto& format : surfaceFormats)
@@ -318,7 +317,6 @@ namespace Fluent
                 mSwapchainImages.emplace_back(Image::Create(swapchainImageDescription));
             }
 
-            mPresentImageCount = static_cast<uint32_t>(mSwapchainImages.size());
             mSwapchainImageUsages.resize(mSwapchainImages.size(), ImageUsage::eUndefined);
 
             mFrameProvider = nullptr;

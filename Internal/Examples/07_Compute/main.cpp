@@ -71,10 +71,13 @@ public:
         descriptorSetDesc.descriptorSetLayout = mDescriptorSetLayout;
         mDescriptorSet = DescriptorSet::Create(descriptorSetDesc);
 
+        ImageUpdateDesc imageUpdateDesc{};
+        imageUpdateDesc.image = mTexture;
+        imageUpdateDesc.usage = ImageUsage::eStorage;
+
         std::vector<DescriptorSetUpdateDesc> updateDescriptions(1);
         updateDescriptions[0].binding = 0;
-        updateDescriptions[0].imageUpdate.image = mTexture;
-        updateDescriptions[0].imageUpdate.usage = ImageUsage::eStorage;
+        updateDescriptions[0].imageUpdates = { imageUpdateDesc };
         updateDescriptions[0].descriptorType = DescriptorType::eStorageImage;
 
         mDescriptorSet->UpdateDescriptorSet(updateDescriptions);

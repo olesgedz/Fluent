@@ -217,11 +217,14 @@ public:
         descriptorSetDesc.descriptorSetLayout = mDescriptorSetLayout;
         mDescriptorSet = DescriptorSet::Create(descriptorSetDesc);
 
+        BufferUpdateDesc bufferUpdateDesc{};
+        bufferUpdateDesc.buffer = mUniformBuffer;
+        bufferUpdateDesc.offset = 0;
+        bufferUpdateDesc.range = sizeof(CameraUBO);
+
         std::vector<DescriptorSetUpdateDesc> updateDescriptions(1);
         updateDescriptions[0].binding = 0;
-        updateDescriptions[0].bufferUpdate.buffer = mUniformBuffer;
-        updateDescriptions[0].bufferUpdate.offset = 0;
-        updateDescriptions[0].bufferUpdate.range = sizeof(CameraUBO);
+        updateDescriptions[0].bufferUpdates = { bufferUpdateDesc };
         updateDescriptions[0].descriptorType = DescriptorType::eUniformBuffer;
         mDescriptorSet->UpdateDescriptorSet(updateDescriptions);
     }

@@ -86,7 +86,10 @@ namespace Fluent
                     &mActiveImageIndex
                 );
 
-            if (acquireResult != VK_SUCCESS) result = false;
+            if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
+            {
+                result = false;
+            }
 
             if (!mCommandBuffersRecorded[mCurrentFrameIndex])
             {
@@ -163,7 +166,10 @@ namespace Fluent
 
             auto presentResult = vkQueuePresentKHR(mQueue, &presentInfo);
 
-            if (presentResult != VK_SUCCESS) return false;
+            if (presentResult != VK_SUCCESS && presentResult != VK_SUBOPTIMAL_KHR)
+            {
+                return false;
+            }
 
             mCommandBuffersRecorded[mCurrentFrameIndex] = false;
             mCurrentFrameIndex = (mCurrentFrameIndex + 1) % mVirtualFrames.size();

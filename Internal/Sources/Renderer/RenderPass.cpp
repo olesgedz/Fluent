@@ -28,6 +28,8 @@ namespace Fluent
 
             std::optional<VkAttachmentReference> depthStencilAttachmentReference;
 
+            mClearValues.reserve(description.clearValues.size());
+
             for (uint32_t i = 0; i < attachmentsCount; ++i)
             {
                 VkAttachmentDescription attachmentDescription{};
@@ -63,9 +65,9 @@ namespace Fluent
                 else
                 {
                     attachmentReferences.emplace_back(attachmentReference);
+                    mClearValues.emplace_back(description.clearValues[i]);
                 }
 
-                mClearValues = description.clearValues;
                 attachmentDescriptions.emplace_back(attachmentDescription);
             }
 
