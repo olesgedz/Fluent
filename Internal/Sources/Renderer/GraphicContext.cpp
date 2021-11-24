@@ -208,6 +208,7 @@ namespace Fluent
             std::vector<const char*> deviceExtensions { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
             if (it != installedExtensions.end())
                 deviceExtensions.emplace_back("VK_KHR_portability_subset");
+            deviceExtensions.emplace_back(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);
 
             /// Logical device and device queue
             float queuePriorities [] = { 1.0f };
@@ -217,12 +218,22 @@ namespace Fluent
             deviceQueueCreateInfo.queueFamilyIndex = mQueueIndex;
             deviceQueueCreateInfo.pQueuePriorities = queuePriorities;
 
+            VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures{};
+            descriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT;
+            descriptorIndexingFeatures.descriptorBindingPartiallyBound = true;
+
+            VkPhysicalDeviceMultiviewFeatures multiviewFeatures{};
+            multiviewFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES;
+            multiviewFeatures.multiview = true;
+            multiviewFeatures.pNext = &descriptorIndexingFeatures;
+
             VkDeviceCreateInfo deviceCreateInfo{};
             deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
             deviceCreateInfo.queueCreateInfoCount = 1;
             deviceCreateInfo.pQueueCreateInfos = &deviceQueueCreateInfo;
             deviceCreateInfo.enabledExtensionCount = deviceExtensions.size();
             deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
+            deviceCreateInfo.pNext = &multiviewFeatures;
 
             vkCreateDevice(mPhysicalDevice, &deviceCreateInfo, nullptr, &mDevice);
             volkLoadDevice(mDevice);
@@ -329,7 +340,7 @@ namespace Fluent
             frameProviderDesc.frameCount = FRAME_COUNT;
             frameProviderDesc.swapchainImageCount = mSwapchainImages.size();
             // TODO: Find optimal size
-            frameProviderDesc.stagingBufferSize = 1024 * 1024 * 50;
+            frameProviderDesc.stagingBufferSize = 1024 * 1024 * 512;
 
             LOG_INFO("Current staging buffer size {}", frameProviderDesc.stagingBufferSize);
 

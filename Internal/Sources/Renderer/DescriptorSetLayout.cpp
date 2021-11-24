@@ -13,6 +13,7 @@ namespace Fluent
             : mShaders(description.shaders)
         {
             std::vector<VkDescriptorSetLayoutBinding> bindings;
+            std::vector<VkDescriptorBindingFlags> bindingFlags;
 
             size_t totalUniformCount = 0;
             for (const auto& shader : description.shaders)
@@ -42,14 +43,25 @@ namespace Fluent
                         binding.descriptorType = ToVulkanDescriptorType(uniform.descriptorType);
                         binding.descriptorCount = uniform.descriptorCount;
                         binding.stageFlags = ToVulkanShaderStage(shader->GetStage());
+
+                        VkDescriptorBindingFlags descriptorBindingFlags = { };
+                        if (uniform.descriptorCount > 1)
+                            descriptorBindingFlags |= VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
+                        bindingFlags.push_back(descriptorBindingFlags);
                     }
                 }
             }
+
+            VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsCreateInfo{};
+            bindingFlagsCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
+            bindingFlagsCreateInfo.bindingCount = bindingFlags.size();
+            bindingFlagsCreateInfo.pBindingFlags = bindingFlags.data();
 
             VkDescriptorSetLayoutCreateInfo layoutCreateInfo{};
             layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
             layoutCreateInfo.bindingCount = static_cast<uint32_t>(bindings.size());
             layoutCreateInfo.pBindings = bindings.data();
+            layoutCreateInfo.pNext = &bindingFlagsCreateInfo;
 
             VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
             VK_ASSERT(vkCreateDescriptorSetLayout(device, &layoutCreateInfo, nullptr, &mHandle));

@@ -4,9 +4,10 @@
 
 namespace Fluent::FileSystem
 {
-    std::string absoluteExecutablePath;
-    std::string shadersDirectory;
-    std::string texturesDirectory;
+    static std::string absoluteExecutablePath;
+    static std::string shadersDirectory;
+    static std::string texturesDirectory;
+    static std::string modelsDirectory;
 
     void Init(char** argv)
     {
@@ -23,6 +24,11 @@ namespace Fluent::FileSystem
         texturesDirectory = absoluteExecutablePath + path;
     }
 
+    void SetModelsDirectory(const std::string& path)
+    {
+        modelsDirectory = absoluteExecutablePath + path;
+    }
+
     const std::string& GetShadersDirectory()
     {
         return shadersDirectory;
@@ -31,5 +37,10 @@ namespace Fluent::FileSystem
     const std::string& GetTexturesDirectory()
     {
         return texturesDirectory;
+    }
+
+    const std::string& GetModelsDirectory()
+    {
+        return modelsDirectory;
     }
 } // namespace Fluent::FileSystem
