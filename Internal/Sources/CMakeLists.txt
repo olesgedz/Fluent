@@ -42,6 +42,7 @@ set(Sources
 	${UiSources})
 
 set(CommonLibs
+		assimp
 		volk
 		glfw
 		glm
