@@ -44,18 +44,16 @@ namespace Fluent
 
                 VkAttachmentReference attachmentReference{};
                 attachmentReference.attachment = i;
-                attachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
                 if (description.finalUsages[i] == ImageUsage::eDepthStencilAttachment)
                 {
                     attachmentDescription.format = ToVulkanFormat(description.depthStencilFormat);
                     attachmentDescription.loadOp = ToVulkanLoadOp(description.depthLoadOp);
-                    attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-                    attachmentDescription.stencilLoadOp = ToVulkanLoadOp(description.depthLoadOp);
-                    attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+                    attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                    attachmentDescription.stencilLoadOp = ToVulkanLoadOp(description.stencilLoadOp);
+                    attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 
                     attachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
                     depthStencilAttachmentReference = attachmentReference;
 
                     mHasDepthStencil = true;
@@ -64,6 +62,7 @@ namespace Fluent
                 }
                 else
                 {
+                    attachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
                     attachmentReferences.emplace_back(attachmentReference);
                     mClearValues.emplace_back(description.clearValues[i]);
                 }
@@ -109,13 +108,13 @@ namespace Fluent
             renderPassCreateInfo.dependencyCount = subpassDependencies.size();
             renderPassCreateInfo.pDependencies = subpassDependencies.data();
 
-            VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
+            auto device = (VkDevice)GetGraphicContext().GetDevice();
             VK_ASSERT(vkCreateRenderPass(device, &renderPassCreateInfo, nullptr, &mHandle));
         }
 
         ~VulkanPass() override
         {
-            VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
+            auto device = (VkDevice)GetGraphicContext().GetDevice();
             vkDestroyRenderPass(device, mHandle, nullptr);
         }
 

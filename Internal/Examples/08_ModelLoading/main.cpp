@@ -284,20 +284,22 @@ public:
 
         auto& window = Application::Get().GetWindow();
 
-        ClearValue clearValue{};
-        clearValue.color = Vector4(0.0, 0.0, 0.0, 1.0);
+        std::vector<ClearValue> clearValues(2);
+        clearValues[0].color = Vector4(0.0, 0.0, 0.0, 1.0);
+        clearValues[1].depth = 1.0f;
+        clearValues[1].stencil = 0;
 
         RenderPassDescription renderPassDesc{};
         renderPassDesc.width = window->GetWidth();
         renderPassDesc.height = window->GetHeight();
-        renderPassDesc.clearValues = { clearValue };
+        renderPassDesc.clearValues = clearValues;
         renderPassDesc.colorFormats = { Format::eR8G8B8A8Unorm };
         renderPassDesc.initialUsages = { ImageUsage::eUndefined, ImageUsage::eUndefined };
         renderPassDesc.finalUsages = { ImageUsage::eStorage, ImageUsage::eDepthStencilAttachment };
         renderPassDesc.attachmentLoadOps = { AttachmentLoadOp::eClear };
         renderPassDesc.depthStencilFormat = Format::eD32Sfloat;
         renderPassDesc.depthLoadOp = AttachmentLoadOp::eClear;
-        renderPassDesc.stencilLoadOp = AttachmentLoadOp::eClear;
+        renderPassDesc.stencilLoadOp = AttachmentLoadOp::eDontCare;
         renderPassDesc.sampleCount = SampleCount::e1;
 
         mRenderPass = RenderPass::Create(renderPassDesc);
@@ -319,8 +321,8 @@ public:
         mDescriptorSetLayout = DescriptorSetLayout::Create(descriptorSetLayoutDesc);
 
         RasterizerStateDescription rasterizerState{};
-        rasterizerState.cullMode = CullMode::eBack;
-        rasterizerState.frontFace = FrontFace::eCounterClockwise;
+        rasterizerState.cullMode = CullMode::eNone;
+        rasterizerState.frontFace = FrontFace::eClockwise;
 
         DepthStateDescription depthStateDescription{};
         depthStateDescription.depthTest = true;
@@ -376,6 +378,7 @@ public:
 
         pipelineDesc.descriptorSetLayout = mDescriptorSetLayout;
         pipelineDesc.rasterizerDescription = rasterizerState;
+        pipelineDesc.depthStateDescription = depthStateDescription;
         pipelineDesc.renderPass = mRenderPass;
 
         mPipeline = Pipeline::Create(pipelineDesc);
@@ -481,14 +484,15 @@ public:
         cmd->SetScissor(window->GetWidth(), window->GetHeight(), 0, 0);
         cmd->BindDescriptorSet(mPipeline, mDescriptorSet);
         cmd->BindPipeline(mPipeline);
-        for (uint32_t i = 0; i < mModel->meshes.size(); i++)
+        auto transform = Matrix4(1.0);
+        transform = glm::scale(transform, Vector3(0.4));
+        transform = Rotate(transform, Radians(mTimer.Elapsed() * 10), Vector3(0.0, 1.0, 0.0));
+        cmd->PushConstants(mPipeline, 0, sizeof(Matrix4), &transform);
+        for (auto& mesh : mModel->meshes)
         {
-            auto transform = mModel->meshes[i].transform;
-            transform = glm::scale(transform, Vector3(0.4));
-            cmd->PushConstants(mPipeline, 0, sizeof(Matrix4), &transform);
-            cmd->BindVertexBuffer(mModel->meshes[i].vertexBuffer, 0);
-            cmd->BindIndexBuffer(mModel->meshes[i].indexBuffer, 0, IndexType::eUint32);
-            cmd->DrawIndexed(mModel->meshes[i].indices.size(), 1, 0, 0, 0);
+            cmd->BindVertexBuffer(mesh.vertexBuffer, 0);
+            cmd->BindIndexBuffer(mesh.indexBuffer, 0, IndexType::eUint32);
+            cmd->DrawIndexed(mesh.indices.size(), 1, 0, 0, 0);
         }
         cmd->EndRenderPass();
         uint32_t activeImage = context->GetActiveImageIndex();

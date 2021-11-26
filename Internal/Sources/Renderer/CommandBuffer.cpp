@@ -52,7 +52,8 @@ namespace Fluent
 
             if (renderPass->HasDepthStencil())
             {
-                clearValues.back().depthStencil = { renderPass->GetDepth(), renderPass->GetStencil() };
+                clearValues[clearValues.size() - 1] = {};
+                clearValues[clearValues.size() - 1].depthStencil = { renderPass->GetDepth(), renderPass->GetStencil() };
             }
 
             VkRect2D rect{};
@@ -61,7 +62,7 @@ namespace Fluent
 
             VkRenderPassBeginInfo renderPassBeginInfo{};
             renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-            renderPassBeginInfo.clearValueCount = clearValues.size();
+            renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
             renderPassBeginInfo.pClearValues = clearValues.data();
             renderPassBeginInfo.renderArea = rect;
             renderPassBeginInfo.framebuffer = (VkFramebuffer)framebuffer->GetNativeHandle();
