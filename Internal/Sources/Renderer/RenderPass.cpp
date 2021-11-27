@@ -22,26 +22,23 @@ namespace Fluent
             , mHeight(description.height)
             , mHasDepthStencil(false)
         {
-            uint32_t attachmentsCount = description.initialUsages.size();
+            uint32_t attachmentsCount = description.finalUsages.size();
             std::vector<VkAttachmentDescription> attachmentDescriptions;
             std::vector<VkAttachmentReference> attachmentReferences;
 
-            std::optional<VkAttachmentReference> depthStencilAttachmentReference;
+            VkAttachmentReference depthStencilAttachmentReference;
 
             mClearValues.reserve(description.clearValues.size());
 
             for (uint32_t i = 0; i < attachmentsCount; ++i)
             {
+                // These fields same for depth and color attachments
                 VkAttachmentDescription attachmentDescription{};
-                attachmentDescription.format = ToVulkanFormat(description.colorFormats[i]);
-                attachmentDescription.samples = ToVulkanSampleCount(description.sampleCount);
-                attachmentDescription.loadOp = ToVulkanLoadOp(description.attachmentLoadOps[i]);
-                attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-                attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-                attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+				attachmentDescription.samples = ToVulkanSampleCount(description.sampleCount);
                 attachmentDescription.initialLayout = ImageUsageToImageLayout(description.initialUsages[i]);
                 attachmentDescription.finalLayout = ImageUsageToImageLayout(description.finalUsages[i]);
 
+                // Again common for depth/stencil
                 VkAttachmentReference attachmentReference{};
                 attachmentReference.attachment = i;
 
@@ -62,8 +59,16 @@ namespace Fluent
                 }
                 else
                 {
+                    // Setup color attachment info
+					attachmentDescription.format = ToVulkanFormat(description.colorFormats[i]);
+					attachmentDescription.loadOp = ToVulkanLoadOp(description.attachmentLoadOps[i]);
+					attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+					attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+					attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                    // Add color attachment reference
                     attachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
                     attachmentReferences.emplace_back(attachmentReference);
+                    // Add color clear value
                     mClearValues.emplace_back(description.clearValues[i]);
                 }
 
@@ -71,11 +76,10 @@ namespace Fluent
             }
 
             VkSubpassDescription subpassDescription{};
-            subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-            subpassDescription.colorAttachmentCount = attachmentReferences.size();
-            subpassDescription.pColorAttachments = attachmentReferences.data();
-            subpassDescription.pDepthStencilAttachment = depthStencilAttachmentReference.has_value() ?
-                                                        &depthStencilAttachmentReference.value() : nullptr;
+            subpassDescription.pipelineBindPoint        = VK_PIPELINE_BIND_POINT_GRAPHICS;
+            subpassDescription.colorAttachmentCount     = attachmentReferences.size();
+            subpassDescription.pColorAttachments        = attachmentReferences.data();
+            subpassDescription.pDepthStencilAttachment  = mHasDepthStencil ? &depthStencilAttachmentReference : nullptr;
 
             // TODO
             std::array subpassDependencies = {
@@ -100,13 +104,13 @@ namespace Fluent
             };
 
             VkRenderPassCreateInfo renderPassCreateInfo{};
-            renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-            renderPassCreateInfo.attachmentCount = attachmentDescriptions.size();
-            renderPassCreateInfo.pAttachments = attachmentDescriptions.data();
-            renderPassCreateInfo.subpassCount = 1;
-            renderPassCreateInfo.pSubpasses = &subpassDescription;
-            renderPassCreateInfo.dependencyCount = subpassDependencies.size();
-            renderPassCreateInfo.pDependencies = subpassDependencies.data();
+            renderPassCreateInfo.sType              = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+            renderPassCreateInfo.attachmentCount    = attachmentDescriptions.size();
+            renderPassCreateInfo.pAttachments       = attachmentDescriptions.data();
+            renderPassCreateInfo.subpassCount       = 1;
+            renderPassCreateInfo.pSubpasses         = &subpassDescription;
+            renderPassCreateInfo.dependencyCount    = subpassDependencies.size();
+            renderPassCreateInfo.pDependencies      = subpassDependencies.data();
 
             auto device = (VkDevice)GetGraphicContext().GetDevice();
             VK_ASSERT(vkCreateRenderPass(device, &renderPassCreateInfo, nullptr, &mHandle));

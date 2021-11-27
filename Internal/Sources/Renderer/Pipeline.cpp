@@ -111,8 +111,8 @@ namespace Fluent
             depthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
             depthStencilStateCreateInfo.depthTestEnable = description.depthStateDescription.depthTest;
             depthStencilStateCreateInfo.depthWriteEnable = description.depthStateDescription.depthWrite;
-            depthStencilStateCreateInfo.depthCompareOp = description.depthStateDescription.depthTest ?
-                                            VK_COMPARE_OP_LESS : VK_COMPARE_OP_ALWAYS;
+            depthStencilStateCreateInfo.depthCompareOp = description.depthStateDescription.depthTest ? 
+                ToVulkanCompareOp(description.depthStateDescription.compareOp) : VK_COMPARE_OP_ALWAYS;
             depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
             depthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
 

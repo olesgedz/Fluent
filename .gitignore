@@ -3,3 +3,5 @@
 .vscode/
 build/
 cmake-build-debug/
+.DS_Store
+.vs/
