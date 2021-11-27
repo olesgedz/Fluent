@@ -690,7 +690,7 @@ IF ( ASSIMP_BUILD_SAMPLES )
   ADD_SUBDIRECTORY( samples/SimpleOpenGL/ )
 ENDIF ()
 
-IF ( ASSIMP_BUILD_TESTS )
+IF ( False )
   ADD_SUBDIRECTORY( test/ )
 ENDIF ()
 
