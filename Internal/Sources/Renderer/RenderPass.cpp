@@ -11,7 +11,7 @@ namespace Fluent
     private:
         uint32_t mWidth;
         uint32_t mHeight;
-        VkRenderPass mHandle;
+        VkRenderPass mHandle = nullptr;
         std::vector<ClearValue> mClearValues;
         float mDepth;
         uint32_t mStencil;

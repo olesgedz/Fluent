@@ -345,7 +345,7 @@ public:
 
         mRenderPass->SetRenderArea(window->GetWidth(), window->GetHeight());
 
-        mCameraUBO.projection = CreatePerspectiveMatrix(Radians(45.0f), window->GetAspect(), 0, 100.f);
+        mCameraUBO.projection = CreatePerspectiveMatrix(Radians(45.0f), window->GetAspect(), 0.1f, 100.0f);
 
         // Demo settings
         mParallaxSettings.lightPosition = Vector3(0.0, 1.0, 3.0);
