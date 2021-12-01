@@ -192,7 +192,9 @@ namespace Fluent
             
             VkPushConstantRange pushConstantRange{};
             pushConstantRange.size = mMaxPushConstantRange;
-            pushConstantRange.stageFlags = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+            pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT
+                                           | VK_SHADER_STAGE_COMPUTE_BIT
+                                           | VK_SHADER_STAGE_FRAGMENT_BIT;
 
             VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
             pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
