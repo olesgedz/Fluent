@@ -1,233 +1,20 @@
 #include <iostream>
 #include <vector>
-
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 #include "Fluent/Fluent.hpp"
 
 using namespace Fluent;
-
-struct Vertex
-{
-    Vector3 position;
-    Vector3 normal;
-    Vector2 texCoords;
-    Vector3 tangent;
-    Vector3 bitangent;
-};
-
-struct Mesh
-{
-    std::vector<Vertex>         vertices;
-    std::vector<uint32_t>       indices;
-    Ref<Buffer>                 vertexBuffer;
-    Ref<Buffer>                 indexBuffer;
-    Matrix4                     transform;
-
-    void InitMesh()
-    {
-        BufferDescription bufferDesc{};
-        bufferDesc.bufferUsage = BufferUsage::eVertexBuffer;
-        bufferDesc.memoryUsage = MemoryUsage::eGpu;
-        bufferDesc.size = vertices.size() * sizeof(vertices[0]);
-        bufferDesc.data = vertices.data();
-
-        vertexBuffer = Buffer::Create(bufferDesc);
-
-        bufferDesc = {};
-        bufferDesc.bufferUsage = BufferUsage::eIndexBuffer;
-        bufferDesc.memoryUsage = MemoryUsage::eGpu;
-        bufferDesc.size = indices.size() * sizeof(indices[0]);
-        bufferDesc.data = indices.data();
-
-        indexBuffer = Buffer::Create(bufferDesc);
-    }
-
-    // constructor
-    Mesh(std::vector<Vertex> vertices, std::vector<uint32_t> indices)
-        : vertices(std::move(vertices))
-        , indices(std::move(indices))
-    {
-        InitMesh();
-    }
-};
-
-class Model
-{
-public:
-    struct LoadedTexture
-    {
-        std::string name;
-        Ref<Image> texture;
-    };
-    // model data
-    std::vector<LoadedTexture>  texturesLoaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
-    std::vector<Mesh>           meshes;
-    std::string                 directory;
-
-    // constructor, expects a filepath to a 3D model.
-    Model(const std::string& filename)
-        : directory(filename.substr(0, filename.find_last_of('/')))
-    {
-        LoadModel(filename);
-    }
-private:
-    void LoadModel(const std::string& filename)
-    {
-        Assimp::Importer importer;
-        const aiScene* scene = importer.ReadFile(FileSystem::GetModelsDirectory() + "/" + filename, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
-
-        if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-        {
-            LOG_WARN("ASSIMP ERROR: {}", importer.GetErrorString());
-            return;
-        }
-
-        ProcessNode(scene->mRootNode, scene);
-    }
-
-    void ProcessNode(aiNode *node, const aiScene *scene)
-    {
-        for (uint32_t i = 0; i < node->mNumMeshes; i++)
-        {
-            aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-            meshes.push_back(ProcessMesh(mesh, scene));
-            auto& t = node->mTransformation;
-            meshes.back().transform = Matrix4(t.a1, t.b1, t.c1, t.d1,
-                                              t.a2, t.b2, t.c2, t.d2,
-                                              t.a3, t.b3, t.c3, t.d3,
-                                              t.a4, t.b4, t.c4, t.d4);
-        }
-
-        for (uint32_t i = 0; i < node->mNumChildren; i++)
-        {
-            ProcessNode(node->mChildren[i], scene);
-        }
-
-    }
-
-    Mesh ProcessMesh(aiMesh *mesh, const aiScene *scene)
-    {
-        // data to fill
-        std::vector<Vertex> vertices;
-        std::vector<uint32_t> indices;
-        std::vector<LoadedTexture> textures;
-
-        // walk through each of the mesh's vertices
-        for(unsigned int i = 0; i < mesh->mNumVertices; i++)
-        {
-            Vertex vertex;
-            Vector3 vector;
-            // positions
-            vector.x = mesh->mVertices[i].x;
-            vector.y = mesh->mVertices[i].y;
-            vector.z = mesh->mVertices[i].z;
-            vertex.position = vector;
-            // normals
-            if (mesh->HasNormals())
-            {
-                vector.x = mesh->mNormals[i].x;
-                vector.y = mesh->mNormals[i].y;
-                vector.z = mesh->mNormals[i].z;
-                vertex.normal = vector;
-            }
-            // texture coordinates
-            if(mesh->mTextureCoords[0])
-            {
-                glm::vec2 vec;
-
-                vec.x = mesh->mTextureCoords[0][i].x;
-                vec.y = mesh->mTextureCoords[0][i].y;
-                vertex.texCoords = vec;
-
-                // tangent
-                vector.x = mesh->mTangents[i].x;
-                vector.y = mesh->mTangents[i].y;
-                vector.z = mesh->mTangents[i].z;
-                vertex.tangent = vector;
-                // bitangent
-                vector.x = mesh->mBitangents[i].x;
-                vector.y = mesh->mBitangents[i].y;
-                vector.z = mesh->mBitangents[i].z;
-                vertex.bitangent = vector;
-            }
-            else
-                vertex.texCoords = Vector2(0.0f, 0.0f);
-
-            vertices.push_back(vertex);
-        }
-
-        for (uint32_t i = 0; i < mesh->mNumFaces; i++)
-        {
-            aiFace face = mesh->mFaces[i];
-
-            for (uint32_t j = 0; j < face.mNumIndices; j++)
-                indices.push_back(face.mIndices[j]);
-        }
-
-        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-
-        // 1. diffuse maps
-        std::vector<LoadedTexture> diffuseMaps = LoadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
-        textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-        // 2. specular maps
-        std::vector<LoadedTexture> specularMaps = LoadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
-        textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-        // 3. normal maps
-        std::vector<LoadedTexture> normalMaps = LoadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
-        textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-        // 4. height maps
-        std::vector<LoadedTexture> heightMaps = LoadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
-        textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
-
-        // return a mesh object created from the extracted mesh data
-        return Mesh(vertices, indices);
-    }
-
-    std::vector<LoadedTexture> LoadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName)
-    {
-        std::vector<LoadedTexture> textures;
-        for(unsigned int i = 0; i < mat->GetTextureCount(type); i++)
-        {
-            aiString str;
-            mat->GetTexture(type, i, &str);
-
-            bool skip = false;
-            for (unsigned int j = 0; j < texturesLoaded.size(); j++)
-            {
-                if (texturesLoaded[j].name == typeName)
-                {
-                    textures.push_back(texturesLoaded[j]);
-                    skip = true;
-                    break;
-                }
-            }
-
-            if (!skip)
-            {
-                std::string texName = str.C_Str();
-                texName = texName.substr(0, texName.find_last_of('.')) + ".ktx";
-                ImageDescription imageDesc{};
-                imageDesc.initialUsage = ImageUsage::Bits::eSampled;
-                imageDesc.filename = directory + "/" + texName;
-
-                LoadedTexture texture{};
-                texture.name = typeName;
-                texture.texture = Image::Create(imageDesc);
-
-                textures.push_back(texture);
-                texturesLoaded.push_back(texture);
-            }
-        }
-        return textures;
-    }
-};
 
 struct CameraUBO
 {
     Matrix4 projection;
     Matrix4 view;
+};
+
+struct PushConstantBlock
+{
+    Matrix4 model;
+    Vector4 viewPosition = Vector4(0.0, 0.0, 2.0, 0.0);
+    Vector4 lightPosition = Vector4(1.0, 2.0, 2.0, 0.0);
 };
 
 class ParallaxMappingLayer : public Layer
@@ -243,11 +30,13 @@ private:
     Ref<DescriptorSet>          mDescriptorSet;
     Ref<Sampler>                mSampler;
 
-    Ref<Model>                  mModel;
+    Model                       mModel;
 
     Timer                       mTimer;
 
     CameraUBO                   mCameraUBO;
+    PushConstantBlock           mPcb;
+    Scope<UIContext>            mUIContext;
 public:
     ParallaxMappingLayer() : Layer("VertexBuffer") {}
 
@@ -303,7 +92,21 @@ public:
         renderPassDesc.sampleCount = SampleCount::e1;
 
         mRenderPass = RenderPass::Create(renderPassDesc);
-        
+
+        UIContextDescription uiDesc{};
+        uiDesc.renderPass = mRenderPass;
+        mUIContext = UIContext::Create(uiDesc);
+
+        LoadModelDescription loadModelDescription{};
+        loadModelDescription.filename = "backpack/backpack.obj";
+        loadModelDescription.loadNormals = true;
+        loadModelDescription.loadTexCoords = true;
+        loadModelDescription.loadTangents = true;
+        loadModelDescription.loadBitangents = true;
+
+        ModelLoader modelLoader;
+        mModel = modelLoader.Load(loadModelDescription);
+
         ShaderDescription vertexShaderDesc{};
         vertexShaderDesc.stage = ShaderStage::eVertex;
         vertexShaderDesc.filename = "08_ModelLoading/main.vert.glsl";
@@ -331,50 +134,8 @@ public:
 
         PipelineDescription pipelineDesc{};
         pipelineDesc.type = PipelineType::eGraphics;
-        pipelineDesc.bindingDescriptions =
-        {
-            VertexBindingDescription
-            {
-                0,
-                sizeof(Vertex),
-                VertexInputRate::eVertex
-            }
-        };
-
-        pipelineDesc.attributeDescriptions = 
-        {
-            VertexAttributeDescription
-            {
-                0,
-                0,
-                Format::eR32G32B32Sfloat,
-                offsetof(Vertex, position)
-            },
-            {
-                1,
-                0,
-                Format::eR32G32B32Sfloat,
-                offsetof(Vertex, normal)
-            },
-            {
-                2,
-                0,
-                Format::eR32G32Sfloat,
-                offsetof(Vertex, texCoords)
-            },
-            {
-                3,
-                0,
-                Format::eR32G32B32Sfloat,
-                offsetof(Vertex, tangent)
-            },
-            {
-                4,
-                0,
-                Format::eR32G32B32Sfloat,
-                offsetof(Vertex, bitangent)
-            }
-        };
+        pipelineDesc.bindingDescriptions = modelLoader.GetVertexBindingDescription();
+        pipelineDesc.attributeDescriptions = modelLoader.GetVertexAttributeDescription();
 
         pipelineDesc.descriptorSetLayout = mDescriptorSetLayout;
         pipelineDesc.rasterizerDescription = rasterizerState;
@@ -386,16 +147,14 @@ public:
         CreateUniformBuffer();
         CreateSampler();
 
-        mModel = CreateScope<Model>("backpack/backpack.obj");
-
         DescriptorSetDescription descriptorSetDesc{};
         descriptorSetDesc.descriptorSetLayout = mDescriptorSetLayout;
         mDescriptorSet = DescriptorSet::Create(descriptorSetDesc);
 
-        std::vector<ImageUpdateDesc> imageUpdates(mModel->texturesLoaded.size());
+        std::vector<ImageUpdateDesc> imageUpdates(mModel.textures.size());
         for (uint32_t i = 0; i < imageUpdates.size(); ++i)
         {
-            imageUpdates[i].image = mModel->texturesLoaded[i].texture;
+            imageUpdates[i].image = mModel.textures[i];
             imageUpdates[i].usage = ImageUsage::eSampled;
         }
 
@@ -425,6 +184,8 @@ public:
     void OnDetach() override
     {
         mUniformBuffer = nullptr;
+        mUIContext = nullptr;
+        mRenderPass = nullptr;
         mPipeline = nullptr;
         mFramebuffer = nullptr;
         mRenderImage = nullptr;
@@ -478,22 +239,27 @@ public:
         auto& context = Application::Get().GetGraphicContext();
         auto& window = Application::Get().GetWindow();
 
-        auto cmd = context->GetCurrentCommandBuffer();
+        auto& cmd = context->GetCurrentCommandBuffer();
         cmd->BeginRenderPass(mRenderPass, mFramebuffer);
         cmd->SetViewport(window->GetWidth(), window->GetHeight(), 0.0f, 1.0f, 0, 0);
         cmd->SetScissor(window->GetWidth(), window->GetHeight(), 0, 0);
         cmd->BindDescriptorSet(mPipeline, mDescriptorSet);
         cmd->BindPipeline(mPipeline);
-        auto transform = Matrix4(1.0);
-        transform = glm::scale(transform, Vector3(0.4));
-        transform = Rotate(transform, Radians(mTimer.Elapsed() * 10), Vector3(0.0, 1.0, 0.0));
-        cmd->PushConstants(mPipeline, 0, sizeof(Matrix4), &transform);
-        for (auto& mesh : mModel->meshes)
+        mPcb.model = Matrix4(1.0);
+        mPcb.model = glm::scale(mPcb.model, Vector3(0.4));
+        mPcb.model = Rotate(mPcb.model, Radians(mTimer.Elapsed() * 10), Vector3(0.0, 1.0, 0.0));
+        for (auto& mesh : mModel.meshes)
         {
+            mPcb.model = mPcb.model * mesh.transform;
+            cmd->PushConstants(mPipeline, 0, sizeof(PushConstantBlock), &mPcb);
+            cmd->PushConstants(mPipeline, sizeof(Matrix4), sizeof(TextureIndices), &mesh.material.textureIndices);
             cmd->BindVertexBuffer(mesh.vertexBuffer, 0);
             cmd->BindIndexBuffer(mesh.indexBuffer, 0, IndexType::eUint32);
             cmd->DrawIndexed(mesh.indices.size(), 1, 0, 0, 0);
         }
+        mUIContext->BeginFrame();
+        ImGui::SliderFloat3("Light position", &mPcb.lightPosition.x, -5.0, 5.0);
+        mUIContext->EndFrame();
         cmd->EndRenderPass();
         uint32_t activeImage = context->GetActiveImageIndex();
         auto swapchainImageUsage = context->GetSwapchainImageUsage(activeImage);

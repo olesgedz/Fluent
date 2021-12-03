@@ -29,6 +29,10 @@ set(RendererSources
 	Renderer/Sampler.cpp
 	Renderer/StagingBuffer.cpp)
 
+set(SceneSources
+	Scene/Model.cpp
+	Scene/ModelLoader.cpp)
+
 set(MathSources
 	Math/Math.cpp)
 
@@ -38,6 +42,7 @@ set(UiSources
 set(Sources 
 	${CoreSources}
 	${RendererSources}
+	${SceneSources}
 	${MathSources}
 	${UiSources})
 

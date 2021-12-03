@@ -25,4 +25,7 @@
 #include "Renderer/Pipeline.hpp"
 #include "Renderer/Sampler.hpp"
 
+#include "Scene/Model.hpp"
+#include "Scene/ModelLoader.hpp"
+
 #include "UI/UIContext.hpp"

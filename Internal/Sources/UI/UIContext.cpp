@@ -88,7 +88,8 @@ namespace Fluent
         {
             ImGui::Render();
             auto& context = GetGraphicContext();
-            ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), (VkCommandBuffer)context.GetCurrentCommandBuffer()->GetNativeHandle());
+            VkCommandBuffer cmd = (VkCommandBuffer)context.GetCurrentCommandBuffer()->GetNativeHandle();
+            ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
         }
     };
 
