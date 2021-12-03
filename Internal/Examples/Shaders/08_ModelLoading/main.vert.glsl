@@ -34,7 +34,7 @@ void main()
 	T = normalize(T - dot(T, N) * N);
 	vec3 B = cross(N, T);
 
-	mat3 TBN = mat3(T, B, N);
+	mat3 TBN = transpose(mat3(T, B, N));
 	TangentLightPosition = TBN * vec3(PushConstants.lightPosition);
 	TangentViewPosition = TBN * vec3(PushConstants.viewPosition);
 	TangentFragmentPosition = TBN * FragmentPosition;

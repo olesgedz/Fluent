@@ -246,19 +246,19 @@ public:
         cmd->BindDescriptorSet(mPipeline, mDescriptorSet);
         cmd->BindPipeline(mPipeline);
         mPcb.model = Matrix4(1.0);
-        mPcb.model = glm::scale(mPcb.model, Vector3(0.4));
+        mPcb.model = glm::translate(mPcb.model, Vector3(0.0, 0.0, 0.0));
+        mPcb.model = glm::scale(mPcb.model, Vector3(0.3));
         mPcb.model = Rotate(mPcb.model, Radians(mTimer.Elapsed() * 10), Vector3(0.0, 1.0, 0.0));
         for (auto& mesh : mModel.meshes)
         {
-            mPcb.model = mPcb.model * mesh.transform;
             cmd->PushConstants(mPipeline, 0, sizeof(PushConstantBlock), &mPcb);
-            cmd->PushConstants(mPipeline, sizeof(Matrix4), sizeof(TextureIndices), &mesh.material.textureIndices);
+            cmd->PushConstants(mPipeline, sizeof(PushConstantBlock), sizeof(TextureIndices), &mesh.material.textureIndices);
             cmd->BindVertexBuffer(mesh.vertexBuffer, 0);
             cmd->BindIndexBuffer(mesh.indexBuffer, 0, IndexType::eUint32);
             cmd->DrawIndexed(mesh.indices.size(), 1, 0, 0, 0);
         }
         mUIContext->BeginFrame();
-        ImGui::SliderFloat3("Light position", &mPcb.lightPosition.x, -5.0, 5.0);
+        ImGui::SliderFloat3("Light position", &mPcb.lightPosition.x, -10.0, 10.0);
         mUIContext->EndFrame();
         cmd->EndRenderPass();
         uint32_t activeImage = context->GetActiveImageIndex();
