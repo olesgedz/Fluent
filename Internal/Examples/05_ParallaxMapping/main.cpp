@@ -172,13 +172,15 @@ public:
 
         auto& window = Application::Get().GetWindow();
 
-        ClearValue clearValue{};
-        clearValue.color = Vector4(0.0, 0.0, 0.0, 1.0);
+        std::vector<ClearValue> clearValues(2);
+        clearValues[0].color = Vector4(0.0, 0.0, 0.0, 1.0);
+        clearValues[1].depth = 1.0f;
+        clearValues[1].stencil = 0;
 
         RenderPassDescription renderPassDesc{};
         renderPassDesc.width = window->GetWidth();
         renderPassDesc.height = window->GetHeight();
-        renderPassDesc.clearValues = { clearValue };
+        renderPassDesc.clearValues = clearValues;
         renderPassDesc.colorFormats = { Format::eR8G8B8A8Unorm };
         renderPassDesc.initialUsages = { ImageUsage::eUndefined, ImageUsage::eUndefined };
         renderPassDesc.finalUsages = { ImageUsage::eStorage, ImageUsage::eDepthStencilAttachment };
