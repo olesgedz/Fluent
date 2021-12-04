@@ -18,6 +18,13 @@ struct CameraUBO
     Matrix4 model;
 };
 
+struct PushConstantBlock
+{
+    float time;
+    float mouseX;
+    float mouseY;
+};
+
 class ComputeLayer : public Layer
 {
 private:
@@ -105,8 +112,11 @@ public:
         auto cmd = context->GetCurrentCommandBuffer();
         cmd->BindDescriptorSet(mPipeline, mDescriptorSet);
         cmd->BindPipeline(mPipeline);
-        float time = mTimer.Elapsed();
-        cmd->PushConstants(mPipeline, 0, sizeof(float), &time);
+        PushConstantBlock pcb;
+        pcb.time = mTimer.Elapsed();
+        pcb.mouseX = Input::GetMouseX();
+        pcb.mouseY = Input::GetMouseY();
+        cmd->PushConstants(mPipeline, 0, sizeof(PushConstantBlock), &pcb);
         cmd->Dispatch(mTexture->GetWidth() / 16, mTexture->GetHeight() / 16, 1);
         uint32_t activeImage = context->GetActiveImageIndex();
         auto swapchainImageUsage = context->GetSwapchainImageUsage(activeImage);

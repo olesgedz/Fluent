@@ -7,138 +7,153 @@ layout (set = 0, binding = 0, rgba32f) uniform image2D uOutputImage;
 layout (push_constant) uniform constants
 {
     float iTime;
+    float iMouseX;
+    float iMouseY;
 } PushConstants;
 
-#if HW_PERFORMANCE==0
-#define AA 1
-#else
-#define AA 2 // Make it 3 if you have a fast machine
-#endif
+#define FRACTAL_ITER 4
+#define STEPS 150
+#define EPSILON 0.004
 
-vec4 orb;
-
-float map( vec3 p, float s )
+mat2 rot( in float a )
 {
-	float scale = 1.0;
-
-	orb = vec4(1000.0);
-
-	for( int i=0; i<8;i++ )
-	{
-		p = -1.0 + 2.0*fract(0.5*p+0.5);
-
-		float r2 = dot(p,p);
-
-        orb = min( orb, vec4(abs(p),r2) );
-
-		float k = s/r2;
-		p     *= k;
-		scale *= k;
-	}
-
-	return 0.25*abs(p.y)/scale;
+	float c = cos(a);
+    float s = sin(a);
+    return mat2(c,s,-s,c);
 }
 
-float trace( in vec3 ro, in vec3 rd, float s )
+float crossDist( in vec3 p )
 {
-	float maxd = 30.0;
-    float t = 0.01;
-    for( int i=0; i<512; i++ )
+    vec3 absp = abs(p);
+    // get the distance to the closest axis
+    float maxyz = max(absp.y, absp.z);
+    float maxxz = max(absp.x, absp.z);
+    float maxxy = max(absp.x, absp.y);
+    float cr = 1.0 - (step(maxyz, absp.x)*maxyz+step(maxxz, absp.y)*maxxz+step(maxxy, absp.z)*maxxy);
+    // cube
+    float cu = max(maxxy, absp.z) - 3.0;
+    // remove the cross from the cube
+    return max(cr, cu);
+}
+
+float fractal(in vec3 p)
+{
+    float scale = 1.0;
+    float dist = 0.0;
+    for (int i = 0 ; i < FRACTAL_ITER ; i++)
     {
-	    float precis = 0.001 * t;
-
-	    float h = map( ro+rd*t, s );
-        if( h<precis||t>maxd ) break;
-        t += h;
+        dist = max(dist, crossDist(p)*scale);
+        p = fract((p-1.0)*0.5) * 6.0 - 3.0;
+        scale /= 3.0;
     }
-
-    if( t>maxd ) t=-1.0;
-    return t;
+    return dist;
 }
 
-vec3 calcNormal( in vec3 pos, in float t, in float s )
+float plane(in vec3 p)
 {
-    float precis = 0.001 * t;
-
-    vec2 e = vec2(1.0,-1.0)*precis;
-    return normalize( e.xyy*map( pos + e.xyy, s ) +
-					  e.yyx*map( pos + e.yyx, s ) +
-					  e.yxy*map( pos + e.yxy, s ) +
-                      e.xxx*map( pos + e.xxx, s ) );
+    const vec3 norm = vec3(0.57735);
+    return dot( p, norm ) - smoothstep(0.05, 1.0, sin(PushConstants.iTime*0.0954-2.5248)*0.5+0.5)*6.0;
 }
 
-vec3 render( in vec3 ro, in vec3 rd, in float anim )
+float de(in vec3 p)
 {
-    // trace
-    vec3 col = vec3(0.0);
-    float t = trace( ro, rd, anim );
-    if( t>0.0 )
-    {
-        vec4 tra = orb;
-        vec3 pos = ro + t*rd;
-        vec3 nor = calcNormal( pos, t, anim );
+    return max(fractal(p), plane(p));
+}
 
-        // lighting
-        vec3  light1 = vec3(  0.577, 0.577, -0.577 );
-        vec3  light2 = vec3( -0.707, 0.000,  0.707 );
-        float key = clamp( dot( light1, nor ), 0.0, 1.0 );
-        float bac = clamp( 0.2 + 0.8*dot( light2, nor ), 0.0, 1.0 );
-        float amb = (0.7+0.3*nor.y);
-        float ao = pow( clamp(tra.w*2.0,0.0,1.0), 1.2 );
+vec3 normal(in vec3 p)
+{
+	const vec3 e = vec3(0.0, 0.001, 0.0);
+    float dd = de(p);
+	return normalize(vec3(
+		dd-de(p-e.yxx),
+		dd-de(p-e.xyx),
+		dd-de(p-e.xxy)));
+}
 
-        vec3 brdf  = 1.0*vec3(0.40,0.40,0.40)*amb*ao;
-        brdf += 1.0*vec3(1.00,1.00,1.00)*key*ao;
-        brdf += 1.0*vec3(0.40,0.40,0.40)*bac*ao;
+vec3 toColor(in vec3 normal)
+{
+    vec3 color = normal*0.5+0.5;
+    color *= vec3(0.9, 0.7, 0.6);
+    color.b = cos((color.b)*4.3)*0.2+0.8;
+    return color;
+}
 
-        // material
-        vec3 rgb = vec3(1.0);
-        rgb = mix( rgb, vec3(1.0,0.4,0.5), clamp(6.0*tra.y,0.0,1.0) );
-        rgb = mix( rgb, vec3(1.0,0.3,0.7), pow(clamp(1.0-2.0*tra.z,0.0,1.0),8.0) );
-
-        // color
-        col = rgb*brdf*exp(-0.2*t);
-    }
-
-    return sqrt(col);
+vec3 toGray(in vec3 color)
+{
+    return vec3((color.r+color.g+color.b)/3.0);
 }
 
 void main() 
 {
-	vec4 pixel = vec4(0.0, 0.0, 0.0, 1.0);
 	ivec2 size = imageSize(uOutputImage);
 	ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
 
-	vec2 drawCoord = vec2(coord) / vec2(size) - 0.5;
-
-    float time = PushConstants.iTime*0.25 + 0.01*1.0;
-    float anim = 1.1 + 0.5*smoothstep( -0.3, 0.3, cos(0.1*PushConstants.iTime) );
-
     vec2 iResolution = vec2(size.x, size.y);
-    vec3 tot = vec3(0.0);
-    #if AA>1
-    for( int jj=0; jj<AA; jj++ )
-    for( int ii=0; ii<AA; ii++ )
-    #else
-    int ii = 1, jj = 1;
-    #endif
-    {
-        vec2 q = coord.xy+vec2(float(ii),float(jj))/float(AA);
-        vec2 p = (2.0*q-iResolution.xy)/iResolution.y;
 
-        // camera
-        vec3 ro = vec3( 2.8*cos(0.1+.33*time), 0.4 + 0.30*cos(0.37*time), 2.8*cos(0.5+0.35*time) );
-        vec3 ta = vec3( 1.9*cos(1.2+.41*time), 0.4 + 0.10*cos(0.27*time), 1.9*cos(2.0+0.38*time) );
-        float roll = 0.2*cos(0.1*time);
-        vec3 cw = normalize(ta-ro);
-        vec3 cp = vec3(sin(roll), cos(roll),0.0);
-        vec3 cu = normalize(cross(cw,cp));
-        vec3 cv = normalize(cross(cu,cw));
-        vec3 rd = normalize( p.x*cu + p.y*cv + 2.0*cw );
+    vec2 uv = vec2(coord.x, coord.y) / iResolution.xy * 2.0 - 1.0;
+	uv.x *= iResolution.x / iResolution.y;
 
-        tot += render( ro, rd, anim );
+	vec3 from = vec3(-6, 0, 0);
+	vec3 dir = normalize(vec3(uv*0.6, 1.0));
+	dir.xz *= rot(3.1415*.5);
+
+    vec3 iMouse = vec3(PushConstants.iMouseX, PushConstants.iMouseY, 1.0);
+	vec2 mouse=(iMouse.xy / iResolution.xy - 0.5) * 0.5;
+	if (iMouse.z < 1.0) mouse = vec2(0.0);
+
+	mat2 rotxz = rot(sin(PushConstants.iTime * 0.0652 - 0.5) * 0.8+mouse.x * 5.0 + 2.5);
+	mat2 rotxy = rot(0.3 - mouse.y * 5.0);
+
+	from.xy *= rotxy;
+	from.xz *= rotxz;
+	dir.xy  *= rotxy;
+	dir.xz  *= rotxz;
+
+	float totdist = 0.0;
+	bool set = false;
+    float onPlane = 0.0;
+	vec3 norm = vec3(0);
+	float ao = 0.0;
+    vec3 p = vec3(0);
+
+	for (int steps = 0 ; steps < STEPS ; steps++)
+	{
+		p = from + totdist * dir;
+		float fdist = fractal(p);
+        float pdist = plane(p);
+        float dist = max(fdist, pdist);
+        totdist += dist;
+		if (dist < EPSILON)
+		{
+			set = true;
+            onPlane = abs(fdist-pdist);
+			norm = normal(p);
+            ao = float(steps) / float(STEPS);
+            break;
+		}
+	}
+
+    vec4 fragColor;
+    if (set) {
+        // get the color on the surface
+        vec3 surfaceColor = toColor(norm);
+       	surfaceColor = mix(surfaceColor, toGray(surfaceColor), 0.2);
+        surfaceColor = surfaceColor * 0.8+0.2;
+        fragColor.rgb = surfaceColor;
+        // add fog
+        fragColor.rgb -= totdist*0.04;
+        // ambient occlusion
+        fragColor.rgb -= smoothstep(0.0, 0.3, ao)*0.4;
+        // add a pulse near the plane
+        fragColor.rgb += (1.0-smoothstep(0.0, 0.02, onPlane))*surfaceColor*0.8;
+    } else {
+        // get the background color slightly desaturated
+        fragColor.rgb = toColor(-dir);
+        fragColor.rgb = mix(toGray(fragColor.rgb), fragColor.rgb, 0.4)*0.8;
     }
 
-    tot = tot/float(AA*AA);
+    fragColor.rgb = clamp(fragColor.rgb, 0.0, 1.0);
+    fragColor.a = 1.0;
 
-	imageStore(uOutputImage, coord, vec4( tot, 1.0 ));
+	imageStore(uOutputImage, coord, fragColor);
 }
