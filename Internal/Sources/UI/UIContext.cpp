@@ -43,6 +43,10 @@ namespace Fluent
             VK_ASSERT(vkCreateDescriptorPool(device, &poolInfo, nullptr, &mDescriptorPool));
 
             ImGui::CreateContext();
+            auto& io = ImGui::GetIO(); (void)io;
+            io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+            io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
             ImGui_ImplVulkan_InitInfo init_info{};
             init_info.Instance              = (VkInstance)context.GetInstance();
             init_info.PhysicalDevice        = (VkPhysicalDevice)context.GetPhysicalDevice();

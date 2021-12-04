@@ -44,7 +44,7 @@ set(Sources
 	${RendererSources}
 	${SceneSources}
 	${MathSources}
-	${UiSources})
+	${UiSources} ../Editor/Editor.cpp ../Editor/EditorLayer.cpp ../Editor/EditorLayer.hpp)
 
 set(CommonLibs
 		assimp
