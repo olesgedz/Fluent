@@ -54,7 +54,10 @@ namespace Fluent
 
         static constexpr uint32_t       FRAME_COUNT = 2;
         Scope<VirtualFrameProvider>     mFrameProvider;
-        
+
+        Ref<RenderPass>                 mDefaultRenderPass;
+        std::vector<Ref<Framebuffer>>   mDefaultFramebuffers;
+
         void CreateDescriptorPool()
         {
             // TODO
@@ -255,13 +258,30 @@ namespace Fluent
             VK_ASSERT(vkCreateCommandPool(mDevice, &cmdPoolCreateInfo, nullptr, &mCommandPool));
             CreateDescriptorPool();
 
+            /// Create default renderpass
+            ClearValue clearValue{};
+            clearValue.color = Vector4(0.0, 0.0, 0.0, 1.0);
+            RenderPassDescription renderPassDesc{};
+            renderPassDesc.width = mExtent.width;
+            renderPassDesc.height = mExtent.height;
+            renderPassDesc.clearValues = { clearValue };
+            renderPassDesc.colorFormats = { FromVulkanFormatToFormat(mSurfaceFormat.format) };
+            renderPassDesc.initialUsages = { ImageUsage::eColorAttachment };
+            renderPassDesc.finalUsages = { ImageUsage::eColorAttachment };
+            renderPassDesc.attachmentLoadOps = { AttachmentLoadOp::eLoad };
+            renderPassDesc.sampleCount = SampleCount::e1;
+
+            mDefaultRenderPass = RenderPass::Create(renderPassDesc);
+
             SetGraphicContext(*oldContext);
         }
 
         ~VulkanContext() override
         {
+            mDefaultFramebuffers.clear();
             mSwapchainImages.clear();
             mFrameProvider.reset(nullptr);
+            mDefaultRenderPass = nullptr;
             vkDestroyDescriptorPool(mDevice, mDescriptorPool, nullptr);
             vkDestroyCommandPool(mDevice, mCommandPool, nullptr);
             vkDestroySwapchainKHR(mDevice, mSwapchain, nullptr);
@@ -286,6 +306,8 @@ namespace Fluent
                     std::clamp(surfaceWidth, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width),
                     std::clamp(surfaceHeight, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height)
                 };
+
+            mDefaultRenderPass->SetRenderArea(mExtent.width, mExtent.height);
 
             VkSwapchainCreateInfoKHR swapchainCreateInfo{};
             swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -321,11 +343,20 @@ namespace Fluent
 
             mSwapchainImages.clear();
             mSwapchainImages.reserve(swapchainImages.size());
+            mDefaultFramebuffers.clear();
+            mDefaultFramebuffers.reserve(swapchainImages.size());
+
+            FramebufferDescription fbDescription{};
+            fbDescription.width = mExtent.width;
+            fbDescription.height = mExtent.height;
+            fbDescription.renderPass = mDefaultRenderPass;
 
             for (auto image : swapchainImages)
             {
                 swapchainImageDescription.handle = image;
                 mSwapchainImages.emplace_back(Image::Create(swapchainImageDescription));
+                fbDescription.targets = { mSwapchainImages.back() };
+                mDefaultFramebuffers.emplace_back(Framebuffer::Create(fbDescription));
             }
 
             mSwapchainImageUsages.resize(mSwapchainImages.size(), ImageUsage::eUndefined);
@@ -386,6 +417,9 @@ namespace Fluent
             vkQueueWaitIdle(mDeviceQueue);
         }
 
+
+        Ref<RenderPass> GetDefaultRenderPass() { return mDefaultRenderPass; }
+        Ref<Framebuffer> GetDefaultFramebuffer(uint32_t index) const { return mDefaultFramebuffers[index]; }
 
         ImageUsage::Bits GetSwapchainImageUsage(uint32_t index) const override { return mSwapchainImageUsages[index]; }
 
