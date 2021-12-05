@@ -1,11 +1,14 @@
 #pragma once
 
 #include "Core/Base.hpp"
+#include "Renderer/RenderPass.hpp"
 
 namespace Fluent
 {
     struct UIContextDescription
     {
+        bool docking = false;
+        bool viewports = false;
         Ref<RenderPass> renderPass;
     };
 

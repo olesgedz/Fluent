@@ -1,4 +1,5 @@
 #include "EditorLayer.hpp"
+#include "Fluent/Fluent.hpp"
 
 using namespace Fluent;
 

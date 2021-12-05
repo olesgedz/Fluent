@@ -44,9 +44,17 @@ namespace Fluent
 
             ImGui::CreateContext();
             auto& io = ImGui::GetIO(); (void)io;
-            io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
             io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-            io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+            if (description.docking)
+            {
+                io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+            }
+
+            if (description.viewports)
+            {
+                io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+            }
 
             ImGui_ImplVulkan_InitInfo init_info{};
             init_info.Instance              = (VkInstance)context.GetInstance();
@@ -63,7 +71,7 @@ namespace Fluent
 
             VkRenderPass renderPass = (VkRenderPass)description.renderPass->GetNativeHandle();
 
-            ImGui_ImplGlfw_InitForVulkan((GLFWwindow*)Application::Get().GetWindow()->GetNativeHandle(), true);
+            ImGui_ImplGlfw_InitForVulkan((GLFWwindow*)Application::Get().GetWindow()->GetNativeHandle(), false);
             ImGui_ImplVulkan_Init(&init_info, renderPass);
 
             auto& cmd = context.GetCurrentCommandBuffer();
