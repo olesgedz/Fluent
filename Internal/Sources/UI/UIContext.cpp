@@ -46,6 +46,7 @@ namespace Fluent
             auto& io = ImGui::GetIO(); (void)io;
             io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
             io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+            io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
             ImGui_ImplVulkan_InitInfo init_info{};
             init_info.Instance              = (VkInstance)context.GetInstance();
@@ -61,6 +62,8 @@ namespace Fluent
             init_info.CheckVkResultFn       = nullptr;
 
             VkRenderPass renderPass = (VkRenderPass)description.renderPass->GetNativeHandle();
+
+            ImGui_ImplGlfw_InitForVulkan((GLFWwindow*)Application::Get().GetWindow()->GetNativeHandle(), true);
             ImGui_ImplVulkan_Init(&init_info, renderPass);
 
             auto& cmd = context.GetCurrentCommandBuffer();
@@ -68,15 +71,14 @@ namespace Fluent
             ImGui_ImplVulkan_CreateFontsTexture((VkCommandBuffer)cmd->GetNativeHandle());
             cmd->End();
             context.ImmediateSubmit(cmd);
-
             ImGui_ImplVulkan_DestroyFontUploadObjects();
-            ImGui_ImplGlfw_InitForVulkan((GLFWwindow*)Application::Get().GetWindow()->GetNativeHandle(), false);
         }
 
         ~VulkanUI() override
         {
-            ImGui_ImplGlfw_Shutdown();
             ImGui_ImplVulkan_Shutdown();
+            ImGui_ImplGlfw_Shutdown();
+            ImGui::DestroyContext();
             VkDevice device = (VkDevice)GetGraphicContext().GetDevice();
             vkDestroyDescriptorPool(device, mDescriptorPool, nullptr);
         }
@@ -92,8 +94,15 @@ namespace Fluent
         {
             ImGui::Render();
             auto& context = GetGraphicContext();
-            VkCommandBuffer cmd = (VkCommandBuffer)context.GetCurrentCommandBuffer()->GetNativeHandle();
+            auto cmd = (VkCommandBuffer)context.GetCurrentCommandBuffer()->GetNativeHandle();
             ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
+
+            ImGuiIO& io = ImGui::GetIO();
+            if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+            {
+                ImGui::UpdatePlatformWindows();
+                ImGui::RenderPlatformWindowsDefault();
+            }
         }
     };
 

@@ -418,8 +418,8 @@ namespace Fluent
         }
 
 
-        Ref<RenderPass> GetDefaultRenderPass() { return mDefaultRenderPass; }
-        Ref<Framebuffer> GetDefaultFramebuffer(uint32_t index) const { return mDefaultFramebuffers[index]; }
+        Ref<RenderPass> GetDefaultRenderPass() const override { return mDefaultRenderPass; }
+        Ref<Framebuffer> GetDefaultFramebuffer(uint32_t index) const override { return mDefaultFramebuffers[index]; }
 
         ImageUsage::Bits GetSwapchainImageUsage(uint32_t index) const override { return mSwapchainImageUsages[index]; }
 

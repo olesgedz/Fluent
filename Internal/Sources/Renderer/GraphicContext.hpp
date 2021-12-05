@@ -30,7 +30,7 @@ namespace Fluent
 
         virtual void WaitIdle() = 0;
 
-        virtual Ref<RenderPass> GetDefaultRenderPass() = 0;
+        virtual Ref<RenderPass> GetDefaultRenderPass() const = 0;
         virtual Ref<Framebuffer> GetDefaultFramebuffer(uint32_t index) const = 0;
 
         virtual ImageUsage::Bits GetSwapchainImageUsage(uint32_t index) const = 0;
